@@ -8,7 +8,7 @@ import subprocess
 import zipfile
 
 root = Path(__file__).resolve().parents[1]
-version = '0.5.1'
+version = '0.5.2'
 for system,arch in [('windows','amd64'),('darwin','arm64')]:
     if (root/'dist'/f'wisp-{version}-{system}-{arch}.zip').exists():
         raise SystemExit('Release already exists; bump the version before rebuilding published artifacts.')

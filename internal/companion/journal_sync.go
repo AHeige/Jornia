@@ -175,6 +175,11 @@ func (j *JournalSync) Scan(ctx context.Context) {
 		if d.IsDir() || d.Name() != "Wisp.lua" || filepath.Base(filepath.Dir(path)) != "SavedVariables" {
 			return nil
 		}
+		// The five-component per-character file is the identity sidecar, not
+		// the account-level event journal. Discovery reads it first (consent v2).
+		if len(strings.Split(rel, string(filepath.Separator))) == 5 {
+			return nil
+		}
 		if d.Type()&os.ModeSymlink != 0 {
 			return errors.New("journal symlink rejected")
 		}

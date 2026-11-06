@@ -242,13 +242,13 @@ func (p *savedReader) value(depth int) (any, error) {
 	}
 	return nil, errors.New("executable or unsupported Lua rejected")
 }
-func ParseSavedVariables(raw string) ([]Export, error) {
-	if len(raw) > 4<<20 || !utf8.ValidString(raw) {
-		return nil, errors.New("Wisp-journalen är för stor eller felkodad")
+func savedObject(raw, global string, limit int) (map[string]any, error) {
+	if len(raw) > limit || !utf8.ValidString(raw) {
+		return nil, errors.New("invalid SavedVariables size or encoding")
 	}
 	p := savedReader{s: strings.TrimPrefix(raw, "\ufeff")}
-	if p.word() != "WispDB" || !p.take('=') {
-		return nil, errors.New("filen är inte en Wisp-journal")
+	if p.word() != global || !p.take('=') {
+		return nil, errors.New("unexpected SavedVariables global")
 	}
 	value, err := p.value(0)
 	if err != nil {
@@ -260,7 +260,31 @@ func ParseSavedVariables(raw string) ([]Export, error) {
 	}
 	object, ok := value.(map[string]any)
 	if !ok {
-		return nil, errors.New("invalid WispDB")
+		return nil, errors.New("invalid SavedVariables object")
+	}
+	return object, nil
+}
+
+// The addon writes this small identity into its own per-character file. The
+// containing directory proves which folder belongs to the account journal GUID;
+// neither first names nor internal realm folder names are used as identity.
+func parseCharacterIdentity(raw string) (string, error) {
+	object, err := savedObject(raw, "WispCharacterDB", 16<<10)
+	if err != nil {
+		return "", err
+	}
+	installation, _ := object["installation_id"].(string)
+	guid, _ := object["character_id"].(string)
+	if fmt.Sprint(object["schema"]) != "1" || installation == "" || len(installation) > 100 || installation == demoInstallation || !strings.HasPrefix(guid, "Player-") || len(guid) > 100 || strings.ContainsAny(installation+guid, ":\r\n\x00") {
+		return "", errors.New("invalid character identity marker")
+	}
+	return installation + ":" + guid, nil
+}
+
+func ParseSavedVariables(raw string) ([]Export, error) {
+	object, err := savedObject(raw, "WispDB", 4<<20)
+	if err != nil {
+		return nil, err
 	}
 	if fmt.Sprint(object["schema"]) != "1" {
 		return nil, errors.New("unsupported WispDB schema")

@@ -1,4 +1,4 @@
-# Start with Wisp 0.5.1
+# Start with Wisp 0.5.2
 
 Private desktop alpha for Windows and Apple Silicon Macs. The in-game Lua chat is still a prototype; the downloadable addon records a local journal. Forever 1.60.x / Interface 16001 is the target, with real gameplay testing still required.
 
@@ -11,7 +11,7 @@ Private desktop alpha for Windows and Apple Silicon Macs. The in-game Lua chat i
 5. Open **Companion** and ask **What was I doing last time?** or **My journey** for local, offline help. For AI, open **Settings & connection → AI connection**, enter your separate private invite code, and choose **Connect Wisp**. Choose **Use AI** when asking a world question.
 6. To include personal context, review the exact journal excerpts and choose **Include journal excerpts** for that question. Consent resets after a confirmed answer. Names, notes and previous conversations are not included automatically.
 
-The Windows app is unsigned; Windows may show a security warning. Mac users may need to approve the unsigned binary themselves. Signed installation and automatic updates are not part of this alpha. Windows 0.5.1 has been cross-built, not run on the remote Windows machine.
+The Windows app is unsigned; Windows may show a security warning. Mac users may need to approve the unsigned binary themselves. Signed installation and automatic updates are not part of this alpha. Windows 0.5.2 has been cross-built, not run on the remote Windows machine.
 
 ## Your actual character and equipment
 
@@ -35,3 +35,7 @@ Wisp loads the official character render and equipped item list, with source/fet
 Windows storage: `%LOCALAPPDATA%/Wisp/player.db`. Mac: the user configuration directory under Wisp. The database is not encrypted by Wisp; protect your account and backups. Replacing the ZIP preserves this data directory.
 
 Wisp's existing HTTPS API remains at `https://wisp.logosab.com`; this is infrastructure, not a Logos-owned repository. Source belongs to the personal `AHeige/Wisp` GitHub repository. No Berget/Blizzard developer secrets, SSH keys or invite codes are shipped in the ZIP. Initial invites last 30 days and allow 50 server requests per UTC day, shared by AI/world questions and explicit Armory lookups. Local memory is offline and does not use that quota. Uncertain remote outcomes are never automatically replayed.
+
+## Character identity (0.5.2)
+
+The addon also saves a small `WispCharacterDB` identity marker in its own per-character SavedVariables file. It contains the installation ID and character GUID; its file location links the real directory (including a surname/numeric realm) to the account journal. The companion does not guess from a first name or realm label. Restart WoW after updating the addon, then log in and `/reload` or log out once. Existing empty duplicate directory rows reconcile when that marker arrives; independent private content is preserved. Old 0.5.1 journals still import, but need the new addon marker to resolve mismatched directory names.

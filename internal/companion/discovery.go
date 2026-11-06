@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,8 +65,8 @@ func directoryEntries(path string) ([]os.DirEntry, error) {
 	return out, nil
 }
 
-// DiscoverCharacters reads directory names only. It never executes or parses
-// other addons, config caches, chat logs, or account credentials.
+// DiscoverCharacters reads directory names and Wisp's own per-character identity
+// marker. It never parses other addons, config caches or account credentials.
 func (s *Store) DiscoverCharacters(ctx context.Context, root string) (int, error) {
 	accounts, err := directoryEntries(filepath.Join(root, "WTF", "Account"))
 	if err != nil {
@@ -103,12 +104,20 @@ func (s *Store) DiscoverCharacters(ctx context.Context, root string) (int, error
 					continue
 				}
 				folderID := "folder:" + Fingerprint(path)[:40]
+				alias := ""
+				if a == nil && info.IsDir() && info.Mode()&os.ModeSymlink == 0 {
+					var markerErr error
+					alias, markerErr = readCharacterIdentity(filepath.Join(path, "SavedVariables", "Wisp.lua"))
+					if markerErr != nil {
+						return count, markerErr
+					}
+				}
 				tx, err := s.DB.BeginTx(ctx, nil)
 				if err != nil {
 					return count, err
 				}
 				var excluded int
-				err = tx.QueryRowContext(ctx, `SELECT count(*) FROM journey_exclusions WHERE character_id=?`, Fingerprint(folderID)).Scan(&excluded)
+				err = tx.QueryRowContext(ctx, `SELECT count(*) FROM journey_exclusions WHERE character_id IN (?,?)`, Fingerprint(folderID), Fingerprint(alias)).Scan(&excluded)
 				if err != nil {
 					tx.Rollback()
 					return count, err
@@ -125,26 +134,6 @@ func (s *Store) DiscoverCharacters(ctx context.Context, root string) (int, error
 				} else if !errors.Is(err, sql.ErrNoRows) {
 					tx.Rollback()
 					return count, err
-				} else {
-					rows, e := tx.QueryContext(ctx, `SELECT id FROM characters WHERE name=? AND realm=?`, char.Name(), realm.Name())
-					if e != nil {
-						tx.Rollback()
-						return count, e
-					}
-					matches := []string{}
-					for rows.Next() {
-						var v string
-						if e = rows.Scan(&v); e != nil {
-							rows.Close()
-							tx.Rollback()
-							return count, e
-						}
-						matches = append(matches, v)
-					}
-					rows.Close()
-					if len(matches) == 1 {
-						id = matches[0]
-					}
 				}
 				if _, err = tx.ExecContext(ctx, `INSERT INTO characters(id,name,realm) VALUES(?,?,?) ON CONFLICT(id) DO NOTHING`, id, char.Name(), realm.Name()); err == nil {
 					_, err = tx.ExecContext(ctx, `INSERT INTO character_files(folder_id,character_id) VALUES(?,?) ON CONFLICT(folder_id) DO NOTHING`, folderID, id)
@@ -152,6 +141,12 @@ func (s *Store) DiscoverCharacters(ctx context.Context, root string) (int, error
 				if err != nil {
 					tx.Rollback()
 					return count, err
+				}
+				if alias != "" {
+					if err = bindCharacterFolder(ctx, tx, folderID, id, alias, char.Name()); err != nil {
+						tx.Rollback()
+						return count, err
+					}
 				}
 				if err = tx.Commit(); err != nil {
 					return count, err
@@ -171,24 +166,75 @@ func (s *Store) journalCharacter(ctx context.Context, alias, name, realm string)
 	if !errors.Is(err, sql.ErrNoRows) {
 		return "", err
 	}
-	rows, err := s.DB.QueryContext(ctx, `SELECT DISTINCT c.id FROM characters c JOIN character_files f ON f.character_id=c.id WHERE c.name=? AND c.realm=?`, name, realm)
+	return alias, nil
+}
+
+func readCharacterIdentity(path string) (string, error) {
+	info, err := os.Lstat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return "", nil
+	}
 	if err != nil {
 		return "", err
 	}
-	defer rows.Close()
-	matches := []string{}
-	for rows.Next() {
-		var v string
-		if err = rows.Scan(&v); err != nil {
-			return "", err
-		}
-		matches = append(matches, v)
+	if !info.Mode().IsRegular() || info.Size() > 16<<10 {
+		return "", errors.New("invalid Wisp identity file")
 	}
-	if err = rows.Err(); err != nil {
+	f, err := os.Open(path)
+	if err != nil {
 		return "", err
 	}
-	if len(matches) == 1 {
-		return matches[0], nil
+	defer f.Close()
+	b, err := io.ReadAll(io.LimitReader(f, (16<<10)+1))
+	if err != nil {
+		return "", err
 	}
-	return alias, nil
+	return parseCharacterIdentity(string(b))
+}
+
+func bindCharacterFolder(ctx context.Context, tx *sql.Tx, folder, current, alias, name string) error {
+	var canonical string
+	err := tx.QueryRowContext(ctx, `SELECT character_id FROM journal_aliases WHERE alias=?`, alias).Scan(&canonical)
+	if errors.Is(err, sql.ErrNoRows) {
+		var links int
+		if err = tx.QueryRowContext(ctx, `SELECT count(*) FROM journal_aliases WHERE character_id=?`, current).Scan(&links); err != nil {
+			return err
+		}
+		canonical = alias
+		// Keep the preliminary ID, and therefore its drafts and selection, only
+		// while it hasn't already been claimed by a different GUID.
+		if current == folder && links == 0 {
+			canonical = current
+		}
+		if _, err = tx.ExecContext(ctx, `INSERT INTO characters(id,name,realm) SELECT ?,name,realm FROM characters WHERE id=? ON CONFLICT DO NOTHING`, canonical, current); err != nil {
+			return err
+		}
+		if _, err = tx.ExecContext(ctx, `INSERT INTO journal_aliases(alias,character_id) VALUES(?,?)`, alias, canonical); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	if canonical != current && current == folder {
+		// Repair the 0.5.1 duplicate only if the preliminary row has no private
+		// content. Characters with independent journals, profiles or conversations
+		// are never guessed/merged or deleted.
+		var content int
+		if err = tx.QueryRowContext(ctx, `SELECT (SELECT count(*) FROM events WHERE character_id=?)+(SELECT count(*) FROM messages WHERE character_id=?)+(SELECT count(*) FROM character_profiles WHERE character_id=?)+(SELECT count(*) FROM journal_aliases WHERE character_id=?)+(SELECT count(*) FROM operations WHERE character_id=?)`, current, current, current, current, current).Scan(&content); err != nil {
+			return err
+		}
+		if content == 0 {
+			if _, err = tx.ExecContext(ctx, `UPDATE character_files SET character_id=? WHERE character_id=?`, canonical, current); err != nil {
+				return err
+			}
+			if _, err = tx.ExecContext(ctx, `DELETE FROM characters WHERE id=?`, current); err != nil {
+				return err
+			}
+		}
+	}
+	if _, err = tx.ExecContext(ctx, `UPDATE character_files SET character_id=? WHERE folder_id=?`, canonical, folder); err != nil {
+		return err
+	}
+	_, err = tx.ExecContext(ctx, `UPDATE characters SET name=? WHERE id=?`, name, canonical)
+	return err
 }

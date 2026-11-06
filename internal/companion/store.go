@@ -269,7 +269,7 @@ func (s *Store) importData(ctx context.Context, id string, data Export, automati
 			return fail(err)
 		}
 	}
-	_, err = tx.ExecContext(ctx, `INSERT INTO characters(id,name,realm) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,realm=excluded.realm`, charID, data.Character.Name, data.Character.Realm)
+	_, err = tx.ExecContext(ctx, `INSERT INTO characters(id,name,realm) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET name=CASE WHEN EXISTS(SELECT 1 FROM character_files WHERE character_id=characters.id) THEN characters.name ELSE excluded.name END,realm=excluded.realm`, charID, data.Character.Name, data.Character.Realm)
 	if err != nil {
 		return fail(err)
 	}

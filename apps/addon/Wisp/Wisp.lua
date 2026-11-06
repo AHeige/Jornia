@@ -33,6 +33,9 @@ local function initialize()
     local c = WispDB.characters[id]
     if not c then c = { id = id, sequence = 0, events = {}, recording = WispDB.consent == "accepted" }; WispDB.characters[id] = c end
     c.name = text(UnitName("player")); c.realm = text(GetRealmName())
+    -- WoW saves this in the actual character directory. It links that directory
+    -- to the account journal without guessing from names or numeric realms.
+    WispCharacterDB = { schema = 1, installation_id = WispDB.installation_id, character_id = id }
     current = c
     return true
 end
