@@ -33,7 +33,7 @@ func TestBergetContract(t *testing.T) {
 				if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 					t.Fatal(err)
 				}
-				if request["model"] != "baseline" || request["max_tokens"] != float64(220) {
+				if request["model"] != "baseline" || request["max_tokens"] != float64(512) {
 					t.Error("missing model or output bound")
 				}
 				w.WriteHeader(tc.status)

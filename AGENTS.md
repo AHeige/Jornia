@@ -14,4 +14,4 @@ This is the user's settled product direction, recorded on 6 November 2026.
 
 - Only test transports that can deliver during an uninterrupted game session. Do not use `/reload`, logout or client shutdown as a required transport step, positive control or test completion step. The user ruled these experiments out on 6 November 2026.
 - Do not restart/reload the game to load or read test results without a new explicit instruction. Prefer an already installed, not-yet-loaded experiment slot and read-only runtime observations. If these are unavailable, report the setup blocker rather than substituting a reload.
-- For the next investigation, prioritise the local SpeakText/voice-helper path. Text appearing only after a session ends does not qualify as realtime delivery.
+- Current investigation: the user explicitly proposed OCR of the visible Wisp Lua chat/outbox on 6 November 2026. Prioritise that path; SpeakText is parked. The user’s earlier rejection of visual transport does not prohibit this newly requested OCR approach. Text appearing only after a session ends still does not qualify as realtime delivery.

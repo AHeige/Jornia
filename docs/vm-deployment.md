@@ -50,3 +50,11 @@ Läsande PowerShell-inventering visade ASUS Z170-P, en Kingston A400 `SA400S3712
 API-image: `wisp-private-api:20261105-2`; modell-image oförändrad. Initieringen är idempotent. 46/46 faktatester passerar på VM:n; grafen har 49 granskade entiteter och 67 relationer. Före uppdateringen sparades `.env.pre-0.2.0`, föregående image och `backups/pre-0.2.0.dump`. Övriga 14 inventerade containrar behöll sina container-ID:n och hade RestartCount 0 efter uppdateringen. Inga globala rensningar utfördes.
 
 Windows startar med `Start-Wisp-VM.cmd` i Desktop/Wisp-0.2.0/wisp-0.2.0-windows-amd64. `Start-Wisp.cmd` använder samma lokala SQLite-journal utan VM-tunnel. Den privata Wisp-nyckeln stannar under `%LOCALAPPDATA%/Wisp/connection`, med rättigheter för användaren och SYSTEM. VM:ns authorized_keys innehåller en separat rad med `restrict`, tillåten port-forwarding, `permitopen="127.0.0.1:18090"`, `permitlisten="127.0.0.1:18090"` och `command="/bin/false"`. Vanlig SSH-shell, PTY, agent- och X11-forwarding ges inte. Detta är en konfiguration för denna privata testdator, inte en publik installationslösning.
+
+## OCR e2e, 2026-11-06
+
+Aktiva Wisp-images efter det verifierade Mac-testet: API `wisp-private-api:20261106-ocr1`, modell `wisp-private-model:20261106-ocr2`. Övriga tjänster inklusive gateway/databas återskapades inte; 20 övriga löpande container-ID:n var oförändrade efter slutuppdateringen. Inga nya nätverk, portar, bibliotek, migrationer eller resursökningar. Modell-/API-healthcheck passerade.
+
+Modelladaptern loggar nu bara felklass och eventuell upstream HTTP-status vid fel; inga exception-strängar, frågor, svar eller provider-nycklar. `LengthFinishReasonError` visade att den tidigare gränsen 220 output-token avbröt svar. Gränsen är nu 512, med instruktion i Go om kort text och få relevanta belägg. Ingen automatisk betald retry. Go-pakettesterna och två nätverksisolerade modelltester passerade. Berget-svaret i den lyckade körningen använde 229 output-token och visades i WoW efter 6,1 s.
+
+Privata miljöbackuper för återgång finns under projektet som `.env.pre-ocr-model-diagnostics` och `.env.pre-ocr-output-fix`; befintliga image-taggar behölls. Läs `docs/ocr-transport-2026-11-06.md` för mätning och kvarvarande begränsningar.

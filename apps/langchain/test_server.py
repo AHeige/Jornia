@@ -30,6 +30,17 @@ class ModelStepTest(unittest.TestCase):
             self.assertIn('Astranaar',result['choices'][0]['message']['content'])
         asyncio.run(exercise())
         self.assertEqual(len(requests),1)
+        self.assertEqual(requests[0].get('max_completion_tokens',requests[0].get('max_tokens')),512)
         self.assertEqual(os.environ['LANGSMITH_TRACING'],'false')
+
+    def test_safe_failure_diagnostics(self):
+        req=server.Request(model=server.MODEL,messages=[server.Message(role='user',content='private question')],response_format={'type':'json_object'})
+        with patch.dict(os.environ,{'BERGET_API_KEY':'private-key'}), patch.object(server,'ChatOpenAI',side_effect=RuntimeError('private question private-key')), self.assertLogs(level='WARNING') as logs:
+            with self.assertRaises(server.HTTPException) as caught:
+                asyncio.run(server.completion(req))
+        self.assertEqual(caught.exception.status_code,502)
+        self.assertIn('kind=RuntimeError',logs.output[0])
+        self.assertNotIn('private',str(logs.output))
+        self.assertNotIn('private',caught.exception.detail)
 
 if __name__=='__main__': unittest.main()

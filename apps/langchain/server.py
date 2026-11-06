@@ -1,5 +1,6 @@
 """A bounded LangChain model step; no agent loop, memory, filesystem tools, or tracing."""
 import asyncio
+import logging
 import os
 import re
 from typing import Literal
@@ -24,7 +25,7 @@ class Request(BaseModel):
     model_config = ConfigDict(extra='forbid')
     model: str
     messages: list[Message] = Field(min_length=1, max_length=3)
-    max_tokens: int = Field(default=220, ge=1, le=220)
+    max_tokens: int = Field(default=512, ge=1, le=512)
     temperature: float = Field(default=0, ge=0, le=1)
     response_format: dict[str, str]
 
@@ -63,6 +64,10 @@ async def completion(request: Request):
         if usage and 'input_tokens' in usage and 'output_tokens' in usage:
             response['usage'] = {'prompt_tokens': usage['input_tokens'], 'completion_tokens': usage['output_tokens']}
         return response
-    except Exception:
+    except Exception as error:
+        # Operational metadata only. Never log exception strings, prompts,
+        # provider bodies or credentials (SDK errors can embed request data).
+        logging.warning('model_step_failed kind=%s upstream_status=%s',
+                        type(error).__name__, getattr(error, 'status_code', None))
         # No request content, responses, credentials or upstream diagnostics in logs/errors.
         raise HTTPException(502, 'Model step failed') from None

@@ -31,6 +31,7 @@ func run() error {
 	listen := flag.String("listen", "127.0.0.1:8787", "local loopback address")
 	backend := flag.String("backend", "https://wisp.logosab.com", "central Wisp API: HTTPS or SSH-forwarded loopback HTTP")
 	data := flag.String("data-dir", "", "local private storage directory")
+	ocrLab := flag.Bool("ocr-lab", false, "explicitly enable local OCR experiment session credentials")
 	noBrowser := flag.Bool("no-browser", false, "do not open the browser automatically")
 	vm := flag.Bool("vm", false, "connect through the dedicated private VM SSH tunnel")
 	prepareVM := flag.Bool("prepare-vm", false, "create only a dedicated local Wisp SSH key and print its public-key path")
@@ -85,6 +86,13 @@ func run() error {
 	app, err := companion.NewServer(store, *backend, listener.Addr().String(), assets)
 	if err != nil {
 		return err
+	}
+	if *ocrLab {
+		path := filepath.Join(*data, "ocr-session.json")
+		if err := app.WriteOCRSession(path); err != nil {
+			return err
+		}
+		defer os.Remove(path)
 	}
 	journal, err := companion.NewJournalSync(store)
 	if err != nil {
