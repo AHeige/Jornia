@@ -36,12 +36,14 @@ def receipt(lines):
 
 
 class Carrier:
-    def __init__(self,root):
+    def __init__(self,root,width=8):
+        if width not in (8,64): raise ValueError("Only the two fixed lab carrier banks are allowed")
+        self.width=width
         self.root=root.resolve(strict=True)
         if not (self.root/'WTF').is_dir(): raise ValueError('Expected WoW client root')
         addons=self.root/'Interface/AddOns'
         self.data=[]
-        for n in range(81,89):
+        for n in (range(81,89) if width==8 else range(1,65)):
             name=f'WispOCRInbox{n:03d}'
             self.data.append(addons/name/(name+'_Camelot.toc'))
         self.clock=addons/'WispBridgeLab/wispreturn_pulse.wav'
@@ -71,7 +73,7 @@ class Carrier:
             p.rename(held)
 
     def publish(self,value):
-        if not 0<=value<=255: raise ValueError('Not a byte')
+        if not 0<=value<(1<<self.width): raise ValueError('Value exceeds carrier width')
         for i,p in enumerate(self.data): self.present(p,bool(value & (1<<i)))
         # Clock changes LAST. Data is frozen until a matching checked OCR receipt.
         self.phase=not self.phase
@@ -83,10 +85,12 @@ class Carrier:
             if hashlib.sha256(p.read_bytes()).hexdigest()!=digest: raise ValueError('Restored hash mismatch')
 
 
-def restore(root):
+def restore(root,width=8):
     # Recovery also after SIGKILL. Fixed own paths only, never paths from a manifest.
+    if width not in (8,64): raise ValueError('Unknown bank width')
     addons=root.resolve(strict=True)/'Interface/AddOns'
-    paths=[addons/f'WispOCRInbox{n:03d}'/f'WispOCRInbox{n:03d}_Camelot.toc' for n in range(81,89)]
+    indexes=range(81,89) if width==8 else range(1,65)
+    paths=[addons/f'WispOCRInbox{n:03d}'/f'WispOCRInbox{n:03d}_Camelot.toc' for n in indexes]
     paths.append(addons/'WispBridgeLab/wispreturn_pulse.wav')
     for p in paths:
         held=Carrier.hold(p)

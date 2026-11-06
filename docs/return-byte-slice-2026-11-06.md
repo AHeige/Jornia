@@ -1,5 +1,7 @@
 # Wisp: återanvändbar byte-/textretur, 6 november 2026
 
+Senare uppföljning: [blocköverföring med åtta byte per kvittens](return-block-slice-2026-11-06.md) är genomförd. Nedan bevaras denna tidigare slices resultat och gränser.
+
 ## Resultat
 
 Egen kontrollerad text skickades från datorn till den verkliga Lua-rutan genom **samma återanvändbara filnamn**, med kvittens tillbaka genom lokal OCR. Ingen ny inbox laddades per byte eller meddelande. Samma redan körande mottagare tog emot flera texter. Ett medvetet skadat meddelande avvisades innan text visades.

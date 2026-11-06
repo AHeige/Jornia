@@ -41,3 +41,24 @@ GOPROXY=off GOSUMDB=off GOCACHE="$PWD/.cache/go-build" GOMODCACHE="$PWD/.cache/g
 ```
 
 See `docs/return-byte-slice-2026-11-06.md` for real live measurements and limitations. The standard OCR AI experiment remains a separate finite-inbox flow until integration is explicitly built and tested.
+
+## Eight-byte block experiment
+
+`return-block-bus.lua` + `block.py` reuse 64 fixed own lab TOCs (`WispOCRInbox001..064`) and the same clock. **Do not run byte and block senders together.** There is no interprocess lock; isolate the normal OCR reader and updater, too. All 64 data files must be present at arming. Use a genuinely unused installed LoD slot to bootstrap owned code; no reload/restart as a substitute.
+
+Arm `/wispblock` **before** starting the sender, then leave the receiver alone until completion/failure. Re-arming while sending can invalidate the baseline or change the transfer nonce. The panel must remain visible and unobscured. `/wispblock hide` stops and hides it.
+
+```sh
+python3 scripts/experiments/return_bus/block.py run \
+  --root '/path/to/_forever_' --binding 12715 --text 'Again'
+```
+
+The sender waits for a checked READY and freezes each eight-byte block until a checked prefix receipt. Fields have fixed widths; omitted OCR spaces are tolerated, altered digits must still pass the checksum. Frame: `WB`, version byte 1, big-endian nonce uint32, binding uint16, payload length uint16, payload, Adler-32 uint32, then zero padding to a multiple of eight. Max payload 1024 UTF-8 bytes; max verified live payload 257 bytes. The nonce/binding are inside the frame as well as receipts. Repeated old receipts cannot advance twice. Checks are not cryptographic authentication.
+
+After separately re-arming, `--fault crc`, `--fault stale` or `--fault padding` injects a checksum, nonce or padding fault. Only correlated rejection counts as a successful fault test. Padding requires a payload that actually has padding. Failed/timed-out transfers restore files, do not resend automatically, and do not show partial text. Restore this bank after abrupt process death using:
+
+```sh
+python3 scripts/experiments/return_bus/block.py restore --root '/path/to/_forever_'
+```
+
+Use the matching recovery width; byte-mode recovery does not restore the 64-bit data bank. See `docs/return-block-slice-2026-11-06.md` for measured speed, live failures and fixes, startup-slot usage, cleanup and performance limits. This remains a local controlled-message lab, not an integrated AI return channel or distributable client.
