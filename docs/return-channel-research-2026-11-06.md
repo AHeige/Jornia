@@ -105,3 +105,7 @@ Teoretisk nyttolast före protokollkostnad: `N datafiler / 8` byte per stabil av
 | Omladdning av samma Lua-inbox | Ingen återanvändningsmekanism identifierad i granskad kod/API-yta | Ska inte utlovas |
 
 Den avgörande nya möjligheten är alltså **återanvändbar observerbar filnärvaro**, inte att återställa addon-laddaren. Vi har hittat och verifierat en signalprimitiv som kan vara grund för returen. Uthållig, snabb och tillförlitlig svarstext kräver fortfarande nästa protokollexperiment.
+
+## Uppföljning: första text-slice genomförd
+
+Efter användarens nästa instruktion byggdes egen byteöverföring med filnärvaro, alternerande klocka, Adler-32, sekvens-/karaktärsbindning och OCR-kvittens. Flera kontrollerade texter inklusive åäö kom fram genom samma återanvändbara bärare; ett skadat paket avvisades. Detta är mer än signalprovet ovan, men fortfarande en långsam, avgränsad testtransport utan AI-koppling. Se `docs/return-byte-slice-2026-11-06.md` för faktiska tider, återställning och kvarvarande arbete.
