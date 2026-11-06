@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only bounded tail. Persist only exact Wisp test markers, never other chat."""
+"""Read-only bounded tail. Persist only exact Wisp test markers, never unrelated log content."""
 import argparse
 import datetime
 import json
@@ -14,13 +14,14 @@ p.add_argument('--log', type=Path, required=True)
 p.add_argument('--run', required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--duration', type=float, default=900)
+p.add_argument('--protocol', choices=['chat', 'native'], default='chat')
 a = p.parse_args()
 if not re.fullmatch(r'[0-9a-f]{8,32}', a.run):
     p.error('Invalid run ID')
 if a.output.exists():
     p.error('Refusing to overwrite evidence')
 a.output.parent.mkdir(parents=True, exist_ok=True)
-pattern = re.compile(rb'WISPCHAT1:' + a.run.encode() + rb':([AB]):(\d+):([0-9.]+):(\d+)')
+pattern = re.compile(rb'WISPCHAT1:' + a.run.encode() + rb':([AB]):(\d+):([0-9.]+):(\d+)') if a.protocol == 'chat' else re.compile(rb'WISPNATIVE1:' + a.run.encode() + rb':([0-9.]+):(\d+)')
 native = re.compile(rb'^(\d+)/(\d+)\s+(\d+):(\d+):(\d+)\.(\d+)')
 offset = a.log.stat().st_size if a.log.exists() else 0
 initial_offset = offset
@@ -37,7 +38,7 @@ with a.output.open('x') as evidence:
         evidence.write(json.dumps(obj) + '\n')
         evidence.flush()
         print(json.dumps(obj), flush=True)
-    emit(dict(event='start', run=a.run, wall=time.time(), mono_ns=time.monotonic_ns(), initial_offset=initial_offset, poll_seconds=0.05, timezone='Europe/Stockholm'))
+    emit(dict(event='start', protocol=a.protocol, run=a.run, wall=time.time(), mono_ns=time.monotonic_ns(), initial_offset=initial_offset, poll_seconds=0.05, timezone='Europe/Stockholm'))
     try:
         while time.monotonic() - started < a.duration:
             now = time.monotonic()
@@ -61,7 +62,11 @@ with a.output.open('x') as evidence:
                         marker = pattern.search(line)
                         if not marker:
                             continue
-                        row = dict(event='marker', variant=marker[1].decode(), sequence=int(marker[2]), sent_game_uptime=float(marker[3]), sent_game_epoch=int(marker[4]), observed_wall=observed_wall, observed_mono_ns=observed_mono)
+                        row = dict(event='marker', protocol=a.protocol, observed_wall=observed_wall, observed_mono_ns=observed_mono)
+                        if a.protocol == 'chat':
+                            row.update(variant=marker[1].decode(), sequence=int(marker[2]), sent_game_uptime=float(marker[3]), sent_game_epoch=int(marker[4]))
+                        else:
+                            row.update(sent_game_uptime=float(marker[1]), sent_game_epoch=int(marker[2]))
                         stamp = native.search(line)
                         if stamp:
                             month, day, hour, minute, second = map(int, stamp.groups()[:5])

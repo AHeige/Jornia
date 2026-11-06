@@ -21,9 +21,16 @@ func TestInspectChatProbeEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	runs, ok := object["chat_runs"].([]any)
+	section := os.Getenv("WISP_LAB_SECTION")
+	if section == "" {
+		section = "chat_runs"
+	}
+	if section != "chat_runs" && section != "native_runs" {
+		t.Fatal("unsupported evidence section")
+	}
+	runs, ok := object[section].([]any)
 	if !ok {
-		t.Fatal("no saved chat runs")
+		t.Fatal("no saved lab runs")
 	}
 	for _, value := range runs {
 		entry, ok := value.(map[string]any)

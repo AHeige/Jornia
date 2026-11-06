@@ -69,3 +69,7 @@ Vi ska inte skapa extra chatttrafik till spelservern för att fylla en okänd bu
 ## Beslut
 
 Nästa föreslagna experiment är **native Lua-loggning med en enda testmarkör**. Det håller oss inom arbetssättet ett test i taget och angriper den saknade utgående transporten. Vår bevisade, begränsade fil-inbox för returvägen finns kvar. Ögonblicksbild och riktiga AI-svar påbörjas inte som del av denna filanalys.
+
+## Senare klienttest
+
+[Det genomförda enmarkörstestet](native-log-test-2026-11-06.md) verifierade att C_Log.LogMessage är tillgänglig och accepterar vår text. Den faktiska målfilen är **General.log**, inte den utvecklarlogg vi först antog. En korrekt bevakad upprepning skrev ut markören först i samband med klientavslut, efter cirka 189 sekunder. Fyndet ger alltså en lokal skrivväg men ännu ingen verifierad realtidskanal. Alla ändrade CVar-värden återställdes; nätåtkomst användes inte i testet.

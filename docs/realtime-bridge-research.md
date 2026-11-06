@@ -91,3 +91,7 @@ Technical feasibility and permission to distribute/run a transport are separate 
 ## Uppföljning: offlineanalys av klientfiler
 
 [Den lokala filanalysen](local-client-file-audit-2026-11-06.md), genomförd utan internet, hittade den exakta native-signaturen `C_Log.LogMessage(message)` samt utvecklarloggens fil och konfigurationssträngar i den installerade klienten. Nästa föreslagna utgående test är en enda uttryckligt märkt native loggpost. API-tillgänglighet, rättigheter och diskfördröjning är ännu inte prövade. Inga klientinställningar eller binärer ändrades i analysen.
+
+## Uppföljning: native Lua-logg mätt
+
+[Enmarkörstestet](native-log-test-2026-11-06.md) verifierade en lokal addon → C_Log.LogMessage → **General.log**-väg. Första försöket bevakade fel fil, så det användes bara för destination/funktionskontroll. En ny markör med korrekt kontinuerlig mätning blev synlig först vid klientavslut, efter cirka 189 sekunder. Den prövade lilla payloaden ger alltså inte verifierad realtid. Buffertvolym, nödvändigheten av developerLog-inställningen och alternativa flushmekanismer är oprövade. Inställningar och testinbox återställdes.
