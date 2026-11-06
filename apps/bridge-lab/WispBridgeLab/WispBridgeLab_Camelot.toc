@@ -1,0 +1,6 @@
+## Interface: 16001
+## Title: Wisp Bridge Lab (experimental)
+## Notes: Explicit local capability and one-shot file-inbox experiments. No networking, memory access or gameplay input.
+## Version: 0.1.0
+## SavedVariables: WispBridgeLabDB
+WispBridgeLab.lua
