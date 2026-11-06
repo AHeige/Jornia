@@ -92,3 +92,7 @@ Samtliga Go-pakettester (`go test ./...`), tre Python-bridge-tester och två mod
 - Detta test skickade **bara frågetext**, inte aktuell questlista eller journalutdrag. Personligt/live questunderlag är nästa separat avgränsade steg. Att chatttransporten fungerar bevisar inte komplett eller korrekt Forever-världsdata.
 
 **Aktuell status: första riktiga OCR → AI → Lua-kedjan är verifierad utan reload, utloggning, klientavslut, minnesläsning eller global tangentövervakning.**
+
+## Uppföljning: möjlig återanvändbar returprimitiv
+
+Senare samma dag granskades aktuell källkod för externa projekt. En egen liveprobe bekräftade att samma redan kända filnamn kunde ge 20 filnärvaroövergångar över 10 cykler via `PlaySoundFile`. Filinnehåll och filnärvaro har alltså olika observerbart beteende på denna Mac-build. Vår fungerande OCR/LoD-implementation ändrades inte; full byte-/texttransport över denna signal är ännu inte implementerad. Fortsättning och belägg: `docs/return-channel-research-2026-11-06.md`.
