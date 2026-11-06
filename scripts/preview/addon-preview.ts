@@ -4,7 +4,7 @@ import {Runtime} from './runtime';
 import {Renderer} from './render';
 import source from '../../../apps/addon/Wisp/Wisp.lua?raw';
 import toc from '../../../apps/addon/Wisp/Wisp_Camelot.toc?raw';
-import panel from '../../../apps/addon-preview/WispPanel.lua?raw';
+import panel from '../../../apps/addon/Wisp/Companion.lua?raw';
 import forest from '../../../apps/companion/web/media/expedition.jpg?url';
 import avatar from '../../../apps/companion/web/media/wisp.png?url';
 const errors:string[]=[];

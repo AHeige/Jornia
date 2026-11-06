@@ -28,3 +28,5 @@ Nedladdningssidan visar nu uttryckligen skillnaden mellan den avsedda ingame-upp
 ## Two window modes, 6 November 2026
 
 The Lua visual prototype now supports a full companion window and a movable/resizable compact chat, sharing drafts, messages and pending state. See [window modes and verification](lua-window-modes.md). This remains a separate UI prototype; it has not replaced the live OCR lab or been bundled in the public ZIP. Subsequent transport work supersedes the early investigation notes above: a finite OCR → Berget → Lua roundtrip and a separate reusable block-return experiment have been proven, while the newest snapshot/waypoint slice still has explicit live-test limits. Go now owns server orchestration and talks directly to Berget.
+
+The subsequent user request installed the two-mode UI into the Mac client. Native character/journal/artwork and resizing have now been tested. The new view explicitly shows that its AI chat is not connected; the OCR lab remains separate. See `lua-window-modes.md` for installation commands, backups and the remaining transport boundary.

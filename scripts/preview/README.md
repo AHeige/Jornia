@@ -23,4 +23,6 @@ The render is a development preview, not evidence of game compatibility, visual 
 
 ## In-game product direction
 
-The adapter additionally loads the original, unreleased `apps/addon-preview/WispPanel.lua`. Open `?scenario=chat` or `?scenario=journey` to render the intended in-game interface. These panels are not in release 0.4.2. `PreviewWorld.lua` and the TypeScript fixture wire local pause/note handlers to the real Wisp journal and provide labelled sample conversation text. The prototype has no live AI sender: attempting to send reports that the bridge is disconnected. No model answer is fabricated as an actual response.
+The adapter additionally loads the original, unreleased `apps/addon/Wisp/Companion.lua`. Open `?scenario=chat` or `?scenario=journey` to render the intended in-game interface. These panels are not in release 0.4.2. `PreviewWorld.lua` and the TypeScript fixture wire local pause/note handlers to the real Wisp journal and provide labelled sample conversation text. The prototype has no live AI sender: attempting to send reports that the bridge is disconnected. No model answer is fabricated as an actual response.
+
+The local UI is now installed in the Mac client with real journal bindings; this adapter still intentionally uses synthetic data and no AI sender. Native installation and verification are documented in `docs/lua-window-modes.md`. The simulator requires the cursor-forwarding handler in our adapter to exercise resize.

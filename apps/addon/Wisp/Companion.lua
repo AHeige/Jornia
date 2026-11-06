@@ -1,6 +1,7 @@
--- First-party companion UI. Not yet bundled or connected to the live OCR transport.
+-- First-party companion view. Transport adapters supply the send/resolve hooks.
 WispJournalUI = {}
 local UI = WispJournalUI
+UI.Config = {}
 local window,rail,banner,chat,journey,chatText,journeyText,status,input,tabs,sendButton,modeButton,closeButton,resize,footer
 local character,entries,messages,drafts={},{},{},{}
 local mode,tab='full','journey'
@@ -11,7 +12,7 @@ local function safe(s) return tostring(s or ''):gsub('|','||') end
 local function label(parent,text,x,y,width,size,gold)
  local out=parent:CreateFontString(nil,'OVERLAY','GameFontHighlight')
  out:SetPoint('TOPLEFT',x,y);out:SetWidth(width);out:SetJustifyH('LEFT')
- out:SetFont('Fonts\\FRIZQT__.TTF',size or 12)
+ out:SetFont('Fonts\\FRIZQT__.TTF',size or 12,'')
  out:SetTextColor(gold and .94 or .9,gold and .74 or .93,gold and .44 or .98,1);out:SetText(text)
  return out
 end
@@ -66,7 +67,7 @@ local function updatePending()
  end
  if waiting then status:SetText('Wisp is thinking…')
  elseif pending then status:SetText('A reply is pending for another character.')
- elseif not UI.OnSend then status:SetText('Preview · AI disconnected. Nothing is sent.')
+ elseif not UI.OnSend then status:SetText(UI.Config.disconnectedText or 'Preview · AI disconnected. Nothing is sent.')
  else status:SetText('Enter to send · your current character only') end
 end
 local function layout()
@@ -79,6 +80,7 @@ local function layout()
  local compact=mode=='compact';rail:SetShown(not compact);banner:SetShown(not compact);footer:SetShown(not compact)
  UI.compactTitle:SetShown(compact);UI.compactIdentity:SetShown(compact);UI.previewLabel:SetShown(not compact)
  place(closeButton,w-42,-10,28,30);place(modeButton,w-160,-10,108,30)
+ if UI.DragHandle then UI.DragHandle:SetWidth(w-176) end
  modeButton.caption:SetText(compact and 'Open journal' or 'Compact chat')
  if compact then
   place(chat,18,-70,w-36,h-84)
@@ -139,16 +141,17 @@ function UI.Show(person,events)
   label(rail,'YOUR FIELD JOURNAL',22,-210,155,9,true)
   tabs={journey=button(rail,'Your journey',16,-238,158,function()UI.ShowJourney()end),chat=button(rail,'Talk to Wisp',16,-278,158,function()UI.ShowChat()end)}
   local avatar=rail:CreateTexture(nil,'ARTWORK');avatar:SetPoint('TOPLEFT',20,-350);avatar:SetSize(64,64);avatar:SetTexture('Interface\\AddOns\\Wisp\\Media\\avatar')
-  label(rail,'A little company.',22,-420,150,12);label(rail,'Local journal\nPreview · not released',22,-452,150,9,true)
-  UI.previewLabel=label(window,'LUA PREVIEW · NOT A LIVE GAME CONNECTION',214,-20,420,9,true)
+  label(rail,'A little company.',22,-420,150,12);label(rail,UI.Config.railLabel or 'Local journal\nPreview · not released',22,-452,150,9,true)
+  UI.previewLabel=label(window,UI.Config.runtimeLabel or 'LUA PREVIEW · NOT A LIVE GAME CONNECTION',214,-20,420,9,true)
   UI.compactTitle=label(window,'WISP',18,-16,100,19);UI.compactIdentity=label(window,'',18,-43,280,11,true)
   modeButton=button(window,'Compact chat',700,-10,108,function()UI.SetMode(mode=='full' and 'compact' or 'full')end)
   closeButton=button(window,'×',810,-10,28,function()window:Hide()end)
+  closeButton.caption:ClearAllPoints();closeButton.caption:SetPoint('CENTER');closeButton.caption:SetWidth(26);closeButton.caption:SetJustifyH('CENTER')
   banner=surface(window,212,-51,626,110,.06,.1,.18)
-  local art=banner:CreateTexture(nil,'BACKGROUND');art:SetAllPoints();art:SetTexture('Interface\\AddOns\\Wisp\\Media\\expedition');art:SetTexCoord(0,1,.25,.52);art:SetVertexColor(.45,.55,.8,1)
+  local art=banner:CreateTexture(nil,'ARTWORK');art:SetAllPoints();art:SetTexture('Interface\\AddOns\\Wisp\\Media\\expedition');art:SetTexCoord(0,1,.25,.52);art:SetVertexColor(.45,.55,.8,1)
   UI.title=label(banner,'Your story so far.',18,-22,540,26);UI.bannerCopy=label(banner,'Recorded places, moments and milestones.',18,-67,540,12)
   chat=CreateFrame('Frame',nil,window);journey=CreateFrame('Frame',nil,window)
-  chatText=CreateFrame('ScrollingMessageFrame',nil,chat);chatText:SetFont('Fonts\\FRIZQT__.TTF',13);chatText:SetJustifyH('LEFT');chatText:SetFading(false);chatText:SetMaxLines(200);chatText:EnableMouseWheel(true)
+  chatText=CreateFrame('ScrollingMessageFrame',nil,chat);chatText:SetFont('Fonts\\FRIZQT__.TTF',13,'');chatText:SetJustifyH('LEFT');chatText:SetFading(false);chatText:SetMaxLines(200);chatText:EnableMouseWheel(true)
   chatText:SetScript('OnMouseWheel',function(self,delta)if delta>0 then if self.ScrollUp then self:ScrollUp() end elseif self.ScrollDown then self:ScrollDown() end end)
   input=CreateFrame('EditBox',nil,chat,'InputBoxTemplate');input:SetFontObject(ChatFontNormal);input:SetAutoFocus(false);input:SetMaxLetters(1000)
   input:SetScript('OnEscapePressed',function(self)self:ClearFocus()end)
@@ -168,12 +171,19 @@ function UI.Show(person,events)
   UI.note=CreateFrame('EditBox',nil,journey,'InputBoxTemplate');UI.note:SetFontObject(ChatFontNormal);UI.note:SetAutoFocus(false)
   UI.noteButton=button(journey,'Save note',378,-210,110,function()local value=UI.note:GetText() or '';if value~='' and UI.OnNote then UI.OnNote(value);UI.note:SetText('');updateJourney()end end)
   UI.pauseButton=button(journey,'Pause',502,-210,106,function(self)if UI.OnPause then UI.OnPause();self.caption:SetText('Paused')end end)
-  footer=label(window,'Your story stays local. In-game AI connection is still in development.',214,-506,620,9,true)
+  footer=label(window,UI.Config.footer or 'Your story stays local. In-game AI connection is still in development.',214,-506,620,9,true)
   resize=CreateFrame('Button',nil,window);resize:SetSize(22,22);resize:EnableMouse(true)
   label(resize,'//',4,-4,18,14,true)
   resize:SetScript('OnMouseDown',function(_,which)if which=='LeftButton' then window:StartSizing('BOTTOMRIGHT') end end)
   resize:SetScript('OnMouseUp',function()window:StopMovingOrSizing();layout()end)
   UI.Controls={Window=window,Input=input,Resize=resize,Mode=modeButton,Status=status,Chat=chat,Journey=journey,Messages=chatText}
+  -- A dedicated title hit region also works where native drag events do not bubble.
+  local drag=CreateFrame('Frame',nil,window);drag:SetPoint('TOPLEFT');drag:SetSize(684,44)
+  drag:SetFrameLevel(window:GetFrameLevel()+10);drag:EnableMouse(true)
+  drag:SetScript('OnMouseDown',function(_,which)if which=='LeftButton' then window:StartMoving() end end)
+  drag:SetScript('OnMouseUp',function()window:StopMovingOrSizing()end)
+  UI.DragHandle=drag
+
  end
  UI.nameLabel:SetText(safe(character.name or 'Character'));UI.identity:SetText('Level '..tostring(character.level or '?')..'\n'..safe(character.zone))
  UI.compactIdentity:SetText(safe(character.name or 'Character')..' · Lv '..tostring(character.level or '?'))
@@ -182,3 +192,6 @@ function UI.Show(person,events)
 end
 function UI.ShowJourney()if window then if mode=='compact' then UI.SetMode('full') end;selectTab('journey')end end
 function UI.ShowChat()if window then selectTab('chat')end end
+
+function UI.IsShown() return window and window:IsShown() or false end
+function UI.Hide() if window then window:Hide() end end
