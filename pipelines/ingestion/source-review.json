@@ -41,13 +41,17 @@
     },
     {
       "name": "ForeverDB API",
-      "status": "not_enabled_requires_developer_access_and_terms_review",
+      "status": "recommended_complement_not_connected_pending_approved_access",
       "primary_documents": [
         "https://foreverdb.net/developers"
       ],
       "limitations": [
-        "No bulk scrape or key request performed"
-      ]
+        "Approved developer key required; none configured locally at review",
+        "Visible ForeverDB.net attribution required; not an open-data licence",
+        "Schema/build and per-field Classic vs Forever observation provenance must be validated before import",
+        "No client library, scraper or third-party product logic adopted"
+      ],
+      "access_request": "submitted_by_user_2026-11-06; approval and key pending"
     }
   ],
   "required_for_new_package": [

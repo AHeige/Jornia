@@ -90,6 +90,9 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if r.Character != nil && r.GameVersion != "" && r.GameVersion != "forever" {
 		return Answer{}, errors.New("character context belongs to Forever")
 	}
+	if answer, handled, err := s.catalogAnswer(ctx, r); handled {
+		return answer, err
+	}
 	start := time.Now()
 	zero := 0.0
 	a := Answer{Status: "unknown", Text: "I don't have verified knowledge for that question and game version yet.", GameVersion: r.GameVersion, Route: "deterministic", Sources: []storage.Source{}, EvidenceIDs: []string{}, Warnings: []string{}, EstimatedCostEUR: &zero}

@@ -371,7 +371,7 @@ func (s *Store) Coverage(ctx context.Context, version string) (map[string]any, e
 		return nil, err
 	}
 	details := map[string]int{}
-	rows, err = s.Pool.Query(ctx, `SELECT split_part(path,'/',4),count(*) FROM api_ingest_documents WHERE expires_at>now() AND path ~ '^/data/wow/[a-z-]+/[0-9]+$' GROUP BY 1`)
+	rows, err = s.Pool.Query(ctx, `SELECT split_part(path,'/',4),count(*) FROM api_ingest_documents WHERE expires_at>now() AND namespace IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%') AND path ~ '^/data/wow/[a-z-]+/[0-9]+$' GROUP BY 1`)
 	if err != nil {
 		return nil, err
 	}
@@ -413,5 +413,5 @@ func (s *Store) Coverage(ctx context.Context, version string) (map[string]any, e
 	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
-	return map[string]any{"game_version": version, "entities": total, "by_kind": counts, "complete": false, "scope": "Curated Ashenvale plus build-scoped official Forever API metadata; not complete game knowledge or proof of live availability.", "unknown_total_game_entities": true, "ingestion": map[string]any{"provider": "blizzard", "namespaces": namespaces, "locales": locales, "detailed_documents_by_resource": details, "record_counts_are_not_field_completeness": true, "documents": documents, "jobs": jobs, "latest_run_status": runStatus, "latest_run_finished_at": checkedAt, "refresh_hours": 24, "retention_days": 28, "search_id_bounds": []int{0, 2147483647}}, "unverified_domains": []string{"complete quests and objectives", "complete NPC positions", "drop chances", "quest eligibility", "live-client availability", "all game data outside supported API endpoints"}}, nil
+	return map[string]any{"game_version": version, "entities": total, "by_kind": counts, "categories": CategoryCatalog(counts, details), "category_counts_overlap": true, "complete": false, "scope": "Curated Ashenvale plus build-scoped official Forever API metadata; not complete game knowledge or proof of live availability.", "unknown_total_game_entities": true, "ingestion": map[string]any{"provider": "blizzard", "namespaces": namespaces, "locales": locales, "detailed_documents_by_resource": details, "record_counts_are_not_field_completeness": true, "documents": documents, "jobs": jobs, "latest_run_status": runStatus, "latest_run_finished_at": checkedAt, "refresh_hours": 24, "retention_days": 28, "search_id_bounds": []int{0, 2147483647}}, "unverified_domains": []string{"complete quests and objectives", "complete NPC positions", "drop chances", "quest eligibility", "live-client availability", "all game data outside supported API endpoints"}}, nil
 }

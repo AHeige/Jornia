@@ -196,10 +196,11 @@ func TestAshenvaleStack(t *testing.T) {
 	w = httptest.NewRecorder()
 	handler.ServeHTTP(w, r)
 	var coverage struct {
-		Complete bool `json:"complete"`
-		Entities int  `json:"entities"`
+		Complete   bool                        `json:"complete"`
+		Entities   int                         `json:"entities"`
+		Categories []storage.KnowledgeCategory `json:"categories"`
 	}
-	if err = json.Unmarshal(w.Body.Bytes(), &coverage); err != nil || w.Code != 200 || coverage.Complete || coverage.Entities != 49 {
+	if err = json.Unmarshal(w.Body.Bytes(), &coverage); err != nil || w.Code != 200 || coverage.Complete || coverage.Entities != 49 || len(coverage.Categories) != 25 {
 		t.Fatalf("misleading coverage %s", w.Body.String())
 	}
 	r = httptest.NewRequest("GET", "/healthz", nil)
