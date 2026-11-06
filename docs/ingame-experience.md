@@ -24,3 +24,7 @@ Primär referens: [wow-ai](https://github.com/chelinho139/wow-ai) beskriver en F
 Nästa verifiering måste använda en riktig Forever-klient: mät loggarnas skrivfördröjning och testa kontrollerad svarsinläsning. Skilj quest visad/accepterad/övergiven/inlämnad, testa flera snabba frågor, avbrott, spelomstart och karaktärsbyte. En rendering eller en fungerande extern AI-chatt bevisar inte ingame-kedjan.
 
 Nedladdningssidan visar nu uttryckligen skillnaden mellan den avsedda ingame-upplevelsen, den körbara Lua-prototypen och den nedladdningsbara externa tekniska alphan.
+
+## Two window modes, 6 November 2026
+
+The Lua visual prototype now supports a full companion window and a movable/resizable compact chat, sharing drafts, messages and pending state. See [window modes and verification](lua-window-modes.md). This remains a separate UI prototype; it has not replaced the live OCR lab or been bundled in the public ZIP. Subsequent transport work supersedes the early investigation notes above: a finite OCR → Berget → Lua roundtrip and a separate reusable block-return experiment have been proven, while the newest snapshot/waypoint slice still has explicit live-test limits. Go now owns server orchestration and talks directly to Berget.

@@ -1,0 +1,61 @@
+package companion
+
+import (
+	lua "github.com/yuin/gopher-lua"
+	"os"
+	"testing"
+)
+
+func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
+	vm := lua.NewState()
+	defer vm.Close()
+	if err := vm.DoString(`
+ UIParent={};ChatFontNormal={};local methods={};local meta={__index=function(t,k)return methods[k] or function()end end}
+ function CreateFrame(kind,name,parent) return setmetatable({scripts={},w=0,h=0,shown=true,lines={}},meta) end
+ function methods:CreateFontString()return CreateFrame()end;function methods:CreateTexture()return CreateFrame()end
+ function methods:SetScript(k,v)self.scripts[k]=v end
+ function methods:SetSize(w,h)self.w=w;self.h=h;if self.scripts.OnSizeChanged then self.scripts.OnSizeChanged(self,w,h)end end
+ function methods:SetWidth(w)self.w=w end;function methods:SetHeight(h)self.h=h end
+ function methods:GetWidth()return self.w end;function methods:GetHeight()return self.h end
+ function methods:SetShown(b)self.shown=b end;function methods:Show()self.shown=true end;function methods:Hide()self.shown=false end
+ function methods:SetText(s)self.text=s;if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self)end end
+ function methods:GetText()return self.text end
+ function methods:Clear()self.lines={} end;function methods:AddMessage(s)table.insert(self.lines,s)end
+ function methods:Disable()self.disabled=true end;function methods:Enable()self.disabled=false end
+ function methods:StartSizing()self.sizing=true end;function methods:StopMovingOrSizing()self.sizing=false end
+ `); err != nil {
+		t.Fatal(err)
+	}
+	source, err := os.ReadFile("../../apps/addon-preview/WispPanel.lua")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = vm.DoString(string(source)); err != nil {
+		t.Fatal(err)
+	}
+	if err = vm.DoString(`
+ local UI=WispJournalUI;local a={id='one',name='One',level=16,zone='Ashenvale'};local b={id='two',name='Two',level=2,zone='Durotar'}
+ UI.Show(a,{});local c=UI.Controls
+ c.Input:SetText('A draft');UI.AddMessage('assistant','Welcome');UI.SetMode('compact')
+ assert(c.Window.w==420 and c.Window.h==340 and c.Input:GetText()=='A draft' and c.Chat.shown and not c.Journey.shown)
+ c.Window:SetSize(50,20);assert(c.Window.w==340 and c.Window.h==260 and c.Input.w>0)
+ c.Resize.scripts.OnMouseDown(c.Resize,'LeftButton');assert(c.Window.sizing);c.Resize.scripts.OnMouseUp();assert(not c.Window.sizing)
+ UI.SetMode('full');assert(c.Window.w==860 and c.Input:GetText()=='A draft')
+ UI.SetMode('compact');assert(c.Window.w==340 and #c.Messages.lines==1)
+ UI.Show(b,{});assert(c.Input:GetText()=='' and #c.Messages.lines==0);c.Input:SetText('Other draft')
+ UI.Show(a,{});assert(c.Input:GetText()=='A draft' and #c.Messages.lines==1)
+ c.Input.scripts.OnEnterPressed();assert(c.Input:GetText()=='A draft')
+ local sends=0;UI.OnSend=function(q,owner)sends=sends+1;assert(owner=='one');return 'op1' end
+ c.Input.scripts.OnEnterPressed();assert(sends==1 and c.Input.disabled)
+ UI.SetMode('full');UI.SetMode('compact');c.Input.scripts.OnEnterPressed();assert(sends==1)
+ assert(not UI.Resolve('wrong','one','Wrong'));assert(not UI.Resolve('op1','two','Wrong'))
+ UI.Show(b,{});assert(c.Input.disabled and c.Input:GetText()=='Other draft' and #c.Messages.lines==0)
+ assert(UI.Resolve('op1','one','Reply',false));assert(#c.Messages.lines==0 and not c.Input.disabled)
+ UI.Show(a,{});assert(c.Input:GetText()=='' and #c.Messages.lines==3)
+ c.Input:SetText('Keep on failure');c.Input.scripts.OnEnterPressed();UI.Resolve('op1','one','error',true)
+ assert(c.Input:GetText()=='Keep on failure' and not c.Input.disabled)
+ UI.ShowJourney();assert(UI.GetMode()=='full' and c.Journey.shown)
+ `); err != nil {
+		t.Fatal(err)
+	}
+}
