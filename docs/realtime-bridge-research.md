@@ -87,3 +87,7 @@ Technical feasibility and permission to distribute/run a transport are separate 
 ## Uppföljning: uppmätt chatlogg 6 november
 
 [Det genomförda A/B-testet](chatlog-test-2026-11-06.md) gav åtta mottagna självviskningar men ingen diskleverans före klientavslut. Tre direkta av/på-växlingar och en av-period på faktiskt 270 ms ändrade inte det. Alla åtta markörer observerades först vid normalt avslut. Det tidigare öppna loggspåret har därmed ett konkret negativt realtidsresultat för den prövade byggversionen och trafikvolymen, med en lyckad positivkontroll. Eventuella volymtrösklar är inte testade.
+
+## Uppföljning: offlineanalys av klientfiler
+
+[Den lokala filanalysen](local-client-file-audit-2026-11-06.md), genomförd utan internet, hittade den exakta native-signaturen `C_Log.LogMessage(message)` samt utvecklarloggens fil och konfigurationssträngar i den installerade klienten. Nästa föreslagna utgående test är en enda uttryckligt märkt native loggpost. API-tillgänglighet, rättigheter och diskfördröjning är ännu inte prövade. Inga klientinställningar eller binärer ändrades i analysen.
