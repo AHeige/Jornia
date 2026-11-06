@@ -8,7 +8,7 @@ The first end-to-end slice includes a Lua addon with user-initiated export, a se
 
 Personal repository: **https://github.com/AHeige/Wisp** (private).
 
-Private alpha download: **https://wisp.logosab.com** (0.5.1). Testers receive a separate revocable access code; no provider key is distributed.
+Private alpha download: **https://aheige.github.io/wisp-site/** (0.5.1). Testers receive a separate revocable access code; no provider key is distributed.
 
 - [Client installation and VM-hosted updates](docs/client-distribution.md)
 - [Automatic local journey: first-use consent, import and limits](docs/automatic-journal.md)

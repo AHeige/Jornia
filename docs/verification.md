@@ -195,3 +195,8 @@ Final SHA-256:
 - Mac arm64: `d56b47de600ac4a21a4976cd68d0a4e3859ca07f6d98e2a96891cba18787342c`
 
 Screenshots: `ux-download-night.jpg`, `ux-download-mobile.jpg`, `ux-kungen-character.jpg`, `ux-mobile-character.jpg`, `ux-journey-night.jpg`, `ux-companion-night.jpg`. Windows 0.5.1 execution, native Forever layout/events and the bidirectional game bridge are not claimed as tested. Directory discovery proves only locally present identities; it cannot recover past adventures or characters absent from game files.
+
+
+### Personal GitHub website and downloads
+
+Published the public static export in `AHeige/wisp-site` and enabled branch-based GitHub Pages at https://aheige.github.io/wisp-site/. GitHub reports the build as built; HTML, CSS and representative media match the exported bytes. Both public unauthenticated GitHub release ZIPs download with the same 0.5.1 SHA-256 values above. Actual browser rendering confirms project-relative assets and public release links. The old VM root now forwards to the new website, leaving authenticated API/release routes intact. Source remains private in `AHeige/Wisp`; the public repo contains only the website, six referenced images and versioned binaries. Screenshot: `ux-download-github.jpg`.

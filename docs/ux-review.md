@@ -95,3 +95,8 @@ The final delivery is **0.5.1**; previously built 0.5.0 archives remain unchange
 
 The existing headless browser runners were adapted to the new view navigation and English selectors and syntax-checked; they were not executed in this review. Browser evidence here is the direct rendered walkthrough, with Go and PostgreSQL tests reported in `verification.md`. Windows execution, actual Forever play and the bidirectional in-game AI bridge remain unverified/unfinished and are disclosed in the site and guide.
 
+### Personal GitHub publication
+
+Application source is private in [AHeige/Wisp](https://github.com/AHeige/Wisp). The static site and previously public preview assets are isolated in [AHeige/wisp-site](https://github.com/AHeige/wisp-site), with public versioned ZIPs. The verified download page is https://aheige.github.io/wisp-site/; unauthenticated downloads match both local SHA-256 hashes. The previous Logos download root forwards there. Only the protected API remains on the existing VM endpoint. No company repository or private player database was published.
+
+The Pages export is reproducible with `python3 scripts/build_download.py --pages-output /path/to/site`: it copies only referenced public assets, rewrites project-relative paths and points downloads at public GitHub release assets. Source and executable packages remain separate from the public website repository.
