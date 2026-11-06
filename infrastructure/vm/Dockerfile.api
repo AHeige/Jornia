@@ -1,0 +1,9 @@
+FROM alpine:3.23
+RUN apk add --no-cache ca-certificates && adduser -D -u 10001 wisp
+COPY wisp /usr/local/bin/wisp
+COPY wisp-ingest /usr/local/bin/wisp-ingest
+COPY wisp-gateway /usr/local/bin/wisp-gateway
+RUN chmod 755 /usr/local/bin/wisp /usr/local/bin/wisp-ingest /usr/local/bin/wisp-gateway
+USER wisp
+ENTRYPOINT ["wisp"]
+CMD ["serve"]

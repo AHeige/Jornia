@@ -1,0 +1,421 @@
+{
+  "version": "forever",
+  "dataset_revision": "ashenvale-geography-review-20261105-v1",
+  "license": "CC-BY-SA-4.0",
+  "sources": [
+    {
+      "id": "wiki-ashenvale-geography-20261105-v1",
+      "title": "Warcraft Wiki: Ashenvale geography and named subregions",
+      "uri": "https://warcraft.wiki.gg/wiki/Ashenvale_(Classic)",
+      "revision": "local-geography-review-2026-11-05-v1; upstream revision unavailable",
+      "license": "CC-BY-SA-4.0 for adapted wiki content; no grant for Blizzard assets",
+      "validation_status": "source_checked",
+      "provenance": {
+        "checked_at": "2026-11-05",
+        "effective_version": "Shared Classic/Forever applicability; exact client build not checked",
+        "verification_method": "Manual review of indexed geography and named-subregion sections; direct article fetch returned HTTP 403. No client extraction.",
+        "attribution": "Warcraft Wiki contributors",
+        "history_uri": "https://warcraft.wiki.gg/wiki/Ashenvale_(Classic)?action=history",
+        "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "license_policy_uri": "https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights",
+        "changes": "Selected names and geographic relationships; no maps, narrative, coordinates or game assets copied.",
+        "review_sha256": "2ce16805dc6867a2c15e8ca39e10a0110145752991f9c9bf8cda3554c790dab9",
+        "reviewed_claims": [
+          "The shared article explicitly marks its subject as remaining in Classic and Forever.",
+          "Its named subregions include: Bathran's Haunt, Iris Lake, Lake Falathim, Mystral Lake, Silverwind Refuge, Raynewood Retreat, The Ruins of Stardust, The Shrine of Aessina, Thistlefur Village, Greenpaw Village, Felfire Hill, Fire Scar Shrine, Warsong Lumber Camp, Warsong Labor Camp, The Dor'Danil Barrow Den, Satyrnaar, Night Run, Xavian, Falfarren River, The Talondeep Path.",
+          "Ashenvale adjoins Darkshore, Felwood, Azshara, Stonetalon Mountains and The Barrens in Kalimdor."
+        ],
+        "redistribution": "Selected adaptation under CC-BY-SA-4.0; underlying Blizzard rights not licensed by this notice."
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "bathrans-haunt",
+      "kind": "location",
+      "name": "Bathran's Haunt",
+      "description": "Bathran's Haunt is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "iris-lake",
+      "kind": "location",
+      "name": "Iris Lake",
+      "description": "Iris Lake is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "lake-falathim",
+      "kind": "location",
+      "name": "Lake Falathim",
+      "description": "Lake Falathim is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "mystral-lake",
+      "kind": "location",
+      "name": "Mystral Lake",
+      "description": "Mystral Lake is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "silverwind-refuge",
+      "kind": "location",
+      "name": "Silverwind Refuge",
+      "description": "Silverwind Refuge is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "raynewood-retreat",
+      "kind": "location",
+      "name": "Raynewood Retreat",
+      "description": "Raynewood Retreat is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "ruins-of-stardust",
+      "kind": "location",
+      "name": "The Ruins of Stardust",
+      "description": "The Ruins of Stardust is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "shrine-of-aessina",
+      "kind": "location",
+      "name": "The Shrine of Aessina",
+      "description": "The Shrine of Aessina is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "thistlefur-village",
+      "kind": "location",
+      "name": "Thistlefur Village",
+      "description": "Thistlefur Village is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "greenpaw-village",
+      "kind": "location",
+      "name": "Greenpaw Village",
+      "description": "Greenpaw Village is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "felfire-hill",
+      "kind": "location",
+      "name": "Felfire Hill",
+      "description": "Felfire Hill is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "fire-scar-shrine",
+      "kind": "location",
+      "name": "Fire Scar Shrine",
+      "description": "Fire Scar Shrine is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "warsong-lumber-camp",
+      "kind": "location",
+      "name": "Warsong Lumber Camp",
+      "description": "Warsong Lumber Camp is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "warsong-labor-camp",
+      "kind": "location",
+      "name": "Warsong Labor Camp",
+      "description": "Warsong Labor Camp is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "dordanil-barrow-den",
+      "kind": "location",
+      "name": "The Dor'Danil Barrow Den",
+      "description": "The Dor'Danil Barrow Den is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "satyrnaar",
+      "kind": "location",
+      "name": "Satyrnaar",
+      "description": "Satyrnaar is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "night-run",
+      "kind": "location",
+      "name": "Night Run",
+      "description": "Night Run is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "xavian",
+      "kind": "location",
+      "name": "Xavian",
+      "description": "Xavian is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "falfarren-river",
+      "kind": "location",
+      "name": "Falfarren River",
+      "description": "Falfarren River is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "talondeep-path",
+      "kind": "location",
+      "name": "The Talondeep Path",
+      "description": "The Talondeep Path is a named location in Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "darkshore",
+      "kind": "zone",
+      "name": "Darkshore",
+      "description": "Darkshore is a Kalimdor zone adjoining Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "felwood",
+      "kind": "zone",
+      "name": "Felwood",
+      "description": "Felwood is a Kalimdor zone adjoining Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "azshara",
+      "kind": "zone",
+      "name": "Azshara",
+      "description": "Azshara is a Kalimdor zone adjoining Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "stonetalon-mountains",
+      "kind": "zone",
+      "name": "Stonetalon Mountains",
+      "description": "Stonetalon Mountains is a Kalimdor zone adjoining Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "the-barrens",
+      "kind": "zone",
+      "name": "The Barrens",
+      "description": "The Barrens is a Kalimdor zone adjoining Ashenvale.",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "bathrans-haunt-in-ashenvale",
+      "subject_id": "bathrans-haunt",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "iris-lake-in-ashenvale",
+      "subject_id": "iris-lake",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "lake-falathim-in-ashenvale",
+      "subject_id": "lake-falathim",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "mystral-lake-in-ashenvale",
+      "subject_id": "mystral-lake",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "silverwind-refuge-in-ashenvale",
+      "subject_id": "silverwind-refuge",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "raynewood-retreat-in-ashenvale",
+      "subject_id": "raynewood-retreat",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "ruins-of-stardust-in-ashenvale",
+      "subject_id": "ruins-of-stardust",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "shrine-of-aessina-in-ashenvale",
+      "subject_id": "shrine-of-aessina",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "thistlefur-village-in-ashenvale",
+      "subject_id": "thistlefur-village",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "greenpaw-village-in-ashenvale",
+      "subject_id": "greenpaw-village",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "felfire-hill-in-ashenvale",
+      "subject_id": "felfire-hill",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "fire-scar-shrine-in-ashenvale",
+      "subject_id": "fire-scar-shrine",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "warsong-lumber-camp-in-ashenvale",
+      "subject_id": "warsong-lumber-camp",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "warsong-labor-camp-in-ashenvale",
+      "subject_id": "warsong-labor-camp",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "dordanil-barrow-den-in-ashenvale",
+      "subject_id": "dordanil-barrow-den",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "satyrnaar-in-ashenvale",
+      "subject_id": "satyrnaar",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "night-run-in-ashenvale",
+      "subject_id": "night-run",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "xavian-in-ashenvale",
+      "subject_id": "xavian",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "falfarren-river-in-ashenvale",
+      "subject_id": "falfarren-river",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "talondeep-path-in-ashenvale",
+      "subject_id": "talondeep-path",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "darkshore-in-kalimdor",
+      "subject_id": "darkshore",
+      "predicate": "located_in",
+      "object_id": "kalimdor",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "ashenvale-borders-darkshore",
+      "subject_id": "ashenvale",
+      "predicate": "borders",
+      "object_id": "darkshore",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "felwood-in-kalimdor",
+      "subject_id": "felwood",
+      "predicate": "located_in",
+      "object_id": "kalimdor",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "ashenvale-borders-felwood",
+      "subject_id": "ashenvale",
+      "predicate": "borders",
+      "object_id": "felwood",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "azshara-in-kalimdor",
+      "subject_id": "azshara",
+      "predicate": "located_in",
+      "object_id": "kalimdor",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "ashenvale-borders-azshara",
+      "subject_id": "ashenvale",
+      "predicate": "borders",
+      "object_id": "azshara",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "stonetalon-mountains-in-kalimdor",
+      "subject_id": "stonetalon-mountains",
+      "predicate": "located_in",
+      "object_id": "kalimdor",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "ashenvale-borders-stonetalon-mountains",
+      "subject_id": "ashenvale",
+      "predicate": "borders",
+      "object_id": "stonetalon-mountains",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "the-barrens-in-kalimdor",
+      "subject_id": "the-barrens",
+      "predicate": "located_in",
+      "object_id": "kalimdor",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    },
+    {
+      "id": "ashenvale-borders-the-barrens",
+      "subject_id": "ashenvale",
+      "predicate": "borders",
+      "object_id": "the-barrens",
+      "source_id": "wiki-ashenvale-geography-20261105-v1"
+    }
+  ]
+}

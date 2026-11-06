@@ -1,0 +1,192 @@
+[
+  {
+    "schema": 1,
+    "installation_id": "wisp-ux-fixture",
+    "character": {
+      "id": "UX-Thalara",
+      "name": "Thalara",
+      "realm": "Synthetic UX fixture"
+    },
+    "events": [
+      {
+        "id": "wisp-ux-fixture:UX-Thalara:1",
+        "kind": "session_start",
+        "observed_at": 1793786400,
+        "zone": "Ashenvale",
+        "subzone": "Maestra's Post",
+        "level": 23,
+        "note": "",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Thalara:2",
+        "kind": "zone",
+        "observed_at": 1793790000,
+        "zone": "Ashenvale",
+        "subzone": "Maestra's Post",
+        "level": 23,
+        "note": "",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Thalara:3",
+        "kind": "quest_completed",
+        "observed_at": 1793793600,
+        "zone": "Ashenvale",
+        "subzone": "Astranaar",
+        "level": 23,
+        "note": "",
+        "quest_id": 1020,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Thalara:4",
+        "kind": "level_up",
+        "observed_at": 1793883600,
+        "zone": "Ashenvale",
+        "subzone": "Astranaar",
+        "level": 24,
+        "note": "",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Thalara:5",
+        "kind": "note",
+        "observed_at": 1793887200,
+        "zone": "Ashenvale",
+        "subzone": "Mystral Lake",
+        "level": 24,
+        "note": "Return to Astranaar before heading south.",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Thalara:6",
+        "kind": "session_end",
+        "observed_at": 1793890800,
+        "zone": "Ashenvale",
+        "subzone": "Mystral Lake",
+        "level": 24,
+        "note": "",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "installation_id": "wisp-ux-fixture",
+    "character": {
+      "id": "UX-Bramble",
+      "name": "Bramble",
+      "realm": "Synthetic UX fixture"
+    },
+    "events": [
+      {
+        "id": "wisp-ux-fixture:UX-Bramble:1",
+        "kind": "session_start",
+        "observed_at": 1793786400,
+        "zone": "Darkshore",
+        "subzone": "Auberdine",
+        "level": 17,
+        "note": "",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Bramble:2",
+        "kind": "zone",
+        "observed_at": 1793790000,
+        "zone": "Darkshore",
+        "subzone": "Auberdine",
+        "level": 17,
+        "note": "",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Bramble:3",
+        "kind": "quest_completed",
+        "observed_at": 1793793600,
+        "zone": "Darkshore",
+        "subzone": "The Long Wash",
+        "level": 17,
+        "note": "",
+        "quest_id": 1020,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Bramble:4",
+        "kind": "level_up",
+        "observed_at": 1793883600,
+        "zone": "Darkshore",
+        "subzone": "The Long Wash",
+        "level": 18,
+        "note": "",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Bramble:5",
+        "kind": "note",
+        "observed_at": 1793887200,
+        "zone": "Darkshore",
+        "subzone": "The Long Wash",
+        "level": 18,
+        "note": "Explore the coast after visiting Auberdine.",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      },
+      {
+        "id": "wisp-ux-fixture:UX-Bramble:6",
+        "kind": "session_end",
+        "observed_at": 1793890800,
+        "zone": "Darkshore",
+        "subzone": "The Long Wash",
+        "level": 18,
+        "note": "",
+        "quest_id": 0,
+        "client_version": "1.60.1",
+        "client_build": "synthetic-ux-fixture",
+        "interface": 16001,
+        "session_id": "ux-fixture-session"
+      }
+    ]
+  }
+]

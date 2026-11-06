@@ -1,0 +1,194 @@
+[
+  {
+    "question": "Where is Ashenvale?",
+    "status": "answered",
+    "contains": "Kalimdor",
+    "game_version": "forever"
+  },
+  {
+    "question": "Tell me about Ashenvale",
+    "status": "answered",
+    "contains": "forest",
+    "game_version": "forever"
+  },
+  {
+    "question": "Where is Astranaar?",
+    "status": "answered",
+    "contains": "Ashenvale",
+    "game_version": "forever"
+  },
+  {
+    "question": "Where is Forest Song?",
+    "status": "answered",
+    "contains": "Ashenvale",
+    "game_version": "forever"
+  },
+  {
+    "question": "Where is Zoram'gar Outpost?",
+    "status": "answered",
+    "contains": "Ashenvale",
+    "game_version": "forever"
+  },
+  {
+    "question": "Where is Blackfathom Deeps?",
+    "status": "answered",
+    "contains": "The Zoram Strand",
+    "game_version": "forever"
+  },
+  {
+    "question": "Where is Raene Wolfrunner?",
+    "status": "answered",
+    "contains": "Astranaar",
+    "game_version": "forever"
+  },
+  {
+    "question": "Who gives Raene's Cleansing?",
+    "status": "answered",
+    "contains": "Raene Wolfrunner",
+    "game_version": "forever"
+  },
+  {
+    "question": "Who do I turn in The Ashenvale Hunt (The Barrens) to?",
+    "status": "answered",
+    "contains": "Senani Thunderheart",
+    "game_version": "forever"
+  },
+  {
+    "question": "What places are in Ashenvale?",
+    "status": "answered",
+    "contains": "Blackfathom Deeps",
+    "game_version": "forever"
+  },
+  {
+    "question": "What quests are in Ashenvale?",
+    "status": "answered",
+    "contains": "Raene's Cleansing",
+    "game_version": "forever"
+  },
+  {
+    "question": "Var ligger Astranaar?",
+    "status": "answered",
+    "contains": "Ashenvale",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vem ger Raene's Cleansing?",
+    "status": "answered",
+    "contains": "Raene Wolfrunner",
+    "game_version": "forever"
+  },
+  {
+    "question": "What level should I be in Ashenvale?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Where is Relathor Moonsong?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Tell me about Hidden Story",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "What did I do last night?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Where is Astranaar?",
+    "game_version": "forever-unchecked-build",
+    "status": "unknown"
+  },
+  {
+    "question": "Var finns Orendil Broadleaf?",
+    "status": "answered",
+    "contains": "Maestra's Post",
+    "game_version": "forever"
+  },
+  {
+    "question": "Var ligger Pelturas Whitemoon?",
+    "status": "answered",
+    "contains": "Astranaar",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vem ger Bathran's Hair?",
+    "status": "answered",
+    "contains": "Orendil Broadleaf",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vem ger Elune's Tear?",
+    "status": "answered",
+    "contains": "Pelturas Whitemoon",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vem ger Pridewings of Stonetalon?",
+    "status": "answered",
+    "contains": "Shindrell Swiftfire",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vem lämnar jag in Orendil's Cure hos?",
+    "status": "answered",
+    "contains": "Pelturas Whitemoon",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vad kommer efter Bathran's Hair?",
+    "status": "answered",
+    "contains": "Orendil's Cure",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vad kommer före Fallen Sky Lake?",
+    "status": "answered",
+    "contains": "The Ruins of Stardust",
+    "game_version": "forever"
+  },
+  {
+    "question": "What comes after Orendil's Cure?",
+    "status": "answered",
+    "contains": "Elune's Tear",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vad kommer efter Fallen Sky Lake?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vad kommer före Bathran's Hair?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Hur mycket XP ger Bathran's Hair?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vilken nivå krävs för Elune's Tear?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Vilka belöningar ger Orendil's Cure?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Var ligger Påhittade NPCn?",
+    "status": "unknown",
+    "game_version": "forever"
+  },
+  {
+    "question": "Var ligger Stormwind?",
+    "status": "unknown",
+    "game_version": "forever"
+  }
+]

@@ -1,0 +1,262 @@
+{
+  "version": "forever",
+  "dataset_revision": "ashenvale-quests-review-20261105-v1",
+  "license": "CC-BY-SA-4.0",
+  "sources": [
+    {
+      "id": "wiki-ashenvale-quests-20261105-v1",
+      "title": "Warcraft Wiki: Ashenvale quests (Classic/Forever index)",
+      "uri": "https://warcraft.wiki.gg/wiki/Ashenvale_quests",
+      "revision": "indexed-oldid-6550117; local-review-20261105-v1",
+      "license": "CC-BY-SA-4.0 for selected wiki adaptations; no licence for Blizzard game assets",
+      "validation_status": "source_checked",
+      "provenance": {
+        "checked_at": "2026-11-05",
+        "effective_version": "Shared Classic/Forever article; exact client build and eligibility not verified",
+        "verification_method": "Reviewed indexed quest table and chain section; direct fetch returned HTTP 403. Excluded retail storyline and conflicting Classic/Forever level/reward values.",
+        "attribution": "Warcraft Wiki contributors",
+        "history_uri": "https://warcraft.wiki.gg/wiki/Ashenvale_quests?oldid=6550117",
+        "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "license_policy_uri": "https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights",
+        "changes": "Selected quest names, givers, locations and recorded sequence. No quest dialogue, maps, rewards, coordinates or bulk database copied.",
+        "review_sha256": "6f0162a86358349195f4d033d4da6676ab95084304965d5e5f196c789f20c058",
+        "reviewed_claims": [
+          "The Ashenvale quests article is marked as shared Classic/Forever content; its indexed revision is 6550117.",
+          "Orendil Broadleaf offers Bathran's Hair and Orendil's Cure at Maestra's Post. Pelturas Whitemoon offers Elune's Tear, The Ruins of Stardust and Fallen Sky Lake at Astranaar. Shindrell Swiftfire offers Pridewings of Stonetalon at Astranaar.",
+          "The listed chain order is Bathran's Hair, Orendil's Cure, Elune's Tear, The Ruins of Stardust, Fallen Sky Lake. This is a recorded order, not a complete eligibility solver."
+        ],
+        "redistribution": "Selected factual adaptation under CC-BY-SA-4.0; underlying Blizzard rights remain separate."
+      }
+    },
+    {
+      "id": "wiki-orendil-cure-20261105-v1",
+      "title": "Warcraft Wiki: Orendil's Cure (Classic), recipient",
+      "uri": "https://warcraft.wiki.gg/wiki/Orendil%27s_Cure_(Classic)",
+      "revision": "local-recipient-review-20261105-v1; upstream revision unavailable",
+      "license": "CC-BY-SA-4.0 for selected wiki adaptations; no licence for Blizzard game assets",
+      "validation_status": "source_checked",
+      "provenance": {
+        "checked_at": "2026-11-05",
+        "effective_version": "Classic recipient fact cross-checked with the shared Classic/Forever quest index; exact build unverified",
+        "verification_method": "Manual review of indexed Classic page; retail quest with a different prerequisite chain excluded.",
+        "attribution": "Warcraft Wiki contributors",
+        "history_uri": "https://warcraft.wiki.gg/wiki/Orendil%27s_Cure_(Classic)?action=history",
+        "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "license_policy_uri": "https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights",
+        "changes": "Selected quest names, givers, locations and recorded sequence. No quest dialogue, maps, rewards, coordinates or bulk database copied.",
+        "review_sha256": "f4e845794a4b3a927b3b9dd491066510f022e891081fe7a081b41515bba4ee22",
+        "reviewed_claims": [
+          "Classic Orendil's Cure starts with Orendil Broadleaf and is delivered to Pelturas Whitemoon in Astranaar. Shared quest-index applicability is reviewed separately; no current build verification."
+        ],
+        "redistribution": "Selected factual adaptation under CC-BY-SA-4.0; underlying Blizzard rights remain separate."
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "orendil-broadleaf",
+      "kind": "npc",
+      "name": "Orendil Broadleaf",
+      "description": "Quest giver in Ashenvale.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "pelturas-whitemoon",
+      "kind": "npc",
+      "name": "Pelturas Whitemoon",
+      "description": "Quest giver in Ashenvale.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "shindrell-swiftfire",
+      "kind": "npc",
+      "name": "Shindrell Swiftfire",
+      "description": "Quest giver in Ashenvale.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "bathrans-hair",
+      "kind": "quest",
+      "name": "Bathran's Hair",
+      "description": "Selected Ashenvale quest; availability and rewards require in-game confirmation.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "orendils-cure",
+      "kind": "quest",
+      "name": "Orendil's Cure",
+      "description": "Selected Ashenvale quest; availability and rewards require in-game confirmation.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "elunes-tear",
+      "kind": "quest",
+      "name": "Elune's Tear",
+      "description": "Selected Ashenvale quest; availability and rewards require in-game confirmation.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "ruins-of-stardust-quest",
+      "kind": "quest",
+      "name": "The Ruins of Stardust",
+      "description": "Selected Ashenvale quest; availability and rewards require in-game confirmation.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "fallen-sky-lake-quest",
+      "kind": "quest",
+      "name": "Fallen Sky Lake",
+      "description": "Selected Ashenvale quest; availability and rewards require in-game confirmation.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "pridewings-of-stonetalon",
+      "kind": "quest",
+      "name": "Pridewings of Stonetalon",
+      "description": "Selected Ashenvale quest; availability and rewards require in-game confirmation.",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "orendil-broadleaf-located_in-maestras-post",
+      "subject_id": "orendil-broadleaf",
+      "predicate": "located_in",
+      "object_id": "maestras-post",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "pelturas-whitemoon-located_in-astranaar",
+      "subject_id": "pelturas-whitemoon",
+      "predicate": "located_in",
+      "object_id": "astranaar",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "shindrell-swiftfire-located_in-astranaar",
+      "subject_id": "shindrell-swiftfire",
+      "predicate": "located_in",
+      "object_id": "astranaar",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "bathrans-hair-offered_by-orendil-broadleaf",
+      "subject_id": "bathrans-hair",
+      "predicate": "offered_by",
+      "object_id": "orendil-broadleaf",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "bathrans-hair-quest_in-ashenvale",
+      "subject_id": "bathrans-hair",
+      "predicate": "quest_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "orendils-cure-offered_by-orendil-broadleaf",
+      "subject_id": "orendils-cure",
+      "predicate": "offered_by",
+      "object_id": "orendil-broadleaf",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "orendils-cure-quest_in-ashenvale",
+      "subject_id": "orendils-cure",
+      "predicate": "quest_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "elunes-tear-offered_by-pelturas-whitemoon",
+      "subject_id": "elunes-tear",
+      "predicate": "offered_by",
+      "object_id": "pelturas-whitemoon",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "elunes-tear-quest_in-ashenvale",
+      "subject_id": "elunes-tear",
+      "predicate": "quest_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "ruins-of-stardust-quest-offered_by-pelturas-whitemoon",
+      "subject_id": "ruins-of-stardust-quest",
+      "predicate": "offered_by",
+      "object_id": "pelturas-whitemoon",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "ruins-of-stardust-quest-quest_in-ashenvale",
+      "subject_id": "ruins-of-stardust-quest",
+      "predicate": "quest_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "fallen-sky-lake-quest-offered_by-pelturas-whitemoon",
+      "subject_id": "fallen-sky-lake-quest",
+      "predicate": "offered_by",
+      "object_id": "pelturas-whitemoon",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "fallen-sky-lake-quest-quest_in-ashenvale",
+      "subject_id": "fallen-sky-lake-quest",
+      "predicate": "quest_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "pridewings-of-stonetalon-offered_by-shindrell-swiftfire",
+      "subject_id": "pridewings-of-stonetalon",
+      "predicate": "offered_by",
+      "object_id": "shindrell-swiftfire",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "pridewings-of-stonetalon-quest_in-ashenvale",
+      "subject_id": "pridewings-of-stonetalon",
+      "predicate": "quest_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "bathrans-hair-next_quest-orendils-cure",
+      "subject_id": "bathrans-hair",
+      "predicate": "next_quest",
+      "object_id": "orendils-cure",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "orendils-cure-next_quest-elunes-tear",
+      "subject_id": "orendils-cure",
+      "predicate": "next_quest",
+      "object_id": "elunes-tear",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "elunes-tear-next_quest-ruins-of-stardust-quest",
+      "subject_id": "elunes-tear",
+      "predicate": "next_quest",
+      "object_id": "ruins-of-stardust-quest",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "ruins-of-stardust-quest-next_quest-fallen-sky-lake-quest",
+      "subject_id": "ruins-of-stardust-quest",
+      "predicate": "next_quest",
+      "object_id": "fallen-sky-lake-quest",
+      "source_id": "wiki-ashenvale-quests-20261105-v1"
+    },
+    {
+      "id": "orendils-cure-turn_in_to-pelturas-whitemoon",
+      "subject_id": "orendils-cure",
+      "predicate": "turn_in_to",
+      "object_id": "pelturas-whitemoon",
+      "source_id": "wiki-orendil-cure-20261105-v1"
+    }
+  ]
+}

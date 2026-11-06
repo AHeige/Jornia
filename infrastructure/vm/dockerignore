@@ -1,0 +1,6 @@
+.env
+*.env
+release.tar.gz
+baseline-containers.txt
+._*
+**/._*

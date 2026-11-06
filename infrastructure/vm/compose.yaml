@@ -1,0 +1,132 @@
+name: wisp-private
+
+x-service: &service
+  restart: unless-stopped
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  pids_limit: 128
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "3"}
+
+services:
+  db:
+    <<: *service
+    image: postgres:17-alpine
+    user: postgres
+    mem_limit: 512m
+    cpus: 0.5
+    environment:
+      POSTGRES_USER: wisp
+      POSTGRES_PASSWORD: ${WISP_DB_PASSWORD:?Set a private database password}
+      POSTGRES_DB: wisp
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    networks: [backend]
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "max_connections=30"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wisp -d wisp"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  init:
+    <<: *service
+    image: ${WISP_API_IMAGE:?Set the versioned API image}
+    restart: "no"
+    mem_limit: 192m
+    cpus: 0.5
+    read_only: true
+    command: [bootstrap]
+    environment:
+      DATABASE_URL: postgres://wisp:${WISP_DB_PASSWORD}@db:5432/wisp?sslmode=disable
+    networks: [backend]
+    depends_on:
+      db: {condition: service_healthy}
+  model:
+    <<: *service
+    image: ${WISP_MODEL_IMAGE:?Set the versioned model image}
+    mem_limit: 384m
+    cpus: 0.75
+    read_only: true
+    tmpfs: ["/tmp:size=32m,noexec,nosuid"]
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      BERGET_API_KEY: ${BERGET_API_KEY:?Set the provider key}
+      BERGET_BASE_URL: https://api.berget.ai/v1
+      BERGET_MODEL: mistralai/Mistral-Small-3.2-24B-Instruct-2506
+    networks: [backend, inference-egress]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+  ingest:
+    <<: *service
+    image: ${WISP_API_IMAGE:?Set the versioned API image}
+    profiles: [ingestion]
+    restart: "no"
+    mem_limit: 192m
+    cpus: 0.5
+    read_only: true
+    entrypoint: [wisp-ingest]
+    command: ["-max-requests", "200"]
+    environment:
+      DATABASE_URL: postgres://wisp:${WISP_DB_PASSWORD}@db:5432/wisp?sslmode=disable
+      BLIZZARD_CLIENT_ID: ${BLIZZARD_CLIENT_ID:-}
+      BLIZZARD_CLIENT_SECRET: ${BLIZZARD_CLIENT_SECRET:-}
+      BLIZZARD_REGION: ${BLIZZARD_REGION:-eu}
+      BLIZZARD_LOCALE: ${BLIZZARD_LOCALE:-en_GB}
+      GOMEMLIMIT: 128MiB
+    networks: [backend, inference-egress]
+    depends_on:
+      db: {condition: service_healthy}
+
+  api:
+    <<: *service
+    image: ${WISP_API_IMAGE:?Set the versioned API image}
+    mem_limit: 192m
+    cpus: 0.5
+    read_only: true
+    environment:
+      DATABASE_URL: postgres://wisp:${WISP_DB_PASSWORD}@db:5432/wisp?sslmode=disable
+      LISTEN_ADDR: :8090
+      LANGCHAIN_URL: http://model:8091/v1
+      BERGET_MODEL: mistralai/Mistral-Small-3.2-24B-Instruct-2506
+      BERGET_INPUT_EUR_PER_MILLION: "0.30"
+      BERGET_OUTPUT_EUR_PER_MILLION: "0.30"
+    ports: ["127.0.0.1:18090:8090"]
+    networks: [backend, inference-egress]
+    healthcheck:
+      test: [CMD, wisp, healthcheck]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      model: {condition: service_healthy}
+      init: {condition: service_completed_successfully}
+
+  gateway:
+    <<: *service
+    image: ${WISP_GATEWAY_IMAGE:?Set the versioned gateway image}
+    entrypoint: [wisp-gateway]
+    mem_limit: 96m
+    cpus: 0.25
+    read_only: true
+    environment:
+      DATABASE_URL: postgres://wisp:${WISP_DB_PASSWORD}@db:5432/wisp?sslmode=disable
+      BLIZZARD_CLIENT_ID: ${BLIZZARD_CLIENT_ID:-}
+      BLIZZARD_CLIENT_SECRET: ${BLIZZARD_CLIENT_SECRET:-}
+      GOMEMLIMIT: 64MiB
+    volumes: ["./releases:/releases:ro"]
+    networks:
+      backend: {}
+      public-proxy:
+        aliases: [wisp-private-gateway]
+
+networks:
+  public-proxy:
+    external: true
+    name: sefira-document-preview_outbound
+  backend: {internal: true}
+  inference-egress: {}
+volumes:
+  postgres-data: {}

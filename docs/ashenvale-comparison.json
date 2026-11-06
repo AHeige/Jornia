@@ -1,0 +1,607 @@
+{
+  "review_date": "2026-11-05",
+  "fixture_version": "fixture-ashenvale-v1",
+  "reviewed_version": "forever",
+  "dataset_revision": "ashenvale-community-review-20261105-v1+ashenvale-geography-review-20261105-v1",
+  "assurance": "Community source-index review; no independent game-client verification.",
+  "counts": {
+    "fixture_entities": 6,
+    "reviewed_entities": 40,
+    "reviewed_edges": 47,
+    "reviewed_sources": 5
+  },
+  "shared_entities": [
+    "ashenvale",
+    "astranaar",
+    "kalimdor",
+    "splintertree-post",
+    "zoram-strand"
+  ],
+  "added_entities": [
+    "ashenvale-hunt-barrens",
+    "azshara",
+    "bathrans-haunt",
+    "blackfathom-deeps",
+    "darkshore",
+    "dordanil-barrow-den",
+    "falfarren-river",
+    "felfire-hill",
+    "felwood",
+    "fire-scar-shrine",
+    "forest-song",
+    "greenpaw-village",
+    "iris-lake",
+    "jorn-skyseer",
+    "lake-falathim",
+    "maestras-post",
+    "mystral-lake",
+    "night-run",
+    "raene-wolfrunner",
+    "raenes-cleansing-chain",
+    "raenes-cleansing-first",
+    "raynewood-retreat",
+    "ruins-of-stardust",
+    "satyrnaar",
+    "senani-thunderheart",
+    "shrine-of-aessina",
+    "silverwind-refuge",
+    "stonetalon-mountains",
+    "talondeep-path",
+    "the-barrens",
+    "thistlefur-village",
+    "warsong-labor-camp",
+    "warsong-lumber-camp",
+    "xavian",
+    "zoramgar-outpost"
+  ],
+  "fixture_only_entities": [
+    "hidden-story"
+  ],
+  "shared_relationships": [
+    [
+      "ashenvale",
+      "located_in",
+      "kalimdor"
+    ],
+    [
+      "astranaar",
+      "located_in",
+      "ashenvale"
+    ],
+    [
+      "splintertree-post",
+      "located_in",
+      "ashenvale"
+    ],
+    [
+      "zoram-strand",
+      "located_in",
+      "ashenvale"
+    ]
+  ],
+  "newly_answered": 6,
+  "questions": [
+    {
+      "question": "Where is Ashenvale?",
+      "fixture": {
+        "status": "answered",
+        "text": "In this development fixture: Ashenvale is in Kalimdor.",
+        "evidence_ids": [
+          "entity:ashenvale",
+          "entity:kalimdor",
+          "edge:ashenvale-in-kalimdor"
+        ],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [
+          "wisp-ashenvale-fixture-v1"
+        ],
+        "source_statuses": [
+          "fixture"
+        ]
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Ashenvale is in Kalimdor.",
+        "evidence_ids": [
+          "entity:ashenvale",
+          "entity:kalimdor",
+          "edge:ashenvale-in-kalimdor"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Where is Astranaar?",
+      "fixture": {
+        "status": "answered",
+        "text": "In this development fixture: Astranaar is in Ashenvale.",
+        "evidence_ids": [
+          "entity:astranaar",
+          "entity:ashenvale",
+          "edge:astranaar-in-ashenvale"
+        ],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [
+          "wisp-ashenvale-fixture-v1"
+        ],
+        "source_statuses": [
+          "fixture"
+        ]
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Astranaar is in Ashenvale.",
+        "evidence_ids": [
+          "entity:astranaar",
+          "entity:ashenvale",
+          "edge:astranaar-in-ashenvale"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Where is Splintertree Post?",
+      "fixture": {
+        "status": "answered",
+        "text": "In this development fixture: Splintertree Post is in Ashenvale.",
+        "evidence_ids": [
+          "entity:splintertree-post",
+          "entity:ashenvale",
+          "edge:splintertree-in-ashenvale"
+        ],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [
+          "wisp-ashenvale-fixture-v1"
+        ],
+        "source_statuses": [
+          "fixture"
+        ]
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Splintertree Post is in Ashenvale.",
+        "evidence_ids": [
+          "entity:splintertree-post",
+          "entity:ashenvale",
+          "edge:splintertree-post-in-ashenvale"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Where is The Zoram Strand?",
+      "fixture": {
+        "status": "answered",
+        "text": "In this development fixture: The Zoram Strand is in Ashenvale.",
+        "evidence_ids": [
+          "entity:zoram-strand",
+          "entity:ashenvale",
+          "edge:zoram-in-ashenvale"
+        ],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [
+          "wisp-ashenvale-fixture-v1"
+        ],
+        "source_statuses": [
+          "fixture"
+        ]
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "The Zoram Strand is in Ashenvale.",
+        "evidence_ids": [
+          "entity:zoram-strand",
+          "entity:ashenvale",
+          "edge:zoram-strand-in-ashenvale"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Tell me about Ashenvale",
+      "fixture": {
+        "status": "answered",
+        "text": "In this development fixture: The reference zone for Wisp's first knowledge graph. This fixture connects it to Kalimdor and three example locations.",
+        "evidence_ids": [
+          "entity:ashenvale"
+        ],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [
+          "wisp-ashenvale-fixture-v1"
+        ],
+        "source_statuses": [
+          "fixture"
+        ]
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "A contested forest zone in northern Kalimdor.",
+        "evidence_ids": [
+          "entity:ashenvale"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Where is Forest Song?",
+      "fixture": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Forest Song is in Ashenvale.",
+        "evidence_ids": [
+          "entity:forest-song",
+          "entity:ashenvale",
+          "edge:forest-song-in-ashenvale"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Where is Zoram'gar Outpost?",
+      "fixture": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Zoram'gar Outpost is in Ashenvale.",
+        "evidence_ids": [
+          "entity:zoramgar-outpost",
+          "entity:ashenvale",
+          "edge:zoramgar-outpost-in-ashenvale"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Where is Blackfathom Deeps?",
+      "fixture": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Blackfathom Deeps is in The Zoram Strand.",
+        "evidence_ids": [
+          "entity:blackfathom-deeps",
+          "entity:zoram-strand",
+          "edge:blackfathom-at-zoram"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Where is Raene Wolfrunner?",
+      "fixture": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Raene Wolfrunner is in Astranaar.",
+        "evidence_ids": [
+          "entity:raene-wolfrunner",
+          "entity:astranaar",
+          "edge:raene-in-astranaar"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1",
+          "wiki-raene-chain-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "Who gives Raene's Cleansing?",
+      "fixture": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Raene's Cleansing is offered by Raene Wolfrunner.",
+        "evidence_ids": [
+          "entity:raenes-cleansing-first",
+          "entity:raene-wolfrunner",
+          "edge:raene-first-giver"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-raene-chain-20261105-v1",
+          "wiki-raene-first-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "What places are in Ashenvale?",
+      "fixture": {
+        "status": "answered",
+        "text": "In this development fixture: Known places in Ashenvale: Astranaar, Splintertree Post, The Zoram Strand.",
+        "evidence_ids": [
+          "entity:ashenvale",
+          "entity:astranaar",
+          "edge:astranaar-in-ashenvale",
+          "entity:splintertree-post",
+          "edge:splintertree-in-ashenvale",
+          "entity:zoram-strand",
+          "edge:zoram-in-ashenvale"
+        ],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [
+          "wisp-ashenvale-fixture-v1"
+        ],
+        "source_statuses": [
+          "fixture"
+        ]
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Known places in Ashenvale: Astranaar, Bathran's Haunt, Blackfathom Deeps, Falfarren River, Felfire Hill, Fire Scar Shrine, Forest Song, Greenpaw Village, Iris Lake, Lake Falathim, Maestra's Post, Mystral Lake, Night Run, Raynewood Retreat, Satyrnaar, Silverwind Refuge, Splintertree Post, The Dor'Danil Barrow Den, The Ruins of Stardust, The Shrine of Aessina, The Talondeep Path, The Zoram Strand, Thistlefur Village, Warsong Labor Camp, Warsong Lumber Camp, Xavian, Zoram'gar Outpost.",
+        "evidence_ids": [
+          "entity:ashenvale",
+          "entity:astranaar",
+          "edge:astranaar-in-ashenvale",
+          "entity:bathrans-haunt",
+          "edge:bathrans-haunt-in-ashenvale",
+          "entity:dordanil-barrow-den",
+          "edge:dordanil-barrow-den-in-ashenvale",
+          "entity:falfarren-river",
+          "edge:falfarren-river-in-ashenvale",
+          "entity:felfire-hill",
+          "edge:felfire-hill-in-ashenvale",
+          "entity:fire-scar-shrine",
+          "edge:fire-scar-shrine-in-ashenvale",
+          "entity:forest-song",
+          "edge:forest-song-in-ashenvale",
+          "entity:greenpaw-village",
+          "edge:greenpaw-village-in-ashenvale",
+          "entity:iris-lake",
+          "edge:iris-lake-in-ashenvale",
+          "entity:lake-falathim",
+          "edge:lake-falathim-in-ashenvale",
+          "entity:maestras-post",
+          "edge:maestras-post-in-ashenvale",
+          "entity:mystral-lake",
+          "edge:mystral-lake-in-ashenvale",
+          "entity:night-run",
+          "edge:night-run-in-ashenvale",
+          "entity:raynewood-retreat",
+          "edge:raynewood-retreat-in-ashenvale",
+          "entity:ruins-of-stardust",
+          "edge:ruins-of-stardust-in-ashenvale",
+          "entity:satyrnaar",
+          "edge:satyrnaar-in-ashenvale",
+          "entity:shrine-of-aessina",
+          "edge:shrine-of-aessina-in-ashenvale",
+          "entity:silverwind-refuge",
+          "edge:silverwind-refuge-in-ashenvale",
+          "entity:splintertree-post",
+          "edge:splintertree-post-in-ashenvale",
+          "entity:talondeep-path",
+          "edge:talondeep-path-in-ashenvale",
+          "entity:thistlefur-village",
+          "edge:thistlefur-village-in-ashenvale",
+          "entity:warsong-labor-camp",
+          "edge:warsong-labor-camp-in-ashenvale",
+          "entity:warsong-lumber-camp",
+          "edge:warsong-lumber-camp-in-ashenvale",
+          "entity:xavian",
+          "edge:xavian-in-ashenvale",
+          "entity:zoram-strand",
+          "edge:zoram-strand-in-ashenvale",
+          "entity:zoramgar-outpost",
+          "edge:zoramgar-outpost-in-ashenvale",
+          "entity:blackfathom-deeps",
+          "edge:blackfathom-at-zoram"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1",
+          "wiki-ashenvale-geography-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "What quests are in Ashenvale?",
+      "fixture": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      },
+      "reviewed": {
+        "status": "answered",
+        "text": "Known quest entries in Ashenvale (not a complete list): Raene's Cleansing.",
+        "evidence_ids": [
+          "entity:ashenvale",
+          "entity:raenes-cleansing-first",
+          "edge:raene-first-in-ashenvale"
+        ],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [
+          "wiki-ashenvale-20261105-v1",
+          "wiki-raene-first-20261105-v1"
+        ],
+        "source_statuses": [
+          "source_checked"
+        ]
+      }
+    },
+    {
+      "question": "What level should I be in Ashenvale?",
+      "fixture": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      },
+      "reviewed": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      }
+    },
+    {
+      "question": "Tell me about Hidden Story",
+      "fixture": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Development fixture only; Forever compatibility is unverified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      },
+      "reviewed": {
+        "status": "unknown",
+        "text": "I don't have verified knowledge for that question and game version yet.",
+        "evidence_ids": [],
+        "warnings": [
+          "Community sources reviewed for Forever; exact client build and in-game state are not independently verified."
+        ],
+        "source_ids": [],
+        "source_statuses": []
+      }
+    }
+  ]
+}

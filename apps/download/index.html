@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-theme="wisp">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wisp — Your character has a history.</title>
+<meta name="description" content="A companion for WoW Forever. Keep a local character journal and ask questions about your journey. Private alpha.">
+<meta name="theme-color" content="#090e19"><link rel="stylesheet" href="/download.css">
+<link rel="preload" as="image" href="/media/expedition.jpg">
+</head>
+<body>
+<a class="sr-only focus:not-sr-only" href="#main">Skip to content</a>
+<header class="shell masthead flex items-center justify-between gap-6">
+<a href="#" aria-label="Wisp home" class="brand text-4xl"><img src="/media/wisp.png" alt="" width="44" height="44">WISP<span class="brand-dot" aria-hidden="true">.</span></a>
+<nav aria-label="Main navigation" class="flex items-center gap-6 text-sm"><a href="#preview" class="hidden sm:inline">Preview</a><a href="#download">Get the alpha <span aria-hidden="true">↗</span></a></nav>
+</header>
+<main id="main">
+<section class="hero-scene" aria-labelledby="hero-title">
+<img class="hero-image" src="/media/expedition.jpg" alt="An expedition camp overlooking a moonlit mountain valley." width="1672" height="941" fetchpriority="high">
+<div class="hero-shade"></div><img class="hero-wisp" src="/media/wisp.png" alt="Wisp, a floating lantern spirit" width="512" height="512">
+<div class="shell hero-copy">
+<p class="eyebrow">For WoW Forever</p>
+<h1 id="hero-title">Your character<br>has a history.</h1>
+<p class="hero-description">Keep track of where you’ve been.<br>Ask Wisp what comes next.</p>
+<a class="btn btn-primary mt-7" href="#download">Get the alpha <span aria-hidden="true">↓</span></a>
+</div>
+<p class="hero-caption">Concept artwork · not a game screenshot</p>
+</section>
+<div class="shell release-note"><span class="status-dot" aria-hidden="true"></span><p>Private alpha 0.5.1. Chat currently runs outside WoW. The in-game UI below is a prototype.</p></div>
+<section id="preview" class="shell chapter" aria-labelledby="character-title"><div class="section-intro"><div><p class="eyebrow">Available in 0.5.1</p><h2 id="character-title">Your character, in Wisp.</h2></div><p>Load the official portrait and equipped items from Blizzard. Switch characters without mixing their journals.</p></div><figure class="main-shot"><a href="/media/character-preview.jpg" target="_blank" rel="noopener noreferrer" aria-label="Enlarge the real character view"><img src="/media/character-preview.jpg" width="1265" height="712" loading="lazy" alt="Wisp displays Kungen Forever, a level 28 Night Elf Warrior, using Blizzard’s actual character render."></a><figcaption><span>Kungen Forever / EU · official Blizzard render</span><span>Dated Armory snapshot · no invented journey history</span></figcaption></figure></section><section class="chapter current-section" aria-labelledby="current-title"><div class="shell">
+<div class="section-intro"><div><p class="eyebrow">Available now</p><h2 id="current-title">Start with a journal.</h2></div><p>A dated record of places, quests and level-ups.<br>Keep notes for the next session, then ask Wisp.</p></div>
+<figure class="main-shot"><a href="/media/journey-preview.jpg" target="_blank" rel="noopener noreferrer" aria-label="Enlarge the current desktop alpha"><img src="/media/journey-preview.jpg" width="1265" height="712" loading="lazy" alt="Wisp 0.5.1 showing Thalara’s explicitly synthetic Ashenvale journey, event filters and recorded places."></a><figcaption><span>03 / Desktop alpha</span><span>Synthetic journal · English desktop UI</span></figcaption></figure>
+<div class="facts grid gap-8 md:grid-cols-3"><div><h3>Stored on your PC.</h3><p>A separate journal for each character. Pause, export or delete it.</p></div><div><h3>You choose what to send.</h3><p>Review journal excerpts before sharing them with the AI.</p></div><div><h3>Saved history.</h3><p>The companion imports events when WoW saves, usually at logout or /reload.</p></div></div>
+</div></section>
+<section id="ingame-preview" class="shell chapter" aria-labelledby="preview-title">
+<div class="section-intro"><div><p class="eyebrow">In development</p><h2 id="preview-title">In your game.</h2></div><p>Chat and your character’s journal, in one addon.<br>The companion handles the connection in the background.</p></div>
+<figure class="main-shot"><a href="/media/ingame-chat-preview.jpg" target="_blank" rel="noopener noreferrer" aria-label="Enlarge the in-game chat prototype"><img src="/media/ingame-chat-preview.jpg" width="960" height="540" loading="lazy" alt="Executed Lua prototype of Wisp chat, with a labelled example response and disconnected AI status."></a><figcaption><span>01 / Chat</span><span>Lua simulator · example response · AI disconnected</span></figcaption></figure>
+<figure class="main-shot second-shot"><a href="/media/ingame-journey-preview.jpg" target="_blank" rel="noopener noreferrer" aria-label="Enlarge the journey prototype"><img src="/media/ingame-journey-preview.jpg" width="960" height="540" loading="lazy" alt="Lua journey prototype showing recorded places, a completed quest and a field for personal notes."></a><figcaption><span>02 / Your journey</span><span>Demo events · not included in alpha 0.5.1</span></figcaption></figure>
+<p class="section-footnote">Rendered from Lua in a simulator. Not yet tested in Forever. The in-game AI connection is still being built.</p>
+</section>
+<section id="download" class="shell chapter" aria-labelledby="download-title">
+<div class="download-grid"><div><p class="eyebrow">Private alpha / 0.5.1</p><h2 id="download-title">Try Wisp.</h2><p class="download-description">Character portraits, equipment, local journal and desktop AI chat.<br>You’ll need an invite code for AI access.</p><div class="mt-7 flex flex-wrap gap-3"><a class="btn btn-neutral" href="/releases/wisp-0.5.1-windows-amd64.zip">Windows ZIP <span aria-hidden="true">↓</span></a><a class="btn btn-ghost" href="/releases/wisp-0.5.1-darwin-arm64.zip">Mac · Apple Silicon <span aria-hidden="true">↓</span></a></div><p class="checksums">SHA-256: <a href="/releases/wisp-0.5.1-windows-amd64.zip.sha256">Windows</a> / <a href="/releases/wisp-0.5.1-darwin-arm64.zip.sha256">Mac</a></p></div>
+<ol class="install-steps"><li><span>01</span><p>Unzip. On Windows, run <code>Start-Wisp.cmd</code>.</p></li><li><span>02</span><p>Enter your invite code in the AI connection settings.</p></li><li><span>03</span><p>Connect your WoW folder to discover its characters, or try the demo. Follow <strong>START-HERE</strong> to install the addon.</p></li></ol></div>
+<p class="section-footnote mt-8">Unsigned Windows app. Version 0.5.1 has not yet been run on Windows or tested end to end in Forever. World data is incomplete. No separate database or developer tools required.</p>
+<div class="faq-list">
+<details class="faq"><summary>Can I chat inside WoW yet?</summary><p>Not in 0.5.1. The download has desktop chat. The Lua previews show the planned in-game interface; the connection that carries questions and replies is unfinished.</p></details>
+<details class="faq"><summary>What stays local?</summary><p>Your character journal, conversation history and cached profiles. AI questions and world context are processed by the Wisp server and Berget. Journal excerpts are sent only when you choose to share them for a question. A separate, approved Armory lookup sends the public name and region to Wisp and Blizzard; portraits load from Blizzard. Wisp does not encrypt its local database.</p></details>
+<details class="faq"><summary>Is it live?</summary><p>The addon records events while you play. The companion receives them after WoW saves its journal file, usually at logout or /reload. It cannot recover adventures that Wisp never recorded. The local journal works offline; AI needs a connection.</p></details>
+<details class="faq"><summary>What does the invite include?</summary><p>No Wisp account. Initial access lasts 30 days, with up to 50 server requests per UTC day, shared by questions and Armory lookups. Future pricing is undecided. Updates are downloaded manually as new versioned ZIPs.</p></details>
+</div>
+</section>
+</main>
+<footer class="shell footer-line"><span class="brand text-3xl">wisp.</span><p>An independent project by AHeige. Not affiliated with Blizzard.<br>World of Warcraft is a Blizzard trademark.</p><a href="#">Back to top ↑</a></footer>
+</body></html>

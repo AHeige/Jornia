@@ -1,0 +1,26 @@
+# Wisp: ingame först
+
+Bekräftat av användaren 2026-11-06: **AI-chatten och journey-hanteringen ska finnas inne i WoW, i Lua.** Desktop-companionen är bakgrundsinfrastruktur för lagring, anslutning och uppdatering. Den externa chatten i 0.4.2 är en teknisk alpha, inte den avsedda slutupplevelsen.
+
+## Vyn
+
+`apps/addon-preview/WispPanel.lua` är en körbar, opublicerad gränssnittsprototyp med flikarna Samtal och Min resa. Den läses av Lua-renderaren tillsammans med det befintliga journaladdonet. Fixturekod tillför en demokaraktär och tydligt märkta exempelsvar. Prototypen ingår inte i den publicerade 0.4.2-zippen och ändrar inte installerade WoW-filer.
+
+Verifierat i simulatorn: flikbyte, visning av faktiska syntetiska journalposter från WispDB, tillägg av lokal anteckning och tydligt avvisad sändning när AI-bryggan saknas. Ingen modell körs av prototypen. Nya UI-funktioner är inte verifierade i Forever.
+
+## Datans ansvar
+
+- Addonet äger aktuellt tillstånd genom tillgängliga spel-API:er och sin journal i minnet. En fråga ska få en ny ögonblicksbild från klienten, inte desktopappens äldre SavedVariables-kopia.
+- Companionen äger det beständiga lokala arkivet, begränsad privat kontext, autentiserad serveranslutning och uppdateringar. Journalen blir inte gemensam världskunskap.
+- Servern äger urval av källbelagda världsfakta, versioner, kostnadsgränser och det tunna LangChain/Berget-steget.
+- Svar måste bindas till fråga, karaktär och session. Återanslutning får inte återköra betalda frågor eller placera ett svar hos en annan karaktär.
+
+## Återstående kärna: transport i båda riktningarna
+
+Det går inte att ersätta bryggan genom att bara flytta ett chattfält till Lua. En automatisk, verifierad kanal behövs ut ur klienten och tillbaka. Användaren har invändningar mot pixelöverföring; den ska inte införas tyst som vald lösning.
+
+Primär referens: [wow-ai](https://github.com/chelinho139/wow-ai) beskriver en Forever-lösning som får in svar via förberedda load-on-demand-addons och använder en visuell kanal ut. Detta är ett kandidatmönster för inkommande data, inte Wisp-verifiering, tillstånd från Blizzard eller bevis för en fungerande utgående loggkanal. Ingen tredjepartsbrygga har installerats.
+
+Nästa verifiering måste använda en riktig Forever-klient: mät loggarnas skrivfördröjning och testa kontrollerad svarsinläsning. Skilj quest visad/accepterad/övergiven/inlämnad, testa flera snabba frågor, avbrott, spelomstart och karaktärsbyte. En rendering eller en fungerande extern AI-chatt bevisar inte ingame-kedjan.
+
+Nedladdningssidan visar nu uttryckligen skillnaden mellan den avsedda ingame-upplevelsen, den körbara Lua-prototypen och den nedladdningsbara externa tekniska alphan.

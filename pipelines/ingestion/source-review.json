@@ -1,0 +1,62 @@
+{
+  "reviewed_on": "2026-11-06",
+  "complete_forever_corpus_available": false,
+  "sources": [
+    {
+      "name": "Curated Warcraft Wiki excerpts",
+      "status": "selected_adaptations_in_use",
+      "limitations": [
+        "community applicability is not client-build verification",
+        "CC BY-SA attribution applies only to rights the source can license",
+        "no bulk narrative or asset import"
+      ]
+    },
+    {
+      "name": "QuestieDB",
+      "status": "bulk_import_blocked_pending_rights_review",
+      "primary_documents": [
+        "https://raw.githubusercontent.com/Questie/QuestieDB/master/LICENSE.md",
+        "https://raw.githubusercontent.com/Questie/QuestieDB/master/PROVENANCE.md",
+        "https://raw.githubusercontent.com/Questie/QuestieDB/master/docs/forever.md"
+      ],
+      "limitations": [
+        "root licence describes unresolved historical contributor permissions and all-rights-reserved fallback",
+        "file/subdirectory terms can override root terms",
+        "Forever documentation explicitly disclaims complete new Forever content",
+        "no data files downloaded, executed, or imported"
+      ]
+    },
+    {
+      "name": "Blizzard Game Data API",
+      "status": "enabled_build_scoped_metadata",
+      "primary_documents": [
+        "https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use"
+      ],
+      "limitations": [
+        "Authenticated API use; not an open redistribution licence",
+        "28-day raw evidence retention; no art or audio",
+        "API metadata and record counts do not prove field completeness or live quest availability",
+        "Current namespace/build discovered and validated; no automatic Classic fallback"
+      ]
+    },
+    {
+      "name": "ForeverDB API",
+      "status": "not_enabled_requires_developer_access_and_terms_review",
+      "primary_documents": [
+        "https://foreverdb.net/developers"
+      ],
+      "limitations": [
+        "No bulk scrape or key request performed"
+      ]
+    }
+  ],
+  "required_for_new_package": [
+    "exact source revision or explicit unavailable status",
+    "game-version and client-build applicability",
+    "documented reuse basis and attribution",
+    "source confidence and review method",
+    "immutable dataset checksum",
+    "foreign-key and duplicate-ID validation",
+    "answer and unknown-case evaluations"
+  ]
+}

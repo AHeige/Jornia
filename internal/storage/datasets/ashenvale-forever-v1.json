@@ -1,0 +1,333 @@
+{
+  "version": "forever",
+  "dataset_revision": "ashenvale-community-review-20261105-v1",
+  "license": "CC-BY-SA-4.0",
+  "sources": [
+    {
+      "id": "wiki-ashenvale-20261105-v1",
+      "title": "Warcraft Wiki: Ashenvale (Classic), shared Classic/Forever article",
+      "uri": "https://warcraft.wiki.gg/wiki/Ashenvale_(Classic)",
+      "revision": "local-review-2026-11-05-v1; upstream revision unavailable",
+      "license": "CC-BY-SA-4.0 for adapted wiki text; Blizzard game material remains separately owned",
+      "validation_status": "source_checked",
+      "provenance": {
+        "checked_at": "2026-11-05",
+        "effective_version": "Forever per article applicability banner; exact client build not independently checked",
+        "verification_method": "Manual review of web search-index excerpts; direct page fetch returned HTTP 403. No in-game verification.",
+        "attribution": "Warcraft Wiki contributors",
+        "history_uri": "https://warcraft.wiki.gg/wiki/Ashenvale_(Classic)?action=history",
+        "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "license_policy_uri": "https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights",
+        "changes": "Selected factual summaries and graph relationships; no article, quest dialogue, image, reward table or bulk dataset copied.",
+        "review_sha256": "c288fd8e008e0da826a9aecc9fa7166d1b715245f698f2c35cc8df2b15d23a6f",
+        "reviewed_claims": [
+          "The article explicitly says the subject remains in Classic and Forever.",
+          "Ashenvale is in northern Kalimdor. Astranaar, Splintertree Post, The Zoram Strand, Zoram'gar Outpost, Forest Song and Maestra's Post are in Ashenvale.",
+          "Astranaar and Forest Song are Alliance travel hubs; Splintertree Post and Zoram'gar Outpost are Horde travel hubs.",
+          "Blackfathom Deeps is a dungeon in Ashenvale at the Zoram Strand."
+        ],
+        "redistribution": "Curated adaptation under CC-BY-SA-4.0; no permission claimed for third-party game assets."
+      }
+    },
+    {
+      "id": "wiki-raene-chain-20261105-v1",
+      "title": "Warcraft Wiki: Raene's Cleansing quest chain",
+      "uri": "https://warcraft.wiki.gg/wiki/Raene%27s_Cleansing_quest_chain",
+      "revision": "local-review-2026-11-05-v1; upstream revision unavailable",
+      "license": "CC-BY-SA-4.0 for adapted wiki text; Blizzard game material remains separately owned",
+      "validation_status": "source_checked",
+      "provenance": {
+        "checked_at": "2026-11-05",
+        "effective_version": "Forever per article applicability banner; exact client build not independently checked",
+        "verification_method": "Manual review of web search-index excerpts; direct page fetch returned HTTP 403. No in-game verification.",
+        "attribution": "Warcraft Wiki contributors",
+        "history_uri": "https://warcraft.wiki.gg/wiki/Raene%27s_Cleansing_quest_chain?action=history",
+        "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "license_policy_uri": "https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights",
+        "changes": "Selected factual summaries and graph relationships; no article, quest dialogue, image, reward table or bulk dataset copied.",
+        "review_sha256": "3be1f07934d3e982256a99baad042cd862c4c8e9fa71498bca05e1cf7323de3f",
+        "reviewed_claims": [
+          "The page explicitly says the subject remains in Classic and Forever.",
+          "The chain is in Ashenvale and begins with Raene Wolfrunner at the inn in Astranaar."
+        ],
+        "redistribution": "Curated adaptation under CC-BY-SA-4.0; no permission claimed for third-party game assets."
+      }
+    },
+    {
+      "id": "wiki-raene-first-20261105-v1",
+      "title": "Warcraft Wiki: Raene's Cleansing (first quest)",
+      "uri": "https://warcraft.wiki.gg/wiki/Raene%27s_Cleansing",
+      "revision": "local-review-2026-11-05-v1; upstream revision unavailable",
+      "license": "CC-BY-SA-4.0 for adapted wiki text; Blizzard game material remains separately owned",
+      "validation_status": "source_checked",
+      "provenance": {
+        "checked_at": "2026-11-05",
+        "effective_version": "Forever per article applicability banner; exact client build not independently checked",
+        "verification_method": "Manual review of web search-index excerpts; direct page fetch returned HTTP 403. No in-game verification.",
+        "attribution": "Warcraft Wiki contributors",
+        "history_uri": "https://warcraft.wiki.gg/wiki/Raene%27s_Cleansing?action=history",
+        "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "license_policy_uri": "https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights",
+        "changes": "Selected factual summaries and graph relationships; no article, quest dialogue, image, reward table or bulk dataset copied.",
+        "review_sha256": "e43d4ba247548a8a7190814ae4df311ea9774b923a2fcd29d643a357d45dc31f",
+        "reviewed_claims": [
+          "The page explicitly says the subject remains in Classic and Forever.",
+          "The first quest starts with Raene Wolfrunner, is in the Ashenvale category, is listed at level 19, and requires level 18."
+        ],
+        "redistribution": "Curated adaptation under CC-BY-SA-4.0; no permission claimed for third-party game assets."
+      }
+    },
+    {
+      "id": "wiki-ashenvale-hunt-20261105-v1",
+      "title": "Warcraft Wiki: The Ashenvale Hunt (The Barrens)",
+      "uri": "https://warcraft.wiki.gg/wiki/The_Ashenvale_Hunt_(The_Barrens)",
+      "revision": "local-review-2026-11-05-v1; upstream revision unavailable",
+      "license": "CC-BY-SA-4.0 for adapted wiki text; Blizzard game material remains separately owned",
+      "validation_status": "source_checked",
+      "provenance": {
+        "checked_at": "2026-11-05",
+        "effective_version": "Forever per article applicability banner; exact client build not independently checked",
+        "verification_method": "Manual review of web search-index excerpts; direct page fetch returned HTTP 403. No in-game verification.",
+        "attribution": "Warcraft Wiki contributors",
+        "history_uri": "https://warcraft.wiki.gg/wiki/The_Ashenvale_Hunt_(The_Barrens)?action=history",
+        "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "license_policy_uri": "https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights",
+        "changes": "Selected factual summaries and graph relationships; no article, quest dialogue, image, reward table or bulk dataset copied.",
+        "review_sha256": "d7e19b077c637f876af8694831e1f9bfcd905fbc3526236fb168e0c45cf768e4",
+        "reviewed_claims": [
+          "The page explicitly says the subject remains in Classic and Forever.",
+          "This Horde lead-in starts with Jorn Skyseer and ends with Senani Thunderheart at Splintertree Post in Ashenvale. Its category is The Barrens."
+        ],
+        "redistribution": "Curated adaptation under CC-BY-SA-4.0; no permission claimed for third-party game assets."
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "kalimdor",
+      "kind": "continent",
+      "name": "Kalimdor",
+      "description": "The continent containing Ashenvale.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "ashenvale",
+      "kind": "zone",
+      "name": "Ashenvale",
+      "description": "A contested forest zone in northern Kalimdor.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "astranaar",
+      "kind": "settlement",
+      "name": "Astranaar",
+      "description": "An Alliance travel hub in Ashenvale.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "splintertree-post",
+      "kind": "settlement",
+      "name": "Splintertree Post",
+      "description": "A Horde travel hub in eastern Ashenvale.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "zoram-strand",
+      "kind": "location",
+      "name": "The Zoram Strand",
+      "description": "The western coast of Ashenvale; Blackfathom Deeps is located here.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "zoramgar-outpost",
+      "kind": "settlement",
+      "name": "Zoram'gar Outpost",
+      "description": "A Horde travel hub on the western beach of Ashenvale.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "forest-song",
+      "kind": "settlement",
+      "name": "Forest Song",
+      "description": "An Alliance travel hub in Ashenvale.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "maestras-post",
+      "kind": "settlement",
+      "name": "Maestra's Post",
+      "description": "A night elf holding in Ashenvale.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "blackfathom-deeps",
+      "kind": "dungeon",
+      "name": "Blackfathom Deeps",
+      "description": "A dungeon at the Zoram Strand in northwestern Ashenvale.",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "raene-wolfrunner",
+      "kind": "npc",
+      "name": "Raene Wolfrunner",
+      "description": "A quest giver at the inn in Astranaar, where Raene's Cleansing begins.",
+      "source_id": "wiki-raene-chain-20261105-v1"
+    },
+    {
+      "id": "raenes-cleansing-chain",
+      "kind": "quest_chain",
+      "name": "Raene's Cleansing quest chain",
+      "description": "An Ashenvale quest chain beginning with Raene Wolfrunner in Astranaar.",
+      "source_id": "wiki-raene-chain-20261105-v1"
+    },
+    {
+      "id": "raenes-cleansing-first",
+      "kind": "quest",
+      "name": "Raene's Cleansing",
+      "description": "The opening quest of the chain, offered by Raene Wolfrunner in Ashenvale; the community record lists level 19 and minimum level 18.",
+      "source_id": "wiki-raene-first-20261105-v1"
+    },
+    {
+      "id": "senani-thunderheart",
+      "kind": "npc",
+      "name": "Senani Thunderheart",
+      "description": "The recipient of The Ashenvale Hunt lead-in at Splintertree Post.",
+      "source_id": "wiki-ashenvale-hunt-20261105-v1"
+    },
+    {
+      "id": "jorn-skyseer",
+      "kind": "npc",
+      "name": "Jorn Skyseer",
+      "description": "The quest giver who starts The Ashenvale Hunt lead-in from The Barrens.",
+      "source_id": "wiki-ashenvale-hunt-20261105-v1"
+    },
+    {
+      "id": "ashenvale-hunt-barrens",
+      "kind": "quest",
+      "name": "The Ashenvale Hunt (The Barrens)",
+      "description": "A Horde lead-in quest from Jorn Skyseer to Senani Thunderheart at Splintertree Post; its source category is The Barrens.",
+      "source_id": "wiki-ashenvale-hunt-20261105-v1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "ashenvale-in-kalimdor",
+      "subject_id": "ashenvale",
+      "predicate": "located_in",
+      "object_id": "kalimdor",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "astranaar-in-ashenvale",
+      "subject_id": "astranaar",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "splintertree-post-in-ashenvale",
+      "subject_id": "splintertree-post",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "zoram-strand-in-ashenvale",
+      "subject_id": "zoram-strand",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "zoramgar-outpost-in-ashenvale",
+      "subject_id": "zoramgar-outpost",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "forest-song-in-ashenvale",
+      "subject_id": "forest-song",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "maestras-post-in-ashenvale",
+      "subject_id": "maestras-post",
+      "predicate": "located_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "blackfathom-at-zoram",
+      "subject_id": "blackfathom-deeps",
+      "predicate": "located_in",
+      "object_id": "zoram-strand",
+      "source_id": "wiki-ashenvale-20261105-v1"
+    },
+    {
+      "id": "raene-in-astranaar",
+      "subject_id": "raene-wolfrunner",
+      "predicate": "located_in",
+      "object_id": "astranaar",
+      "source_id": "wiki-raene-chain-20261105-v1"
+    },
+    {
+      "id": "raene-chain-giver",
+      "subject_id": "raenes-cleansing-chain",
+      "predicate": "offered_by",
+      "object_id": "raene-wolfrunner",
+      "source_id": "wiki-raene-chain-20261105-v1"
+    },
+    {
+      "id": "raene-chain-in-ashenvale",
+      "subject_id": "raenes-cleansing-chain",
+      "predicate": "quest_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-raene-chain-20261105-v1"
+    },
+    {
+      "id": "raene-first-giver",
+      "subject_id": "raenes-cleansing-first",
+      "predicate": "offered_by",
+      "object_id": "raene-wolfrunner",
+      "source_id": "wiki-raene-first-20261105-v1"
+    },
+    {
+      "id": "raene-first-in-ashenvale",
+      "subject_id": "raenes-cleansing-first",
+      "predicate": "quest_in",
+      "object_id": "ashenvale",
+      "source_id": "wiki-raene-first-20261105-v1"
+    },
+    {
+      "id": "senani-in-splintertree",
+      "subject_id": "senani-thunderheart",
+      "predicate": "located_in",
+      "object_id": "splintertree-post",
+      "source_id": "wiki-ashenvale-hunt-20261105-v1"
+    },
+    {
+      "id": "hunt-giver",
+      "subject_id": "ashenvale-hunt-barrens",
+      "predicate": "offered_by",
+      "object_id": "jorn-skyseer",
+      "source_id": "wiki-ashenvale-hunt-20261105-v1"
+    },
+    {
+      "id": "hunt-recipient",
+      "subject_id": "ashenvale-hunt-barrens",
+      "predicate": "turn_in_to",
+      "object_id": "senani-thunderheart",
+      "source_id": "wiki-ashenvale-hunt-20261105-v1"
+    },
+    {
+      "id": "hunt-destination",
+      "subject_id": "ashenvale-hunt-barrens",
+      "predicate": "objective_at",
+      "object_id": "splintertree-post",
+      "source_id": "wiki-ashenvale-hunt-20261105-v1"
+    }
+  ]
+}

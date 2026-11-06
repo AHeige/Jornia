@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: Wisp
+## Notes: Private adventure journal and consented automatic local recording. Experimental Forever prototype.
+## Author: Wisp contributors
+## Version: 0.5.1
+## SavedVariables: WispDB
+Wisp.lua

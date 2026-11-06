@@ -1,0 +1,65 @@
+name: wisp
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: wisp
+      POSTGRES_PASSWORD: wisp-local-only
+      POSTGRES_DB: wisp
+    ports:
+      - "127.0.0.1:${WISP_DB_PORT:-55471}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wisp -d wisp"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  init:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile
+    command: ["bootstrap"]
+    environment:
+      DATABASE_URL: postgres://wisp:wisp-local-only@db:5432/wisp?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+  model:
+    build:
+      context: .
+      dockerfile: apps/langchain/Dockerfile
+    environment:
+      BERGET_API_KEY: ${BERGET_API_KEY:-}
+      BERGET_BASE_URL: ${BERGET_BASE_URL:-https://api.berget.ai/v1}
+      BERGET_MODEL: ${BERGET_MODEL:-mistralai/Mistral-Small-3.2-24B-Instruct-2506}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile
+    environment:
+      DATABASE_URL: postgres://wisp:wisp-local-only@db:5432/wisp?sslmode=disable
+      LISTEN_ADDR: :8090
+      LANGCHAIN_URL: http://model:8091/v1
+      BERGET_MODEL: ${BERGET_MODEL:-mistralai/Mistral-Small-3.2-24B-Instruct-2506}
+      BERGET_INPUT_EUR_PER_MILLION: ${BERGET_INPUT_EUR_PER_MILLION:-0.30}
+      BERGET_OUTPUT_EUR_PER_MILLION: ${BERGET_OUTPUT_EUR_PER_MILLION:-0.30}
+    ports:
+      - "127.0.0.1:${WISP_API_PORT:-8090}:8090"
+    depends_on:
+      model:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wisp", "healthcheck"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+volumes:
+  postgres-data:

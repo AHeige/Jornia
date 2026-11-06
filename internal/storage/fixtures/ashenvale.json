@@ -1,0 +1,26 @@
+{
+  "version": "fixture-ashenvale-v1",
+  "source": {
+    "id": "wisp-ashenvale-fixture-v1",
+    "title": "Wisp original Ashenvale development fixture",
+    "uri": "wisp:fixtures/ashenvale-v1",
+    "revision": "1",
+    "license": "CC0-1.0 (original fixture descriptions and relationships only)",
+    "validation_status": "fixture"
+  },
+  "entities": [
+    {"id":"kalimdor","kind":"continent","name":"Kalimdor","description":"The continent used as the parent of Ashenvale in this development fixture."},
+    {"id":"ashenvale","kind":"zone","name":"Ashenvale","description":"The reference zone for Wisp's first knowledge graph. This fixture connects it to Kalimdor and three example locations."},
+    {"id":"astranaar","kind":"settlement","name":"Astranaar","description":"An example settlement linked to Ashenvale in this development fixture."},
+    {"id":"splintertree-post","kind":"settlement","name":"Splintertree Post","description":"An example settlement linked to Ashenvale in this development fixture."},
+    {"id":"zoram-strand","kind":"location","name":"The Zoram Strand","description":"An example coastal location linked to Ashenvale in this development fixture."},
+    {"id":"hidden-story","kind":"story","name":"Hidden Story","description":"A synthetic story detail used only to test spoiler filtering.","spoiler":true}
+  ],
+  "edges": [
+    {"id":"ashenvale-in-kalimdor","subject_id":"ashenvale","predicate":"located_in","object_id":"kalimdor"},
+    {"id":"astranaar-in-ashenvale","subject_id":"astranaar","predicate":"located_in","object_id":"ashenvale"},
+    {"id":"splintertree-in-ashenvale","subject_id":"splintertree-post","predicate":"located_in","object_id":"ashenvale"},
+    {"id":"zoram-in-ashenvale","subject_id":"zoram-strand","predicate":"located_in","object_id":"ashenvale"},
+    {"id":"story-in-ashenvale","subject_id":"hidden-story","predicate":"located_in","object_id":"ashenvale"}
+  ]
+}

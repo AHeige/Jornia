@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+.cache
+**/._*
+.DS_Store
+bin
+**/node_modules
+**/__pycache__
+**/*.pyc
+dist
+.playwright-mcp
