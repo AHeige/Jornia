@@ -83,3 +83,7 @@ The lab is separate from the 0.5.2 downloadable addon and normal Wisp import rea
 - [Jocys' own implementation description](https://www.jocys.com/TTS/#How_It_Works): its game-to-monitor channel uses pixels and provides no return path. This was investigated, not adopted.
 
 Technical feasibility and permission to distribute/run a transport are separate questions. This note records mechanisms and evidence, not a claim that Blizzard permits a process reader or that the experiment is production-ready.
+
+## Uppföljning: uppmätt chatlogg 6 november
+
+[Det genomförda A/B-testet](chatlog-test-2026-11-06.md) gav åtta mottagna självviskningar men ingen diskleverans före klientavslut. Tre direkta av/på-växlingar och en av-period på faktiskt 270 ms ändrade inte det. Alla åtta markörer observerades först vid normalt avslut. Det tidigare öppna loggspåret har därmed ett konkret negativt realtidsresultat för den prövade byggversionen och trafikvolymen, med en lyckad positivkontroll. Eventuella volymtrösklar är inte testade.
