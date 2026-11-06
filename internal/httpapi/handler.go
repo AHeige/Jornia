@@ -42,7 +42,11 @@ func Handler(service *wisp.Service, ping func(context.Context) error) http.Handl
 			write(w, 400, map[string]string{"error": err.Error()})
 			return
 		}
-		if len(req.Journal) > 0 && req.Mode != "generate" {
+		if err := wisp.ValidateCharacter(req.Character); err != nil {
+			write(w, 400, map[string]string{"error": err.Error()})
+			return
+		}
+		if (len(req.Journal) > 0 || req.Character != nil) && req.Mode != "generate" {
 			write(w, 400, map[string]string{"error": "journal requires AI mode"})
 			return
 		}
@@ -53,6 +57,10 @@ func Handler(service *wisp.Service, ping func(context.Context) error) http.Handl
 		}
 		if req.GameVersion == "" {
 			req.GameVersion = "forever"
+		}
+		if req.Character != nil && req.GameVersion != "forever" {
+			write(w, 400, map[string]string{"error": "character context belongs to Forever"})
+			return
 		}
 		if req.Mode == "" {
 			req.Mode = "auto"

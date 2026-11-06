@@ -14,17 +14,19 @@ import (
 )
 
 type Worker struct {
-	Store       *storage.Store
-	Client      *Client
-	MaxRequests int
+	Store          *storage.Store
+	Client         *Client
+	MaxRequests    int
+	ReprojectLimit int
 }
 type Report struct {
-	Status    string `json:"status"`
-	Requests  int    `json:"requests"`
-	Documents int    `json:"documents"`
-	Entities  int    `json:"normalized_records"`
-	Pending   int    `json:"pending"`
-	Namespace string `json:"namespace,omitempty"`
+	Status      string `json:"status"`
+	Requests    int    `json:"requests"`
+	Documents   int    `json:"documents"`
+	Entities    int    `json:"normalized_records"`
+	Pending     int    `json:"pending"`
+	Namespace   string `json:"namespace,omitempty"`
+	Reprojected int    `json:"reprojected_documents"`
 }
 
 func (w *Worker) Run(ctx context.Context) (report Report, runErr error) {
@@ -34,6 +36,12 @@ func (w *Worker) Run(ctx context.Context) (report Report, runErr error) {
 	}
 	if w.MaxRequests > 2000 {
 		return report, errors.New("batch request limit exceeds 2000")
+	}
+	if w.ReprojectLimit <= 0 {
+		w.ReprojectLimit = 200
+	}
+	if w.ReprojectLimit > 2000 {
+		return report, errors.New("cache reprojection limit exceeds 2000")
 	}
 	if err := w.Client.init(); err != nil {
 		return report, err
@@ -88,10 +96,10 @@ func (w *Worker) Run(ctx context.Context) (report Report, runErr error) {
 		return report, err
 	}
 	// Reproject cached records after a schema change without resetting their original expiry.
-	for rebuilt := 0; rebuilt < 200; rebuilt++ {
+	for rebuilt := 0; rebuilt < w.ReprojectLimit; rebuilt++ {
 		var d Document
 		var raw []byte
-		err = w.Store.Pool.QueryRow(ctx, `SELECT path,namespace,locale,payload,fetched_at FROM api_ingest_documents WHERE projection_version=0 AND expires_at>now() AND namespace=$1 AND locale=$2 ORDER BY fetched_at,path LIMIT 1`, probe.Namespace, w.Client.Locale).Scan(&d.Path, &d.Namespace, &d.Locale, &raw, &d.FetchedAt)
+		err = w.Store.Pool.QueryRow(ctx, `SELECT path,namespace,locale,payload,fetched_at FROM api_ingest_documents WHERE projection_version<2 AND expires_at>now() AND namespace=$1 AND locale=$2 ORDER BY fetched_at,path LIMIT 1`, probe.Namespace, w.Client.Locale).Scan(&d.Path, &d.Namespace, &d.Locale, &raw, &d.FetchedAt)
 		if errors.Is(err, pgx.ErrNoRows) {
 			break
 		}
@@ -104,6 +112,7 @@ func (w *Worker) Run(ctx context.Context) (report Report, runErr error) {
 		if err = w.Save(ctx, d); err != nil {
 			return report, err
 		}
+		report.Reprojected++
 	}
 
 	if err = w.Save(ctx, probe); err != nil {
@@ -192,7 +201,7 @@ func (w *Worker) Save(ctx context.Context, d Document) error {
 		return err
 	}
 	defer tx.Rollback(ctx)
-	_, err = tx.Exec(ctx, `INSERT INTO api_ingest_documents(path,namespace,locale,checksum,payload,fetched_at,expires_at,projection_version) VALUES($1,$2,$3,$4,$5,$6,$7,1) ON CONFLICT(path,namespace,locale) DO UPDATE SET checksum=excluded.checksum,payload=excluded.payload,fetched_at=excluded.fetched_at,expires_at=excluded.expires_at,projection_version=1`, d.Path, d.Namespace, d.Locale, checksum, raw, now, now.Add(28*24*time.Hour))
+	_, err = tx.Exec(ctx, `INSERT INTO api_ingest_documents(path,namespace,locale,checksum,payload,fetched_at,expires_at,projection_version) VALUES($1,$2,$3,$4,$5,$6,$7,2) ON CONFLICT(path,namespace,locale) DO UPDATE SET checksum=excluded.checksum,payload=excluded.payload,fetched_at=excluded.fetched_at,expires_at=excluded.expires_at,projection_version=2`, d.Path, d.Namespace, d.Locale, checksum, raw, now, now.Add(28*24*time.Hour))
 	if err != nil {
 		return err
 	}
@@ -233,7 +242,7 @@ func (w *Worker) Save(ctx context.Context, d Document) error {
 			return err
 		}
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO api_ingest_jobs(path,namespace,locale,status,checked_at,http_status,next_attempt) VALUES($1,$2,$3,'current',now(),200,now()+interval '24 hours') ON CONFLICT(path,namespace,locale) DO UPDATE SET status='current',checked_at=now(),http_status=200,next_attempt=now()+interval '24 hours'`, d.Path, d.Namespace, d.Locale)
+	_, err = tx.Exec(ctx, `INSERT INTO api_ingest_jobs(path,namespace,locale,status,checked_at,http_status,next_attempt) VALUES($1,$2,$3,'current',$4,200,$4::timestamptz+interval '24 hours') ON CONFLICT(path,namespace,locale) DO UPDATE SET status='current',checked_at=excluded.checked_at,http_status=200,next_attempt=excluded.next_attempt`, d.Path, d.Namespace, d.Locale, now)
 	if err != nil {
 		return err
 	}

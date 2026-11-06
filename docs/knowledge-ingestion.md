@@ -27,7 +27,7 @@ API-data används enligt [Blizzards Developer API Terms](https://www.blizzard.co
 7. Spara händelser/referenser atomiskt per API-svar. Ny indexdata ersätter bara sin egen projektion. En indexreferens får inte skriva över ett redan hämtat detaljsvar. Ett tomt fält är okänt, inte noll; en API-länk får inte automatiskt bli questkrav eller dropchans.
 8. Återuppta köade jobb efter avbrott, kontrollera nya källversioner, uppdatera resursdata normalt efter 24 timmar och rensa utgångna API-kopior. En ändrad projektion kan byggas om från giltig cache utan att förlänga dess ursprungliga expiry.
 
-En batch har normalt högst 200 game-data-anrop, minst en sekund mellan anrop och högst tolv minuters körtid. Fel/404/429 sparas som retry/not_available/rate_limited, inte som nya spelfakta. API-token och hemligheter loggas inte. Hårdvaruresurser begränsas separat i VM:s Compose-profil. Grafen, dokumenten och jobbstatus tillhör endast Wisp.
+På VM:n har en batch nu högst 500 game-data-anrop var 15:e minut, minst en sekund mellan anrop och högst tolv minuters körtid. Fel/404/429 sparas som retry/not_available/rate_limited, inte som nya spelfakta. API-token och hemligheter loggas inte. Hårdvaruresurser begränsas separat i VM:s Compose-profil. Grafen, dokumenten och jobbstatus tillhör endast Wisp.
 
 ## Rådata, graf och täckning är olika saker
 
@@ -47,3 +47,13 @@ TEST_DATABASE_URL='postgres://wisp:wisp-local-only@127.0.0.1:55471/wisp?sslmode=
 På VM:n finns den separata Compose-profilen `ingestion`, med kommandot `wisp-ingest`. Scheduler och faktisk driftsättning redovisas i VM-dokumentationen. Den centrala modellen lagrar inga privata spelarjournaler.
 
 Råkopior får inte arkiveras obegränsat i dumpfiler, loggar eller distributionspaket. Tillfällig överföringsdump tas bort efter inläsning. Framtida databasbackuper som innehåller API-data behöver samma eller kortare retention. Klienter som cachelagrar svar med `expires_at` rensar dem vid nästa användning; avstängda klienter kan inte utföra fysisk rensning. Det är en begränsning att hantera före publik distribution, inte ett löfte om ständig radering på en avstängd dator. Egna spelhändelser är separata och raderas inte av denna cachepolicy.
+
+## Driftuppdatering 2026-11-06
+
+Projektion v2 bevarar ytterligare uttryckliga API-fält (bland annat krav, belöningar, kvalitet, klasser och item-tooltips) som begränsad JSON i entitetens beskrivning. Länkar/media tas bort, fältstorlek begränsas och ingen relation ges starkare betydelse än källan visar. Questberättelser ingår inte i denna faktaprojektion. Saknade/utelämnade fält förblir okända. Varken ett länkat föremål eller en referens bevisar en dropchans eller att något finns i den aktuella spelvärlden.
+
+Giltiga cachedokument med äldre projektion byggs om, normalt 200 per batch. `-reproject-limit 2000 -max-requests 1` gör en avgränsad större ombyggnad med en enda namespace-probe. Ursprunglig hämtningstid, expiry och nästa faktiska uppdateringsdeadline behålls. Den lokala CLI-standarden är 200 nätanrop; VM-runnern väljer 500. Ingen ökning av databasens eller andra tjänsters resursgränser.
+
+Servern har separata Wisp-cronjobb för refresh var 15:e minut och `-purge-only` dagligen 03:17 (VM-tid). Lås, resursvakt och atomisk exitstatus finns i `infrastructure/vm/refresh-knowledge.sh`. Rensningen kontaktar inte en provider och behöver ingen giltig API-nyckel. För kopior i backuper/cache gäller samma TTL; statistik utan API-innehåll kan behållas för driftuppföljning. Se [leveranschecklistan](delivery-knowledge-character-2026-11-06.md) för verkliga resultat och frågetester.
+
+ForeverDB:s dokumenterade API erbjuder kompletterande uppgifter men kräver en separat godkänd nyckel och synlig attribution. Ingen sådan nyckel har tillhandahållits i detta arbete. QuestieDB:s historiska rättigheter är fortsatt oklara; ingen bulkimport aktiverades. Originalkällornas status kontrollerades på nytt 6 november 2026.

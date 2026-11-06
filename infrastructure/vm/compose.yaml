@@ -61,14 +61,14 @@ services:
       retries: 20
   ingest:
     <<: *service
-    image: ${WISP_API_IMAGE:?Set the versioned API image}
+    image: ${WISP_INGEST_IMAGE:-${WISP_API_IMAGE:?Set the versioned API image}}
     profiles: [ingestion]
     restart: "no"
     mem_limit: 192m
     cpus: 0.5
     read_only: true
     entrypoint: [wisp-ingest]
-    command: ["-max-requests", "200"]
+    command: ["-max-requests", "500"]
     environment:
       DATABASE_URL: postgres://wisp:${WISP_DB_PASSWORD}@db:5432/wisp?sslmode=disable
       BLIZZARD_CLIENT_ID: ${BLIZZARD_CLIENT_ID:-}

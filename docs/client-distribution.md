@@ -1,6 +1,6 @@
 # Privat kompisalpha: distribution och AI-anslutning
 
-Driftsatt 2026-11-06: **https://wisp.logosab.com**. Aktuell klient är 0.4.2, ett portabelt ZIP för Windows amd64 och Mac arm64. Publicerade versionsfiler och SHA-256 behålls; nya byggen får nytt versionsnummer. Denna alpha har ingen signerad installer eller automatisk uppdatering. Ladda ned nästa ZIP och stäng den äldre processen före start; samma lokala datakatalog används.
+Uppdaterat 2026-11-06: webb/nedladdning **https://aheige.github.io/wisp-site/**, skyddat API **https://wisp.logosab.com**. Aktuell klient är 0.6.0, ett portabelt ZIP för Windows amd64 och Mac arm64. Publicerade versionsfiler och SHA-256 behålls; nya byggen får nytt versionsnummer. Denna alpha har ingen signerad installer eller automatisk uppdatering. Ladda ned nästa ZIP och stäng den äldre processen före start; samma lokala datakatalog används.
 
 ## Spelarens flöde
 

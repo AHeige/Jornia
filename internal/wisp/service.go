@@ -18,12 +18,13 @@ var ErrUnavailable = errors.New("live inference is not configured")
 var ErrRateLimited = errors.New("local inference limit reached; try again in a minute")
 
 type Request struct {
-	Question         string        `json:"question"`
-	GameVersion      string        `json:"game_version"`
-	Mode             string        `json:"mode"`
-	Spoilers         bool          `json:"spoilers"`
-	Journal          []Observation `json:"journal,omitempty"`
-	SyntheticJournal bool          `json:"synthetic_journal,omitempty"`
+	Question         string            `json:"question"`
+	GameVersion      string            `json:"game_version"`
+	Mode             string            `json:"mode"`
+	Spoilers         bool              `json:"spoilers"`
+	Journal          []Observation     `json:"journal,omitempty"`
+	SyntheticJournal bool              `json:"synthetic_journal,omitempty"`
+	Character        *CharacterContext `json:"character,omitempty"`
 }
 type Answer struct {
 	Status           string           `json:"status"`
@@ -83,6 +84,12 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if err := ValidateJournal(r.Journal); err != nil {
 		return Answer{}, err
 	}
+	if err := ValidateCharacter(r.Character); err != nil {
+		return Answer{}, err
+	}
+	if r.Character != nil && r.GameVersion != "" && r.GameVersion != "forever" {
+		return Answer{}, errors.New("character context belongs to Forever")
+	}
 	start := time.Now()
 	zero := 0.0
 	a := Answer{Status: "unknown", Text: "I don't have verified knowledge for that question and game version yet.", GameVersion: r.GameVersion, Route: "deterministic", Sources: []storage.Source{}, EvidenceIDs: []string{}, Warnings: []string{}, EstimatedCostEUR: &zero}
@@ -101,7 +108,7 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if err != nil {
 		return a, err
 	}
-	if len(g.Entities) == 0 && len(r.Journal) == 0 {
+	if len(g.Entities) == 0 && len(r.Journal) == 0 && r.Character == nil {
 		a.LatencyMS = time.Since(start).Milliseconds()
 		return a, nil
 	}
@@ -122,6 +129,9 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		entities[e.ID] = e
 	}
 	facts := map[string]bool{}
+	if r.Character != nil {
+		facts[r.Character.EvidenceID] = true
+	}
 	for _, e := range r.Journal {
 		facts[e.ID] = true
 	}
@@ -132,6 +142,15 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		facts["edge:"+e.ID] = true
 	}
 	finish := func() {
+		if c := r.Character; c != nil {
+			for _, id := range a.EvidenceIDs {
+				if id == c.EvidenceID {
+					expires := time.Unix(c.ExpiresAt, 0).UTC()
+					a.Sources = append(a.Sources, storage.Source{ID: id, Title: "Selected local Armory snapshot", URI: "wisp-local:character/profile", Revision: time.Unix(c.LastLogin, 0).UTC().Format(time.RFC3339), License: "Private dated character context", ValidationStatus: "user_imported", ExpiresAt: &expires})
+				}
+			}
+			a.Warnings = append(a.Warnings, "Character equipment and level are from a dated published profile, not live game state.")
+		}
 		for _, e := range r.Journal {
 			for _, id := range a.EvidenceIDs {
 				if id == e.ID {
@@ -300,7 +319,11 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 					}
 
 				}
-				break
+				// A name can exist in several separately sourced records. A catalog
+				// entry without the requested relationship must not hide curated facts.
+				if a.Status == "answered" {
+					break
+				}
 			}
 			break
 		}
@@ -318,7 +341,7 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 			selected[e.ID] = true
 		}
 	}
-	if len(selected) == 0 && len(r.Journal) == 0 {
+	if len(selected) == 0 && len(r.Journal) == 0 && r.Character == nil {
 		finish()
 		return a, nil
 	}
@@ -335,6 +358,9 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		}
 	}
 	allowed := map[string]bool{}
+	if r.Character != nil {
+		allowed[r.Character.EvidenceID] = true
+	}
 	for _, e := range r.Journal {
 		allowed[e.ID] = true
 	}
@@ -368,7 +394,20 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 			sourceRefs = append(sourceRefs, map[string]string{"id": src.ID, "validation_status": src.ValidationStatus})
 		}
 	}
-	b, _ := json.Marshal(map[string]any{"game_version": contextGraph.GameVersion, "entities": contextGraph.Entities, "edges": contextGraph.Edges, "sources": sourceRefs, "journal": r.Journal, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false})
+	b, _ := json.Marshal(map[string]any{"game_version": contextGraph.GameVersion, "entities": contextGraph.Entities, "edges": contextGraph.Edges, "sources": sourceRefs, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false})
+	if len(b) > 40000 && (r.Character != nil || len(r.Journal) > 0) {
+		// Broad world matches must not prevent a supported personal-only answer.
+		// Strip both world facts and their allowed citations before inference.
+		allowed = map[string]bool{}
+		for _, e := range r.Journal {
+			allowed[e.ID] = true
+		}
+		if r.Character != nil {
+			allowed[r.Character.EvidenceID] = true
+		}
+		b, _ = json.Marshal(map[string]any{"game_version": r.GameVersion, "entities": []storage.Entity{}, "edges": []storage.Edge{}, "sources": []any{}, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false})
+		a.Warnings = append(a.Warnings, "World matches exceeded the context budget. This answer can use only your selected dated character context; name a specific world resource for a combined answer.")
+	}
 	if len(b) > 40000 {
 		a.Warnings = append(a.Warnings, "Retrieved context exceeded the model budget; narrow the question. No model request was sent.")
 		finish()
@@ -405,7 +444,7 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		return a, nil
 	}
 	a.Status = result.Status
-	if a.Status == "answered" || len(r.Journal) > 0 {
+	if a.Status == "answered" || len(r.Journal) > 0 || r.Character != nil {
 		a.Text = result.Text
 		a.EvidenceIDs = result.EvidenceIDs
 		if isFixture {

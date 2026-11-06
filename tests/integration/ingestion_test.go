@@ -50,6 +50,20 @@ func TestOfficialImportRetrievalAndExpiry(t *testing.T) {
 		t.Fatal(err)
 	}
 	worker := ingestion.Worker{Store: store, Client: &ingestion.Client{Region: "eu", Locale: "en_GB"}}
+	// A growing API catalog must not shadow a same-named curated relationship.
+	duplicate := ingestion.Document{Path: "/data/wow/quest/999991", Namespace: "static-1.60.1_70399-forever-eu", Locale: "en_GB", Payload: map[string]any{"title": "Raene's Cleansing"}}
+	if err = worker.Save(ctx, duplicate); err != nil {
+		t.Fatal(err)
+	}
+	duplicateService := wisp.Service{Store: store}
+	duplicateAnswer, err := duplicateService.Ask(ctx, wisp.Request{Question: "Who gives Raene's Cleansing?", GameVersion: "forever", Mode: "auto"})
+	if err != nil || duplicateAnswer.Status != "answered" || !strings.Contains(duplicateAnswer.Text, "Raene Wolfrunner") {
+		t.Fatal("catalog hid curated quest giver", duplicateAnswer, err)
+	}
+	parenthetical, err := duplicateService.Ask(ctx, wisp.Request{Question: "Who do I turn in The Ashenvale Hunt (The Barrens) to?", GameVersion: "forever", Mode: "auto"})
+	if err != nil || parenthetical.Status != "answered" {
+		t.Fatal("punctuation hid curated quest", parenthetical, err)
+	}
 	// More records than the old whole-scope reader's first-100 window.
 	for i := 1; i <= 240; i++ {
 		d := ingestion.Document{Path: fmt.Sprintf("/data/wow/creature/%d", i), Namespace: "static-1.60.1_70399-forever-eu", Locale: "en_GB", Payload: map[string]any{"name": fmt.Sprintf("Archive Creature %d", i), "id": float64(i)}}

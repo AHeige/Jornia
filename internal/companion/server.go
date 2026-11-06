@@ -38,6 +38,7 @@ type Ask struct {
 	ContextIDs    []string `json:"context_ids,omitempty"`
 	ContextDigest string   `json:"context_digest,omitempty"`
 	journal       []wisp.Observation
+	character     *wisp.CharacterContext
 	synthetic     bool
 }
 
@@ -208,7 +209,7 @@ func (s *Server) Handler() http.Handler {
 				return
 			}
 		}
-		if len(req.ContextIDs) > 0 {
+		if len(req.ContextIDs) > 0 || req.ContextDigest != "" {
 			if !req.AI || req.CharacterID == "" {
 				reply(w, 400, map[string]string{"error": "Journal excerpts require a selected character and AI."})
 				return
@@ -219,6 +220,7 @@ func (s *Server) Handler() http.Handler {
 				return
 			}
 			req.journal = preview.Events
+			req.character = preview.Character
 			req.synthetic = preview.Synthetic
 		}
 		fresh, err := s.Store.begin(r.Context(), req.ID, "ask", req.CharacterID, Fingerprint(req), req)
@@ -397,7 +399,10 @@ func (s *Server) runAsk(req Ask) {
 }
 func (s *Server) answer(ctx context.Context, req Ask) (wisp.Answer, error) {
 	q := strings.ToLower(strings.Trim(req.Question, " ?.!"))
-	if !(req.AI && len(req.journal) > 0) {
+	if !(req.AI && (len(req.journal) > 0 || req.character != nil)) {
+		if answer, handled, err := s.characterAnswer(ctx, req.CharacterID, q); handled {
+			return answer, err
+		}
 		switch q {
 		case "what was i doing last time", "what did i do last", "where am i":
 			return s.englishMemory(ctx, req.CharacterID, false)
@@ -414,7 +419,7 @@ func (s *Server) answer(ctx context.Context, req Ask) (wisp.Answer, error) {
 	if req.AI {
 		mode = "generate"
 	}
-	body, _ := json.Marshal(wisp.Request{Question: req.Question, GameVersion: "forever", Mode: mode, Journal: req.journal, SyntheticJournal: req.synthetic})
+	body, _ := json.Marshal(wisp.Request{Question: req.Question, GameVersion: "forever", Mode: mode, Journal: req.journal, Character: req.character, SyntheticJournal: req.synthetic})
 	request, err := http.NewRequestWithContext(ctx, "POST", s.Backend+"/api/wisp/ask", bytes.NewReader(body))
 	if err != nil {
 		return wisp.Answer{}, err

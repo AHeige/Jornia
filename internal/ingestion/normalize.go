@@ -68,6 +68,25 @@ func Normalize(d Document, region string, now time.Time) Bundle {
 				description += " " + key + "=" + strconv.FormatFloat(n, 'f', -1, 64) + "."
 			}
 		}
+		// Preserve useful explicit API fields without inferring mechanics from links.
+		// Resource URLs/media are stripped; large fields remain in the TTL-bound raw document.
+		attributes := map[string]any{}
+		for _, key := range []string{"description", "requirements", "objectives", "rewards", "quality", "area", "category", "item_class", "item_subclass", "inventory_type", "preview_item", "cast_time", "cooldown", "range", "power_cost", "is_equippable", "is_stackable", "purchase_quantity"} {
+			if key == "description" && kind == "quest" {
+				continue // Quest narrative is not part of the non-spoiler factual projection.
+			}
+			if value := plainAttribute(obj[key], 0); value != nil {
+				attributes[key] = value
+				raw, _ := json.Marshal(attributes)
+				if len(raw) > 1600 {
+					delete(attributes, key)
+				}
+			}
+		}
+		if len(attributes) > 0 {
+			raw, _ := json.Marshal(attributes)
+			description += " Explicit API fields (partial projection; absent fields unknown): " + string(raw)
+		}
 		b.Entities = append(b.Entities, storage.Entity{ID: id, GameVersion: "forever", Kind: kind, Name: name, Description: description, SourceID: sourceID})
 		return id
 	}
@@ -125,4 +144,45 @@ func Normalize(d Document, region string, now time.Time) Bundle {
 	}
 	b.Entities = entities
 	return b
+}
+
+func plainAttribute(value any, depth int) any {
+	if depth > 5 {
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		if len(v) <= 600 {
+			return v
+		}
+	case float64, bool:
+		return v
+	case []any:
+		if len(v) > 20 {
+			return nil
+		}
+		out := []any{}
+		for _, child := range v {
+			if x := plainAttribute(child, depth+1); x != nil {
+				out = append(out, x)
+			}
+		}
+		if len(out) > 0 {
+			return out
+		}
+	case map[string]any:
+		out := map[string]any{}
+		for key, child := range v {
+			if key == "key" || key == "_links" || key == "media" || key == "href" || len(key) > 80 {
+				continue
+			}
+			if x := plainAttribute(child, depth+1); x != nil {
+				out[key] = x
+			}
+		}
+		if len(out) > 0 {
+			return out
+		}
+	}
+	return nil
 }

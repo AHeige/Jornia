@@ -23,6 +23,8 @@ func main() {
 }
 func run() error {
 	max := flag.Int("max-requests", 200, "maximum public game-data requests in one resumable batch")
+	purge := flag.Bool("purge-only", false, "remove expired API evidence without contacting any provider")
+	reproject := flag.Int("reproject-limit", 200, "maximum stale cached projections to rebuild without extending source expiry (at most 2000)")
 	flag.Parse()
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
@@ -47,7 +49,13 @@ func run() error {
 		return err
 	}
 	client := &ingestion.Client{Region: env("BLIZZARD_REGION", "eu"), Locale: env("BLIZZARD_LOCALE", "en_GB"), ClientID: os.Getenv("BLIZZARD_CLIENT_ID"), ClientSecret: os.Getenv("BLIZZARD_CLIENT_SECRET"), Interval: time.Second}
-	worker := ingestion.Worker{Store: store, Client: client, MaxRequests: *max}
+	worker := ingestion.Worker{Store: store, Client: client, MaxRequests: *max, ReprojectLimit: *reproject}
+	if *purge {
+		if err = worker.Purge(ctx); err != nil {
+			return err
+		}
+		return json.NewEncoder(os.Stdout).Encode(map[string]string{"status": "purged"})
+	}
 	report, err := worker.Run(ctx)
 	_ = json.NewEncoder(os.Stdout).Encode(report)
 	return err

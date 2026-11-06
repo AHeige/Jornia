@@ -8,7 +8,7 @@ import subprocess
 import zipfile
 
 root = Path(__file__).resolve().parents[1]
-version = '0.5.2'
+version = '0.6.0'
 for system,arch in [('windows','amd64'),('darwin','arm64')]:
     if (root/'dist'/f'wisp-{version}-{system}-{arch}.zip').exists():
         raise SystemExit('Release already exists; bump the version before rebuilding published artifacts.')
@@ -28,6 +28,7 @@ for system,arch in [('windows','amd64'),('darwin','arm64')]:
     shutil.copy2(root/'docs/wow-first-test.md',stage/'START-HERE.md')
     shutil.copy2(root/'docs/automatic-journal.md',stage/'automatic-journal.md')
     shutil.copy2(root/'docs/companion-dependencies.md',stage/'DEPENDENCIES.md')
+    shutil.copy2(root/'docs/release-0.6.0.md',stage/'RELEASE-NOTES.md')
     if system=='windows':
         (stage/'Start-Wisp.cmd').write_bytes(b'@echo off\r\ncd /d "%~dp0"\r\nwisp.exe %*\r\nif errorlevel 1 pause\r\n')
         shutil.copy2(root/'scripts/install-addon.ps1',stage/'Install-Addon.ps1')

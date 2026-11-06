@@ -58,3 +58,20 @@ Aktiva Wisp-images efter det verifierade Mac-testet: API `wisp-private-api:20261
 Modelladaptern loggar nu bara felklass och eventuell upstream HTTP-status vid fel; inga exception-strängar, frågor, svar eller provider-nycklar. `LengthFinishReasonError` visade att den tidigare gränsen 220 output-token avbröt svar. Gränsen är nu 512, med instruktion i Go om kort text och få relevanta belägg. Ingen automatisk betald retry. Go-pakettesterna och två nätverksisolerade modelltester passerade. Berget-svaret i den lyckade körningen använde 229 output-token och visades i WoW efter 6,1 s.
 
 Privata miljöbackuper för återgång finns under projektet som `.env.pre-ocr-model-diagnostics` och `.env.pre-ocr-output-fix`; befintliga image-taggar behölls. Läs `docs/ocr-transport-2026-11-06.md` för mätning och kvarvarande begränsningar.
+
+## Kunskap och karaktärsfrågor 0.6.0, 2026-11-06
+
+Slutlig API-image: `wisp-private-api:20261106-knowledge5`. Ingester har en separat image `wisp-private-ingest:20261106-knowledge2`, byggd från befintlig API-bas utan nya systempaket. Modell `20261106-ocr2`, gateway och databas behöll sina image-/containeridentiteter. Endast Wisp-API:t återskapades för de ändrade fråge-/kontextreglerna. Kontroller direkt före/efter visade inga andra ändrade löpande containrar. Ingen global rensning, proxy-, brandväggs- eller diskändring gjordes.
+
+User-cron under leon:
+
+```cron
+*/15 * * * * /home/leon/wisp-private/refresh-knowledge.sh refresh # wisp-knowledge-refresh
+17 3 * * * /home/leon/wisp-private/refresh-knowledge.sh purge # wisp-knowledge-purge
+```
+
+Runnern har lås, resursvakt (3 GiB ledig disk/512 MiB tillgängligt RAM), två begränsade loggfiler och atomisk `ingestion-status.json` med exitkod och tider. `-purge-only` fungerar utan credentials/nätanrop. Ingester behåller 192 MiB/0,5 CPU, 500 requests per batch, minst en sekund mellan anrop och 12 minuters deadline. Schemat följer VM-tid, körloggar använder UTC. Cron-batch 16:00:01–16:08:49 UTC slutförde 500 anrop och 200 cacheombyggnader. En separat begränsad körning byggde om 2 000 cachedokument med en namespace-probe. Detta förlängde inte källornas expiry eller refreshdeadline.
+
+Rollbackunderlag finns som `compose.yaml.pre-knowledge-20261106`, `.env.pre-knowledge-20261106`, `refresh-knowledge.sh.pre-knowledge-20261106` och `crontab.pre-knowledge-20261106`. Återställ endast Wisp-fälten i aktuell `.env`/cron om andra projekt ändrats senare; ersätt inte användarens hela nya crontab blint. Befintliga images är kvar. Cacheprojektion v2 kräver ingen destruktiv migration. Vid framtida binäröverföring: sätt `chmod 755` på de egna korsbyggda inputbinärerna innan Docker bygger, eftersom scp/VM-umask annars kan ge 700.
+
+Publika ZIPs och webbsida ligger på personliga GitHub `AHeige/wisp-site`, inte på Logos. VM:n betjänar fortsatt det redan konfigurerade skyddade API:t. 0.6.0 ger explicit granskad daterad karaktärskontext, inga automatiska uppladdningar av privata journaler. Se [leveranschecklistan](delivery-knowledge-character-2026-11-06.md) för täckning, testfall, paket och kvarvarande gränser.

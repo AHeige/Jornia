@@ -1,0 +1,6 @@
+ARG WISP_BASE_IMAGE
+FROM ${WISP_BASE_IMAGE}
+# Cross-built inputs must be chmod 755 before sending this context to Docker.
+COPY wisp-ingest /usr/local/bin/wisp-ingest
+ENTRYPOINT ["wisp-ingest"]
+CMD ["-max-requests", "500"]

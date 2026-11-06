@@ -21,7 +21,7 @@ func (s *Store) Retrieve(ctx context.Context, version string, spoilers bool, que
 	if words == "" {
 		return g, nil
 	}
-	rows, err := s.Pool.Query(ctx, `SELECT e.id FROM entities e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND to_tsvector('simple',e.name||' '||e.id) @@ to_tsquery('simple',$4) AND ($2 OR NOT e.spoiler) AND s.validation_status IN ('fixture','source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) AND (position(' '||regexp_replace(lower(e.name),'[^[:alnum:]]+',' ','g')||' ' in $3)>0 OR position(' '||regexp_replace(lower(e.id),'[^[:alnum:]]+',' ','g')||' ' in $3)>0) ORDER BY length(e.name) DESC,e.id LIMIT 24`, version, spoilers, normalized, words)
+	rows, err := s.Pool.Query(ctx, `SELECT e.id FROM entities e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND to_tsvector('simple',e.name||' '||e.id) @@ to_tsquery('simple',$4) AND ($2 OR NOT e.spoiler) AND s.validation_status IN ('fixture','source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) AND (position(' '||btrim(regexp_replace(lower(e.name),'[^[:alnum:]]+',' ','g'))||' ' in $3)>0 OR position(' '||btrim(regexp_replace(lower(e.id),'[^[:alnum:]]+',' ','g'))||' ' in $3)>0) ORDER BY length(e.name) DESC,e.id LIMIT 24`, version, spoilers, normalized, words)
 	if err != nil {
 		return g, err
 	}

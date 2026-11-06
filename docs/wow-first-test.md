@@ -1,4 +1,4 @@
-# Start with Wisp 0.5.2
+# Start with Wisp 0.6.0
 
 Private desktop alpha for Windows and Apple Silicon Macs. The in-game Lua chat is still a prototype; the downloadable addon records a local journal. Forever 1.60.x / Interface 16001 is the target, with real gameplay testing still required.
 
@@ -8,16 +8,16 @@ Private desktop alpha for Windows and Apple Silicon Macs. The in-game Lua chat i
 2. Choose **Connect your journal**. Wisp checks standard WoW install locations and the Windows installation registry. Confirm the client folder containing `WTF`, approve local reading, and choose **Import all local characters**. You can enter a custom path. Wisp discovers character directories and reads every existing Wisp journal in that folder. It does not parse other addons, account settings or chat logs.
 3. Or choose **Explore a demo** without WoW. Its invented events stay in a separate, marked demo journal.
 4. Use **Journey** to see your selected character, dated entries and recorded places. Filter quests, levels or notes. **Characters** and the persistent character selector switch the journal, conversations and drafts together.
-5. Open **Companion** and ask **What was I doing last time?** or **My journey** for local, offline help. For AI, open **Settings & connection → AI connection**, enter your separate private invite code, and choose **Connect Wisp**. Choose **Use AI** when asking a world question.
-6. To include personal context, review the exact journal excerpts and choose **Include journal excerpts** for that question. Consent resets after a confirmed answer. Names, notes and previous conversations are not included automatically.
+5. Open **Companion** and ask **What was I doing last time?**, **My journey**, **What level am I?**, **What is my class?** or **My gear** for local, offline help. Class and gear need a saved Armory profile; levels can use journal observations. For AI, open **Settings & connection → AI connection**, enter your separate private invite code, and choose **Connect Wisp**. Choose **Use AI** when asking a world question.
+6. To include personal context, review the exact journal excerpts and any dated class, race, level and equipment, then choose **Include character context** for that question. Consent resets after a confirmed answer. Names, notes and previous conversations are not included automatically.
 
-The Windows app is unsigned; Windows may show a security warning. Mac users may need to approve the unsigned binary themselves. Signed installation and automatic updates are not part of this alpha. Windows 0.5.2 has been cross-built, not run on the remote Windows machine.
+The Windows app is unsigned; Windows may show a security warning. Mac users may need to approve the unsigned binary themselves. Signed installation and automatic updates are not part of this alpha. Windows 0.6.0 has been cross-built, not run on the remote Windows machine.
 
 ## Your actual character and equipment
 
 Under **Settings & connection → Character portrait & gear**, enter the first name, surname and region of a public Forever character. Choose an existing matching character or **Add a character**, approve the lookup and click **Load character from Blizzard**. An invite code is required. One lookup uses one server request from the invite quota.
 
-Wisp loads the official character render and equipped item list, with source/fetch times and the profile's last login. This is a published Armory snapshot, not a live 3D model or live gear. Some new/low-level characters or individual endpoints may be unavailable. Expired profile data is removed when Wisp is next used, with a maximum cache lifetime of 28 days. Profile data stays in the local database and is not inserted into shared world knowledge or AI journal excerpts. Portraits load from Blizzard's render host.
+Wisp loads the official character render and equipped item list, with source/fetch times and the profile's last login. This is a published Armory snapshot, not a live 3D model or live gear. Some new/low-level characters or individual endpoints may be unavailable. Expired profile data is removed when Wisp is next used, with a maximum cache lifetime of 28 days. Profile data stays in the local database and is not inserted into shared world knowledge. A stripped snapshot of class, race, level, equipment and dates may be sent to AI only after the per-question preview is explicitly approved. Your name, surname, portrait URL and realm are excluded. Portraits load from Blizzard's render host.
 
 ## Record new adventures
 
@@ -39,3 +39,9 @@ Wisp's existing HTTPS API remains at `https://wisp.logosab.com`; this is infrast
 ## Character identity (0.5.2)
 
 The addon also saves a small `WispCharacterDB` identity marker in its own per-character SavedVariables file. It contains the installation ID and character GUID; its file location links the real directory (including a surname/numeric realm) to the account journal. The companion does not guess from a first name or realm label. Restart WoW after updating the addon, then log in and `/reload` or log out once. Existing empty duplicate directory rows reconcile when that marker arrives; independent private content is preserved. Old 0.5.1 journals still import, but need the new addon marker to resolve mismatched directory names.
+
+## World knowledge and current limits (0.6.0)
+
+The shared server continuously discovers and refreshes build-scoped Forever API records. Catalog counts do not mean complete quest objectives, NPC positions or drops. Responses show their sources; unknown facts should remain unknown. Updates to shared world data do not require another client download. The official API may lag your client build.
+
+Active quests, bag contents, gold, talents and live equipment are not collected by this release. Wisp can discuss the recorded journey and selected dated equipment, but cannot invent your present state. The reusable return-channel and OCR experiments are not bundled: the downloadable chat runs in your browser alongside WoW. No game restart is required to run the desktop companion; addon installation itself follows the normal client startup process.

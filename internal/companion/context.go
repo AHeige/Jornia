@@ -9,16 +9,30 @@ import (
 )
 
 type ContextPreview struct {
-	EventIDs  []string           `json:"event_ids"`
-	Events    []wisp.Observation `json:"events"`
-	Digest    string             `json:"digest"`
-	Synthetic bool               `json:"synthetic"`
+	EventIDs  []string               `json:"event_ids"`
+	Events    []wisp.Observation     `json:"events"`
+	Digest    string                 `json:"digest"`
+	Synthetic bool                   `json:"synthetic"`
+	Character *wisp.CharacterContext `json:"character,omitempty"`
 }
 
 func (s *Store) ContextPreview(ctx context.Context, character string, ids []string) (ContextPreview, error) {
 	out := ContextPreview{EventIDs: []string{}, Events: []wisp.Observation{}, Synthetic: character == DemoCharacterID}
 	if character == "" {
 		return out, nil
+	}
+	profiles, err := s.Profiles(ctx)
+	if err != nil {
+		return out, err
+	}
+	if p, ok := profiles[character]; ok && !out.Synthetic {
+		c := &wisp.CharacterContext{EvidenceID: "character:profile", Level: p.Level, Race: p.Race, Class: p.Class, FetchedAt: p.FetchedAt, LastLogin: p.LastLogin, ExpiresAt: p.ExpiresAt, Items: []wisp.CharacterItem{}}
+		for _, item := range p.Items {
+			c.Items = append(c.Items, wisp.CharacterItem{ID: item.ID, Name: item.Name, Slot: item.Slot, Quality: item.Quality})
+		}
+		if wisp.ValidateCharacter(c) == nil {
+			out.Character = c
+		}
 	}
 	if ids == nil {
 		events, err := s.Events(ctx, character)
@@ -63,6 +77,7 @@ func (s *Store) ContextPreview(ctx context.Context, character string, ids []stri
 		IDs       []string
 		Events    []wisp.Observation
 		Synthetic bool
-	}{character, out.EventIDs, out.Events, out.Synthetic})
+		Profile   *wisp.CharacterContext
+	}{character, out.EventIDs, out.Events, out.Synthetic, out.Character})
 	return out, nil
 }

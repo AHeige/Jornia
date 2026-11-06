@@ -46,7 +46,7 @@ function answerNode(question,answer) {
   const group=element('article','space-y-3');
   const user=element('div','chat chat-end');user.append(element('div','chat-bubble whitespace-pre-wrap',question));
   const ai=element('div','chat chat-start');const content=element('div','max-w-full');
-  content.append(element('div','chat-header mb-1 text-sm text-base-content/65',answer.route==='local_memory'?'Wisp · your journal':answer.sources?.some(s=>s.id.startsWith('memory:'))?'Wisp · your journey & world knowledge':'Wisp · world knowledge'));
+  content.append(element('div','chat-header mb-1 text-sm text-base-content/65',answer.sources?.some(s=>s.id.startsWith('character:'))?'Wisp · your character':answer.route==='local_memory'?'Wisp · your journal':answer.sources?.some(s=>s.id.startsWith('memory:'))?'Wisp · your journey & world knowledge':'Wisp · world knowledge'));
   content.append(element('div','chat-bubble whitespace-pre-wrap leading-relaxed',answer.text));
   if(answer.sources?.length){const details=element('details','mt-2 text-xs text-base-content/70');details.append(element('summary','cursor-pointer',answer.route==='local_memory'?'View journal evidence':'View sources'));const list=element('ul','mt-2 space-y-2');for(const source of answer.sources){const item=element('li');if(/^https:\/\//.test(source.uri)){const link=element('a','underline',source.title);link.href=source.uri;link.target='_blank';link.rel='noopener noreferrer';item.append(link);}else if(source.uri?.startsWith('wisp-local:event/')){const evidence=element('button','text-link',source.title+' →');evidence.type='button';evidence.addEventListener('click',()=>{activeFilter='all';renderTimeline();setView('journey',true);const eventId=decodeURIComponent(source.uri.slice('wisp-local:event/'.length));const row=[...document.querySelectorAll('[data-event-id]')].find(e=>e.dataset.eventId===eventId);if(row){row.focus();row.scrollIntoView({block:'center'});}});item.append(evidence);}else item.textContent=source.title+' · '+source.revision;list.append(item);}details.append(list);if(answer.warnings?.length)details.append(element('p','mt-2 leading-relaxed',answer.warnings.join(' ')));if(sourceExpiry(answer))details.append(element('p','mt-2 leading-relaxed','Time-limited world source. This answer is removed after its source expires and Wisp is used again. Your journal is unaffected.'));content.append(details);}
   if(answer.model){const meta=element('p','answer-tech mt-2',answer.model+' · '+(answer.estimated_cost_eur==null?'cost unknown':'≈ €'+answer.estimated_cost_eur.toFixed(6)));const evidence=content.querySelector('details');if(evidence)evidence.append(meta);else{const details=element('details');details.append(element('summary','cursor-pointer','Answer details'),meta);content.append(details);}}
@@ -196,7 +196,7 @@ function contextPayload(){
  if(!$('share-journey').checked)return {};
  if(!$('ai').checked||contextCharacter!==selected||!contextPreview)throw Error('Review the journal excerpts before sending.');
  const ids=contextPreview.event_ids;
- if(!ids.length)throw Error('Choose journal excerpts or turn sharing off.');
+ if(!ids.length&&!contextPreview.character)throw Error('No recorded context to share. Turn sharing off or connect a journal or Armory profile.');
  // The digest approves the exact displayed set for this question only.
  return {context_ids:ids,context_digest:contextPreview.digest};
 }
@@ -206,7 +206,8 @@ async function loadContext(){
  $('share-journey').disabled=true;$('context-status').textContent='Reading local journal excerpts…';
  try{const preview=await mutations.read('/local/context?character_id='+encodeURIComponent(character));if(version!==contextGeneration||selected!==character)return;contextPreview=preview;contextCharacter=character;$('context-events').replaceChildren();
  for(let i=0;i<preview.events.length;i++){const e=preview.events[i],label=element('label','flex items-start gap-2');label.append(element('span','',`${localTime(e.observed_at)} · ${({snapshot:'Observation',zone:'Place',level_up:'Level gained',quest_completed:'Quest completed',session_start:'Session started',session_end:'Session ended'})[e.kind]||'Observation'} · level ${e.level} · ${e.zone}${e.subzone?' / '+e.subzone:''}${e.quest_id?' · quest #'+e.quest_id:''}`));$('context-events').append(label);}
- $('context-status').textContent=preview.events.length?`${preview.synthetic?'Demo data. ':''}${preview.events.length} recorded observations. Sent only if you include them for this question.`:'No shareable journal excerpts yet.';$('context-preview').classList.toggle('hidden',!preview.events.length);
+ if(preview.character){const c=preview.character;const profile=element('div','mt-3');profile.append(element('p','','Armory snapshot · level '+c.level+' · '+c.race+' '+c.class+' · last login '+localTime(c.last_login)+' · fetched '+localTime(c.fetched_at)+' · not live'));for(const item of c.items)profile.append(element('p','text-sm',item.slot+' · '+item.name+' · '+item.quality+' · item #'+item.id));$('context-events').append(profile);}
+ $('context-status').textContent=preview.events.length||preview.character?`${preview.synthetic?'Demo data. ':''}${preview.events.length} recorded observations. Sent only if you include them for this question.${preview.character?' Dated class, race, level and listed equipment are included.':''}`:'No shareable context yet. Connect a journal or load an Armory profile.';$('context-preview').classList.toggle('hidden',!preview.events.length&&!preview.character);
  }catch(error){$('context-status').textContent=error.message;}finally{$('share-journey').disabled=false;}
 }
 $('ai').addEventListener('change',()=>{resetContext();loadContext();});
@@ -214,7 +215,7 @@ $('share-journey').addEventListener('change',()=>{if($('share-journey').checked)
 
 $('access-form').addEventListener('submit',async event=>{event.preventDefault();$('access-status').textContent='Checking your invite code…';try{await mutations.submit('access','/local/access',{token:$('access-code').value.trim()},busy=>{$('access-save').disabled=busy;});$('access-code').value='';$('access-status').textContent='Wisp is connected. You can now ask AI questions.';$('connection-status').textContent='Invite code and connection verified.';}catch(error){$('access-status').textContent=error.message;}});
 
-// Armory is explicit, dated personal context. It is never included in AI excerpts.
+// Armory is dated local context; only the exact reviewed projection may be shared.
 function renderProfile(){
  const profiles=state.profiles||{},profile=profiles[selected],image=$('character-render');
  image.classList.toggle('hidden',!profile?.image);if(profile?.image){if(image.getAttribute('src')!==profile.image)image.src=profile.image;image.alt=profile.name+' '+profile.surname+' — official Blizzard character render';}else image.removeAttribute('src');
