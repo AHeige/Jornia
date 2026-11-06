@@ -28,18 +28,21 @@ type Server struct {
 	Host, Token string
 	Assets      fs.FS
 	Journal     *JournalSync
+	GameContext bool
 	access      atomic.Value
 }
 type Ask struct {
-	ID            string   `json:"mutation_id"`
-	CharacterID   string   `json:"character_id"`
-	Question      string   `json:"question"`
-	AI            bool     `json:"ai"`
-	ContextIDs    []string `json:"context_ids,omitempty"`
-	ContextDigest string   `json:"context_digest,omitempty"`
-	journal       []wisp.Observation
-	character     *wisp.CharacterContext
-	synthetic     bool
+	ID               string             `json:"mutation_id"`
+	CharacterID      string             `json:"character_id"`
+	Question         string             `json:"question"`
+	AI               bool               `json:"ai"`
+	ContextIDs       []string           `json:"context_ids,omitempty"`
+	ContextDigest    string             `json:"context_digest,omitempty"`
+	Snapshot         *wisp.GameSnapshot `json:"snapshot,omitempty"`
+	SnapshotApproved bool               `json:"snapshot_approved,omitempty"`
+	journal          []wisp.Observation
+	character        *wisp.CharacterContext
+	synthetic        bool
 }
 
 func NewServer(store *Store, backend, host string, assets fs.FS) (*Server, error) {
@@ -206,6 +209,16 @@ func (s *Server) Handler() http.Handler {
 			var id string
 			if s.Store.DB.QueryRowContext(r.Context(), `SELECT id FROM characters WHERE id=?`, req.CharacterID).Scan(&id) != nil {
 				reply(w, 400, map[string]string{"error": "Choose a local character."})
+				return
+			}
+		}
+		if req.Snapshot != nil {
+			if !s.GameContext || !req.SnapshotApproved || !req.AI || req.CharacterID == "" {
+				reply(w, 400, map[string]string{"error": "Current quest context requires an explicitly enabled lab and per-question approval."})
+				return
+			}
+			if err := wisp.ValidateSnapshot(req.Snapshot); err != nil {
+				reply(w, 409, map[string]string{"error": "The current quest observation is invalid or expired. Capture a new question in-game."})
 				return
 			}
 		}
@@ -399,7 +412,7 @@ func (s *Server) runAsk(req Ask) {
 }
 func (s *Server) answer(ctx context.Context, req Ask) (wisp.Answer, error) {
 	q := strings.ToLower(strings.Trim(req.Question, " ?.!"))
-	if !(req.AI && (len(req.journal) > 0 || req.character != nil)) {
+	if !(req.AI && (len(req.journal) > 0 || req.character != nil || req.Snapshot != nil)) {
 		if answer, handled, err := s.characterAnswer(ctx, req.CharacterID, q); handled {
 			return answer, err
 		}
@@ -419,7 +432,7 @@ func (s *Server) answer(ctx context.Context, req Ask) (wisp.Answer, error) {
 	if req.AI {
 		mode = "generate"
 	}
-	body, _ := json.Marshal(wisp.Request{Question: req.Question, GameVersion: "forever", Mode: mode, Journal: req.journal, Character: req.character, SyntheticJournal: req.synthetic})
+	body, _ := json.Marshal(wisp.Request{Question: req.Question, GameVersion: "forever", Mode: mode, Journal: req.journal, Character: req.character, Snapshot: req.Snapshot, SyntheticJournal: req.synthetic})
 	request, err := http.NewRequestWithContext(ctx, "POST", s.Backend+"/api/wisp/ask", bytes.NewReader(body))
 	if err != nil {
 		return wisp.Answer{}, err
@@ -444,6 +457,22 @@ func (s *Server) answer(ctx context.Context, req Ask) (wisp.Answer, error) {
 	if out.Status != "answered" && out.Status != "unknown" {
 		return out, errors.New("invalid backend status")
 	}
+	// A remote action is data. Retain only an action tied to this approved, fresh quest observation.
+	actions := []wisp.Action{}
+	if req.Snapshot != nil && req.SnapshotApproved && wisp.ValidateSnapshot(req.Snapshot) == nil {
+		for _, action := range out.Actions {
+			for _, q := range req.Snapshot.Quests {
+				if action.Kind == "show_quest_waypoint" && action.ID == fmt.Sprintf("navigate:quest:%d", q.ID) && action.QuestID == q.ID && q.Waypoint && action.ExpiresAt > time.Now().Unix() && action.ExpiresAt <= req.Snapshot.CapturedAt+90 {
+					for _, e := range out.EvidenceIDs {
+						if e == fmt.Sprintf("state:quest:%d", q.ID) {
+							actions = append(actions, action)
+						}
+					}
+				}
+			}
+		}
+	}
+	out.Actions = actions
 	// Replace request-local memory citations with local-only journal references.
 	for i := range out.Sources {
 		for j, e := range req.journal {

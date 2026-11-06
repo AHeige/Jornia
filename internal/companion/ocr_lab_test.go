@@ -21,6 +21,7 @@ func TestOCRLabCorrelatesReplyAndNeverResendsOnFrame(t *testing.T) {
  function methods:SetText(s)self.text=s end
  function methods:GetText()return self.text end
  function methods:Disable()self.disabled=true end;function methods:Enable()self.disabled=false end
+ function GetBuildInfo()return '1.60.1','70790' end;function UnitLevel()return 16 end
  function print()end;function time()return 1793960000 end;function GetTime()return NOW end;function UnitGUID()return GUID end
  C_AddOns={IsAddOnLoaded=function()return false end,LoadAddOn=function()LOADS=LOADS+1;return true end}
  `
@@ -79,5 +80,40 @@ func TestOCRSessionIsExplicitPrivateAndRefusesOverwrite(t *testing.T) {
 	}
 	if server.WriteOCRSession(link) == nil {
 		t.Fatal("followed symlink")
+	}
+}
+
+func TestNavigationRequiresClickAndChecksActualGameState(t *testing.T) {
+	vm := lua.NewState()
+	defer vm.Close()
+	if err := vm.DoString(`
+ NOW=100;GUID='Player-one';ACTIVE=true;COMBAT=false;MAP=1412;X=.3;Y=.4;SETS=0;CONFIRM=true
+ function time()return NOW end;function UnitGUID()return GUID end;function InCombatLockdown()return COMBAT end
+ C_QuestLog={IsOnQuest=function(id)return ACTIVE and id==123 end,GetNextWaypoint=function()return MAP,X,Y end}
+ UiMapPoint={CreateFromCoordinates=function(map,x,y)return {uiMapID=map,position={GetXY=function()return x,y end}} end}
+ C_Map={CanSetUserWaypointOnMap=function()return true end,SetUserWaypoint=function(p)SETS=SETS+1;POINT=p end,GetUserWaypoint=function()if CONFIRM then return POINT end end}
+ `); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile("../../apps/ocr-lab/WispOCR/Navigation.lua")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = vm.DoString(string(b)); err != nil {
+		t.Fatal(err)
+	}
+	if err = vm.DoString(`
+ assert(SETS==0 and WispNavigation.HasWaypoint(123))
+ assert(not WispNavigation.ShowQuest(123,200,'other'));assert(SETS==0)
+ assert(not WispNavigation.ShowQuest(123,99,GUID));assert(SETS==0)
+ ACTIVE=false;assert(not WispNavigation.ShowQuest(123,180,GUID));ACTIVE=true
+ COMBAT=true;assert(not WispNavigation.ShowQuest(123,180,GUID));COMBAT=false
+ X=0/0;assert(not WispNavigation.ShowQuest(123,180,GUID));X=.3
+ C_Map.CanSetUserWaypointOnMap=function()return false end;assert(not WispNavigation.ShowQuest(123,180,GUID));assert(SETS==0)
+ C_Map.CanSetUserWaypointOnMap=function()return true end;assert(WispNavigation.ShowQuest(123,180,GUID));assert(SETS==1)
+ CONFIRM=false;assert(not WispNavigation.ShowQuest(123,180,GUID))
+ C_Map.SetUserWaypoint=nil;assert(not WispNavigation.ShowQuest(123,180,GUID))
+ `); err != nil {
+		t.Fatal(err)
 	}
 }

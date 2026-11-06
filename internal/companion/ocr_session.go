@@ -46,5 +46,8 @@ func (s *Server) WriteOCRSession(path string) error {
 	if err != nil {
 		return err
 	}
+	if closeErr == nil {
+		s.GameContext = true
+	}
 	return closeErr
 }

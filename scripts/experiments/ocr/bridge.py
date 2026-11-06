@@ -13,29 +13,92 @@ import urllib.request
 
 
 def checksum(text):
-    return sum(i * b for i, b in enumerate(text.encode('ascii'), 1)) % 65521
+    return sum(i * b for i, b in enumerate(text.encode('utf8'), 1)) % 65521
+
+
+def expand_snapshot(value):
+    if value is None:
+        return None
+    integer = lambda n: type(n) is int
+    if not isinstance(value, list) or len(value) != 6:
+        raise ValueError('snapshot shape')
+    captured, level, zone, build, truncated, rows = value
+    if (not integer(captured) or not time.time()-90 <= captured <= time.time()+5
+            or not integer(level) or not 1 <= level <= 100
+            or not isinstance(zone, str) or len(zone.encode()) > 160
+            or not isinstance(build, str) or len(build.encode()) > 30
+            or type(truncated) is not int or truncated not in (0, 1)
+            or not isinstance(rows, list) or len(rows) > 4):
+        raise ValueError('snapshot bounds')
+    quests, seen = [], set()
+    for row in rows:
+        if not isinstance(row, list) or len(row) != 4:
+            raise ValueError('quest shape')
+        ident, title, complete, waypoint = row
+        if (not integer(ident) or not 1 <= ident <= 2147483647 or ident in seen
+                or not isinstance(title, str) or len(title.encode()) > 200
+                or type(complete) is not int or complete not in (0, 1)
+                or type(waypoint) is not int or waypoint not in (0, 1)):
+            raise ValueError('quest bounds')
+        seen.add(ident)
+        quests.append(dict(id=ident, title=title, complete=bool(complete), waypoint=bool(waypoint)))
+    return dict(captured_at=captured, level=level, zone=zone, client_build=build,
+                truncated=bool(truncated), quests=quests)
 
 
 def parse(lines, nonce, identities):
-    # Never repair identifiers, infer missing words, or trust OCR confidence alone.
+    # Reject damaged bytes instead of asking OCR to recognize every writing system.
     text = '\n'.join(lines)
-    match = re.search(r'^WISPBEGIN\s+(\d{24})\s+(\d{5})\s+(\d{5})\n(.+?)\nWISPEND$', text, re.M | re.S)
+    match = re.search(r'^WISPBEGIN(2?)\s+(\d{24})\s+(\d{5})\s+(\d{5})\n(.+?)\nWISPEND$', text, re.M | re.S)
     if not match:
         return None
-    ident, binding, check, question = match.groups()
-    question = ' '.join(question.split())
-    if not ident.startswith(nonce) or not 1 <= len(question) <= 160 or '|' in question:
-        return None
+    version, ident, binding, check, wire = match.groups()
+    snapshot = None
     try:
-        if checksum(ident + binding + question) != int(check):
+        if version == '2':
+            encoded = ''.join(wire.split())
+            if not re.fullmatch('[0-9a-f]{2,800}', encoded) or len(encoded) % 2:
+                return None
+            wire = bytes.fromhex(encoded).decode('utf8', errors='strict')
+            value = json.loads(wire)
+            if not isinstance(value, dict) or set(value) != {'q', 's'}:
+                return None
+            question = value['q']
+            snapshot = expand_snapshot(value['s'])
+        else:
+            wire = question = ' '.join(wire.split())
+            if not question.isascii() or '|' in question:
+                return None
+        if (not ident.startswith(nonce) or not isinstance(question, str)
+                or not question.strip() or len(question.encode('utf8')) > 160
+                or checksum(ident + binding + wire) != int(check)):
             return None
         matches = [guid for guid in identities if re.fullmatch(r'Player-[A-Za-z0-9-]+', guid) and checksum(guid) == int(binding)]
-    except UnicodeEncodeError:
+    except (ValueError, TypeError, UnicodeError):
         return None
     if len(matches) != 1:
         return None
     guid = matches[0]
-    return {'id': ident, 'guid': guid, 'character_id': identities[guid], 'question': question}
+    packet = dict(id=ident, guid=guid, character_id=identities[guid], question=question)
+    if snapshot is not None:
+        packet['snapshot'] = snapshot
+    return packet
+
+
+def navigation(packet, result):
+    snapshot = packet.get('snapshot')
+    if not snapshot or snapshot['captured_at'] < time.time()-90:
+        return None
+    for action in result.get('actions') or []:
+        quest = action.get('quest_id')
+        expires = action.get('expires_at')
+        if (type(quest) is int and type(expires) is int and time.time() < expires <= snapshot['captured_at']+90
+                and action.get('kind') == 'show_quest_waypoint'
+                and action.get('id') == f'navigate:quest:{quest}'
+                and f'state:quest:{quest}' in (result.get('evidence_ids') or [])
+                and any(q['id'] == quest and q['waypoint'] for q in snapshot['quests'])):
+            return quest, expires
+    return None
 
 
 def atomic(path, text):
@@ -45,10 +108,11 @@ def atomic(path, text):
     temp.replace(path)
 
 
-def publish(addons, packet, status, text):
+def publish(addons, packet, status, text, action=None):
     # Only hex data enters executable Lua. Bind replies to both request and GUID.
     encoded = text.encode('utf8')[:16000].decode('utf8', errors='ignore').encode().hex()
-    body = f'WispOCRReceive("{packet["id"]}","{packet["guid"]}","{status}","{encoded}")\n'
+    suffix = f',{action[0]},{action[1]}' if action else ''
+    body = f'WispOCRReceive("{packet["id"]}","{packet["guid"]}","{status}","{encoded}"{suffix})\n'
     for n in range(1, 97):
         atomic(addons / f'WispOCRInbox{n:03d}' / 'Inbox.lua', body)
 
@@ -66,9 +130,12 @@ def complete(session, addons, packet, evidence):
     try:
         # Stable operation ID survives reader restart: existing receipts prevent paid replay.
         publish(addons, packet, 'sending', '')
-        receipt = api(session, '/local/ask', {
+        payload = {
             'mutation_id': 'ocr-' + packet['id'], 'character_id': packet['character_id'],
-            'question': packet['question'], 'ai': True})
+            'question': packet['question'], 'ai': True}
+        if packet.get('snapshot') is not None:
+            payload.update(snapshot=packet['snapshot'], snapshot_approved=True)
+        receipt = api(session, '/local/ask', payload)
         publish(addons, packet, 'thinking', '')
         while receipt['status'] == 'pending' and time.monotonic() - started < 48:
             time.sleep(.3)
@@ -80,11 +147,11 @@ def complete(session, addons, packet, evidence):
         warnings = result.get('warnings') or []
         sources = result.get('sources') or []
         if warnings:
-            text += '\n\n' + '\n'.join(warnings)
+            text += '\n\nContext notes: %d — details in desktop chat.' % len(warnings)
         if sources:
-            text += '\n\nSources: ' + '; '.join(str(s.get('title') or s.get('url') or s.get('id') or 'World knowledge') for s in sources)
-        text += '\n\nLab timing: OCR %.0f ms; API %.1f s. Images stayed local.' % (evidence['ocr_ms'], time.monotonic()-started)
-        publish(addons, packet, 'done', text)
+            text += '\nSources: %d — details in desktop chat.' % len(sources)
+        text += '\nOCR %.0f ms · API %.1f s · images stayed local.' % (evidence['ocr_ms'], time.monotonic()-started)
+        publish(addons, packet, 'done', text, navigation(packet, result))
         evidence.update(status='reply_files_written', route=result.get('route'), model=result.get('model'), backend_ms=result.get('latency_ms'))
     except Exception as error:
         # Generic transport message; do not leak tokens/URLs or pretend a failed request was unsent.

@@ -88,7 +88,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		log.Print("LangChain model step enabled; no agent harness or tracing")
+		log.Print("Legacy model proxy enabled; Wisp tool orchestration is owned by Go")
 	} else if key := os.Getenv("BERGET_API_KEY"); key != "" {
 		base := env("BERGET_BASE_URL", "https://api.berget.ai/v1")
 		u, err := url.Parse(base)

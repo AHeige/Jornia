@@ -43,6 +43,7 @@ services:
       db: {condition: service_healthy}
   model:
     <<: *service
+    profiles: [legacy-model]
     image: ${WISP_MODEL_IMAGE:?Set the versioned model image}
     mem_limit: 384m
     cpus: 0.75
@@ -89,7 +90,8 @@ services:
     environment:
       DATABASE_URL: postgres://wisp:${WISP_DB_PASSWORD}@db:5432/wisp?sslmode=disable
       LISTEN_ADDR: :8090
-      LANGCHAIN_URL: http://model:8091/v1
+      BERGET_API_KEY: ${BERGET_API_KEY:?Set the provider key}
+      BERGET_BASE_URL: https://api.berget.ai/v1
       BERGET_MODEL: mistralai/Mistral-Small-3.2-24B-Instruct-2506
       BERGET_INPUT_EUR_PER_MILLION: "0.30"
       BERGET_OUTPUT_EUR_PER_MILLION: "0.30"
@@ -101,7 +103,6 @@ services:
       timeout: 3s
       retries: 20
     depends_on:
-      model: {condition: service_healthy}
       init: {condition: service_completed_successfully}
 
   gateway:

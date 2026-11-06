@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"wisp/internal/ai"
+	"wisp/internal/harness"
 	"wisp/internal/storage"
 )
 
@@ -25,6 +27,7 @@ type Request struct {
 	Journal          []Observation     `json:"journal,omitempty"`
 	SyntheticJournal bool              `json:"synthetic_journal,omitempty"`
 	Character        *CharacterContext `json:"character,omitempty"`
+	Snapshot         *GameSnapshot     `json:"snapshot,omitempty"`
 }
 type Answer struct {
 	Status           string           `json:"status"`
@@ -38,6 +41,8 @@ type Answer struct {
 	Usage            *ai.Usage        `json:"usage"`
 	EstimatedCostEUR *float64         `json:"estimated_cost_eur"`
 	LatencyMS        int64            `json:"latency_ms"`
+	Actions          []Action         `json:"actions,omitempty"`
+	ToolTrace        []harness.Event  `json:"tool_trace,omitempty"`
 }
 type Knowledge interface {
 	Graph(context.Context, string, bool) (storage.Graph, error)
@@ -90,6 +95,12 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if r.Character != nil && r.GameVersion != "" && r.GameVersion != "forever" {
 		return Answer{}, errors.New("character context belongs to Forever")
 	}
+	if err := ValidateSnapshot(r.Snapshot); err != nil {
+		return Answer{}, err
+	}
+	if r.Snapshot != nil && r.GameVersion != "forever" && r.GameVersion != "" {
+		return Answer{}, errors.New("game snapshot belongs to Forever")
+	}
 	if answer, handled, err := s.catalogAnswer(ctx, r); handled {
 		return answer, err
 	}
@@ -99,19 +110,19 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if swedish {
 		a.Text = "Jag saknar källbelagda uppgifter för den frågan och spelversionen."
 	}
-	var g storage.Graph
-	var err error
-	if retriever, ok := s.Store.(interface {
-		Retrieve(context.Context, string, bool, string) (storage.Graph, error)
-	}); ok {
-		g, err = retriever.Retrieve(ctx, r.GameVersion, r.Spoilers, retrievalQuestion(r))
-	} else {
-		g, err = s.Store.Graph(ctx, r.GameVersion, r.Spoilers)
-	}
+	plan, g, err := BuildGamePlan(ctx, r.Snapshot, func(ctx context.Context) (storage.Graph, error) {
+		if retriever, ok := s.Store.(interface {
+			Retrieve(context.Context, string, bool, string) (storage.Graph, error)
+		}); ok {
+			return retriever.Retrieve(ctx, r.GameVersion, r.Spoilers, snapshotQuestion(r))
+		}
+		return s.Store.Graph(ctx, r.GameVersion, r.Spoilers)
+	})
+	a.ToolTrace = plan.Trace
 	if err != nil {
 		return a, err
 	}
-	if len(g.Entities) == 0 && len(r.Journal) == 0 && r.Character == nil {
+	if len(g.Entities) == 0 && len(r.Journal) == 0 && r.Character == nil && r.Snapshot == nil && r.Mode != "generate" {
 		a.LatencyMS = time.Since(start).Milliseconds()
 		return a, nil
 	}
@@ -132,6 +143,12 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		entities[e.ID] = e
 	}
 	facts := map[string]bool{}
+	if r.Snapshot != nil {
+		facts["state:snapshot"] = true
+		for _, q := range r.Snapshot.Quests {
+			facts[fmt.Sprintf("state:quest:%d", q.ID)] = true
+		}
+	}
 	if r.Character != nil {
 		facts[r.Character.EvidenceID] = true
 	}
@@ -145,6 +162,16 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		facts["edge:"+e.ID] = true
 	}
 	finish := func() {
+		if snap := r.Snapshot; snap != nil {
+			for _, id := range a.EvidenceIDs {
+				if id == "state:snapshot" || strings.HasPrefix(id, "state:quest:") {
+					expires := time.Unix(snap.CapturedAt+90, 0).UTC()
+					a.Sources = append(a.Sources, storage.Source{ID: id, Title: "Approved per-question addon observation", URI: "wisp-local:game-snapshot", Revision: time.Unix(snap.CapturedAt, 0).UTC().Format(time.RFC3339), License: "Private player context", ValidationStatus: "user_imported", ExpiresAt: &expires})
+				}
+			}
+			a.Warnings = append(a.Warnings, "The game snapshot is user-supplied, time-limited and may contain only part of the quest log. Navigation is rechecked in the game on click.")
+		}
+
 		if c := r.Character; c != nil {
 			for _, id := range a.EvidenceIDs {
 				if id == c.EvidenceID {
@@ -338,13 +365,13 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	}
 	// Retrieve only named entities and their one-hop neighborhood. No fuzzy guesses.
 	selected := map[string]bool{}
-	question := " " + normalizeWords(retrievalQuestion(r)) + " "
+	question := " " + normalizeWords(snapshotQuestion(r)) + " "
 	for _, e := range g.Entities {
 		if strings.Contains(question, " "+normalizeWords(e.Name)+" ") {
 			selected[e.ID] = true
 		}
 	}
-	if len(selected) == 0 && len(r.Journal) == 0 && r.Character == nil {
+	if len(selected) == 0 && len(r.Journal) == 0 && r.Character == nil && r.Snapshot == nil && r.Mode != "generate" {
 		finish()
 		return a, nil
 	}
@@ -361,6 +388,12 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		}
 	}
 	allowed := map[string]bool{}
+	if r.Snapshot != nil {
+		allowed["state:snapshot"] = true
+		for _, q := range r.Snapshot.Quests {
+			allowed[fmt.Sprintf("state:quest:%d", q.ID)] = true
+		}
+	}
 	if r.Character != nil {
 		allowed[r.Character.EvidenceID] = true
 	}
@@ -397,18 +430,24 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 			sourceRefs = append(sourceRefs, map[string]string{"id": src.ID, "validation_status": src.ValidationStatus})
 		}
 	}
-	b, _ := json.Marshal(map[string]any{"game_version": contextGraph.GameVersion, "entities": contextGraph.Entities, "edges": contextGraph.Edges, "sources": sourceRefs, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false})
-	if len(b) > 40000 && (r.Character != nil || len(r.Journal) > 0) {
+	b, _ := json.Marshal(map[string]any{"game_version": contextGraph.GameVersion, "entities": contextGraph.Entities, "edges": contextGraph.Edges, "sources": sourceRefs, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false, "game_snapshot": r.Snapshot, "next_step_options": plan.Candidates})
+	if len(b) > 40000 && (r.Character != nil || len(r.Journal) > 0 || r.Snapshot != nil) {
 		// Broad world matches must not prevent a supported personal-only answer.
 		// Strip both world facts and their allowed citations before inference.
 		allowed = map[string]bool{}
+		if r.Snapshot != nil {
+			allowed["state:snapshot"] = true
+			for _, q := range r.Snapshot.Quests {
+				allowed[fmt.Sprintf("state:quest:%d", q.ID)] = true
+			}
+		}
 		for _, e := range r.Journal {
 			allowed[e.ID] = true
 		}
 		if r.Character != nil {
 			allowed[r.Character.EvidenceID] = true
 		}
-		b, _ = json.Marshal(map[string]any{"game_version": r.GameVersion, "entities": []storage.Entity{}, "edges": []storage.Edge{}, "sources": []any{}, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false})
+		b, _ = json.Marshal(map[string]any{"game_version": r.GameVersion, "entities": []storage.Entity{}, "edges": []storage.Edge{}, "sources": []any{}, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false, "game_snapshot": r.Snapshot, "next_step_options": plan.Candidates})
 		a.Warnings = append(a.Warnings, "World matches exceeded the context budget. This answer can use only your selected dated character context; name a specific world resource for a combined answer.")
 	}
 	if len(b) > 40000 {
@@ -441,13 +480,34 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if result.Status == "unknown" && len(result.EvidenceIDs) > 0 {
 		valid = false
 	}
+	// A single cited, observed quest is sufficient to offer optional navigation.
+	// This avoids making UI availability depend on the model remembering an optional field.
+	if result.Status == "answered" && result.ActionID == "" {
+		choices := []string{}
+		for _, candidate := range plan.Candidates {
+			if plan.Action(candidate.ID, r.Snapshot, result.EvidenceIDs) != nil {
+				choices = append(choices, candidate.ID)
+			}
+		}
+		if len(choices) == 1 {
+			result.ActionID = choices[0]
+		}
+	}
+	if result.ActionID != "" {
+		if result.Status != "answered" || plan.Action(result.ActionID, r.Snapshot, result.EvidenceIDs) == nil {
+			valid = false
+		}
+	}
 	if !valid {
 		a.Warnings = append(a.Warnings, "Model answer failed evidence validation; answer withheld.")
 		finish()
 		return a, nil
 	}
 	a.Status = result.Status
-	if a.Status == "answered" || len(r.Journal) > 0 || r.Character != nil {
+	if action := plan.Action(result.ActionID, r.Snapshot, result.EvidenceIDs); action != nil {
+		a.Actions = []Action{*action}
+	}
+	if a.Status == "answered" || a.Status == "unknown" {
 		a.Text = result.Text
 		a.EvidenceIDs = result.EvidenceIDs
 		if isFixture {

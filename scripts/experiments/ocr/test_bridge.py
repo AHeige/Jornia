@@ -67,3 +67,24 @@ class ProtocolTest(unittest.TestCase):
 
 
 if __name__ == '__main__': unittest.main()
+
+class UnicodeSnapshotTest(unittest.TestCase):
+    def packet(self, q='次は何をすればいい？', snapshot=None):
+        wire=json.dumps({'q':q,'s':snapshot},ensure_ascii=False,separators=(',',':'))
+        ident=ProtocolTest.ident; binding=f'{bridge.checksum(ProtocolTest.guid):05d}'
+        encoded=wire.encode().hex()
+        lines=[f'WISPBEGIN2 {ident} {binding} {bridge.checksum(ident+binding+wire):05d}',encoded[:80],encoded[80:],'WISPEND']
+        return bridge.parse(lines,ProtocolTest.nonce,{ProtocolTest.guid:'char'})
+    def test_unicode_and_explicit_snapshot(self):
+        for q in ['次は何をすればいい？','إلى أين أذهب؟','Vad gör jag nu?','¿Qué hago ahora?','Куда идти?','quote " backslash \\ pipe |']:
+            p=self.packet(q);self.assertEqual(p['question'],q);self.assertNotIn('snapshot',p)
+        snapshot=[int(bridge.time.time()),16,'灰谷','70790',1,[[123,'Quest',1,1]]]
+        p=self.packet(snapshot=snapshot);self.assertTrue(p['snapshot']['quests'][0]['waypoint'])
+        result={'actions':[{'id':'navigate:quest:123','kind':'show_quest_waypoint','quest_id':123,'expires_at':snapshot[0]+90}],'evidence_ids':['state:quest:123']}
+        self.assertIsNotNone(bridge.navigation(p,result))
+        result['actions'][0]['quest_id']=999;self.assertIsNone(bridge.navigation(p,result))
+        snapshot[0]-=100;self.assertIsNone(self.packet(snapshot=snapshot))
+    def test_invalid_shapes(self):
+        self.assertIsNone(self.packet(snapshot=[True,16,'z','b',0,[]]))
+        self.assertIsNone(self.packet(q='界'*60))
+        self.assertIsNone(self.packet(snapshot=[int(bridge.time.time()),16,'z','b',0,[[1,'x',1,1],[1,'x',1,1]]]))

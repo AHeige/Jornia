@@ -1,0 +1,356 @@
+{
+  "cases": [
+    {
+      "language": "fr",
+      "passed": true,
+      "answer": {
+        "status": "answered",
+        "text": "Vérifiez la remise de la quête \"Synthetic completed quest\" ou continuez les objectifs de la quête \"Synthetic active quest\".",
+        "game_version": "forever",
+        "route": "berget",
+        "sources": [
+          {
+            "expires_at": "2026-11-06T18:58:34Z",
+            "id": "state:quest:700001",
+            "title": "Approved per-question addon observation",
+            "uri": "wisp-local:game-snapshot",
+            "revision": "2026-11-06T18:57:04Z",
+            "license": "Private player context",
+            "validation_status": "user_imported"
+          },
+          {
+            "expires_at": "2026-11-06T18:58:34Z",
+            "id": "state:quest:700002",
+            "title": "Approved per-question addon observation",
+            "uri": "wisp-local:game-snapshot",
+            "revision": "2026-11-06T18:57:04Z",
+            "license": "Private player context",
+            "validation_status": "user_imported"
+          }
+        ],
+        "evidence_ids": [
+          "state:quest:700001",
+          "state:quest:700002"
+        ],
+        "warnings": [
+          "Sources checked for Forever; API or community evidence does not independently verify the current in-game state.",
+          "World matches exceeded the context budget. This answer can use only your selected dated character context; name a specific world resource for a combined answer.",
+          "The game snapshot is user-supplied, time-limited and may contain only part of the quest log. Navigation is rechecked in the game on click."
+        ],
+        "model": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        "usage": {
+          "prompt_tokens": 987,
+          "completion_tokens": 67
+        },
+        "estimated_cost_eur": 0.0003162,
+        "latency_ms": 2332,
+        "actions": [
+          {
+            "id": "navigate:quest:700001",
+            "kind": "show_quest_waypoint",
+            "quest_id": 700001,
+            "expires_at": 1793991514
+          }
+        ],
+        "tool_trace": [
+          {
+            "tool": "read_game_context",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "retrieve_world_evidence",
+            "status": "completed",
+            "duration_ms": 995
+          },
+          {
+            "tool": "find_active_quest_options",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "validate_navigation_options",
+            "status": "completed",
+            "duration_ms": 0
+          }
+        ]
+      }
+    },
+    {
+      "language": "es",
+      "passed": true,
+      "answer": {
+        "status": "answered",
+        "text": "Deberías revisar la entrega de la misión 'Synthetic completed quest'.",
+        "game_version": "forever",
+        "route": "berget",
+        "sources": [
+          {
+            "expires_at": "2026-11-06T18:58:47Z",
+            "id": "state:quest:700001",
+            "title": "Approved per-question addon observation",
+            "uri": "wisp-local:game-snapshot",
+            "revision": "2026-11-06T18:57:17Z",
+            "license": "Private player context",
+            "validation_status": "user_imported"
+          }
+        ],
+        "evidence_ids": [
+          "state:quest:700001"
+        ],
+        "warnings": [
+          "Sources checked for Forever; API or community evidence does not independently verify the current in-game state.",
+          "World matches exceeded the context budget. This answer can use only your selected dated character context; name a specific world resource for a combined answer.",
+          "The game snapshot is user-supplied, time-limited and may contain only part of the quest log. Navigation is rechecked in the game on click."
+        ],
+        "model": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        "usage": {
+          "prompt_tokens": 987,
+          "completion_tokens": 42
+        },
+        "estimated_cost_eur": 0.00030869999999999997,
+        "latency_ms": 1609,
+        "actions": [
+          {
+            "id": "navigate:quest:700001",
+            "kind": "show_quest_waypoint",
+            "quest_id": 700001,
+            "expires_at": 1793991527
+          }
+        ],
+        "tool_trace": [
+          {
+            "tool": "read_game_context",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "retrieve_world_evidence",
+            "status": "completed",
+            "duration_ms": 937
+          },
+          {
+            "tool": "find_active_quest_options",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "validate_navigation_options",
+            "status": "completed",
+            "duration_ms": 0
+          }
+        ]
+      }
+    },
+    {
+      "language": "ja",
+      "passed": true,
+      "answer": {
+        "status": "answered",
+        "text": "「Synthetic completed quest」を提出してください。",
+        "game_version": "forever",
+        "route": "berget",
+        "sources": [
+          {
+            "expires_at": "2026-11-06T18:59:00Z",
+            "id": "state:quest:700001",
+            "title": "Approved per-question addon observation",
+            "uri": "wisp-local:game-snapshot",
+            "revision": "2026-11-06T18:57:30Z",
+            "license": "Private player context",
+            "validation_status": "user_imported"
+          }
+        ],
+        "evidence_ids": [
+          "state:quest:700001"
+        ],
+        "warnings": [
+          "Sources checked for Forever; API or community evidence does not independently verify the current in-game state.",
+          "World matches exceeded the context budget. This answer can use only your selected dated character context; name a specific world resource for a combined answer.",
+          "The game snapshot is user-supplied, time-limited and may contain only part of the quest log. Navigation is rechecked in the game on click."
+        ],
+        "model": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        "usage": {
+          "prompt_tokens": 993,
+          "completion_tokens": 37
+        },
+        "estimated_cost_eur": 0.000309,
+        "latency_ms": 3303,
+        "actions": [
+          {
+            "id": "navigate:quest:700001",
+            "kind": "show_quest_waypoint",
+            "quest_id": 700001,
+            "expires_at": 1793991540
+          }
+        ],
+        "tool_trace": [
+          {
+            "tool": "read_game_context",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "retrieve_world_evidence",
+            "status": "completed",
+            "duration_ms": 2705
+          },
+          {
+            "tool": "find_active_quest_options",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "validate_navigation_options",
+            "status": "completed",
+            "duration_ms": 0
+          }
+        ]
+      }
+    },
+    {
+      "language": "ar",
+      "passed": true,
+      "answer": {
+        "status": "answered",
+        "text": "تحقق من تسليم المهمة 'Synthetic completed quest' أو استمر في أهداف المهمة 'Synthetic active quest'.",
+        "game_version": "forever",
+        "route": "berget",
+        "sources": [
+          {
+            "expires_at": "2026-11-06T18:59:14Z",
+            "id": "state:quest:700001",
+            "title": "Approved per-question addon observation",
+            "uri": "wisp-local:game-snapshot",
+            "revision": "2026-11-06T18:57:44Z",
+            "license": "Private player context",
+            "validation_status": "user_imported"
+          },
+          {
+            "expires_at": "2026-11-06T18:59:14Z",
+            "id": "state:quest:700002",
+            "title": "Approved per-question addon observation",
+            "uri": "wisp-local:game-snapshot",
+            "revision": "2026-11-06T18:57:44Z",
+            "license": "Private player context",
+            "validation_status": "user_imported"
+          }
+        ],
+        "evidence_ids": [
+          "state:quest:700001",
+          "state:quest:700002"
+        ],
+        "warnings": [
+          "Sources checked for Forever; API or community evidence does not independently verify the current in-game state.",
+          "World matches exceeded the context budget. This answer can use only your selected dated character context; name a specific world resource for a combined answer.",
+          "The game snapshot is user-supplied, time-limited and may contain only part of the quest log. Navigation is rechecked in the game on click."
+        ],
+        "model": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        "usage": {
+          "prompt_tokens": 985,
+          "completion_tokens": 60
+        },
+        "estimated_cost_eur": 0.0003135,
+        "latency_ms": 2593,
+        "actions": [
+          {
+            "id": "navigate:quest:700001",
+            "kind": "show_quest_waypoint",
+            "quest_id": 700001,
+            "expires_at": 1793991554
+          }
+        ],
+        "tool_trace": [
+          {
+            "tool": "read_game_context",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "retrieve_world_evidence",
+            "status": "completed",
+            "duration_ms": 1777
+          },
+          {
+            "tool": "find_active_quest_options",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "validate_navigation_options",
+            "status": "completed",
+            "duration_ms": 0
+          }
+        ]
+      }
+    },
+    {
+      "language": "sv",
+      "passed": true,
+      "answer": {
+        "status": "answered",
+        "text": "Du kan lämna in Synthetic completed quest.",
+        "game_version": "forever",
+        "route": "berget",
+        "sources": [
+          {
+            "expires_at": "2026-11-06T18:59:28Z",
+            "id": "state:quest:700001",
+            "title": "Approved per-question addon observation",
+            "uri": "wisp-local:game-snapshot",
+            "revision": "2026-11-06T18:57:58Z",
+            "license": "Private player context",
+            "validation_status": "user_imported"
+          }
+        ],
+        "evidence_ids": [
+          "state:quest:700001"
+        ],
+        "warnings": [
+          "Sources checked for Forever; API or community evidence does not independently verify the current in-game state.",
+          "World matches exceeded the context budget. This answer can use only your selected dated character context; name a specific world resource for a combined answer.",
+          "The game snapshot is user-supplied, time-limited and may contain only part of the quest log. Navigation is rechecked in the game on click."
+        ],
+        "model": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        "usage": {
+          "prompt_tokens": 989,
+          "completion_tokens": 36
+        },
+        "estimated_cost_eur": 0.0003075,
+        "latency_ms": 2508,
+        "actions": [
+          {
+            "id": "navigate:quest:700001",
+            "kind": "show_quest_waypoint",
+            "quest_id": 700001,
+            "expires_at": 1793991568
+          }
+        ],
+        "tool_trace": [
+          {
+            "tool": "read_game_context",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "retrieve_world_evidence",
+            "status": "completed",
+            "duration_ms": 1968
+          },
+          {
+            "tool": "find_active_quest_options",
+            "status": "completed",
+            "duration_ms": 0
+          },
+          {
+            "tool": "validate_navigation_options",
+            "status": "completed",
+            "duration_ms": 0
+          }
+        ]
+      }
+    }
+  ],
+  "passed": 5,
+  "total": 5
+}

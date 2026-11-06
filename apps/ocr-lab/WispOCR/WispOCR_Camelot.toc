@@ -2,4 +2,5 @@
 ## Title: Wisp OCR Lab
 ## Notes: Explicit local OCR experiment. Question text only; no journal or other chat.
 Config.lua
+Navigation.lua
 WispOCR.lua

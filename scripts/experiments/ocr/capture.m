@@ -39,7 +39,7 @@ static CGRect panel(CGImageRef image) {
  // All four corners must be present: reject unrelated isolated magenta pixels.
  // Read only the outbox band, excluding the answer, input and other game chat.
  CGFloat height=maxy-miny;
- return CGRectIntersection(CGRectMake(minx+8,miny+height*.22,maxx-minx-16,height*.27),CGRectMake(0,0,w,h));
+ return CGRectIntersection(CGRectMake(minx+8,miny+height*.22,maxx-minx-16,height*.33),CGRectMake(0,0,w,h));
 }
 int main(int argc,const char *argv[]) {
  @autoreleasepool {
