@@ -30,6 +30,8 @@ These are working ideas worth understanding. Our question was narrower: could a 
 
 [NeverQuestAlone's signal implementation](https://github.com/tommygeoco/neverquestalone/blob/5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07/bridge/transport/signals.mjs) supplied the important lead. It briefly removes and recreates an already known file. The addon probes it through `PlaySoundFile`, using the change as a doorbell that announces an update. Its [documented protocol](https://github.com/tommygeoco/neverquestalone/blob/5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07/docs/PROTOCOL.md) still delivers reply contents through a finite pool of addon slots.
 
+An earlier public report is also directly relevant: [rdimascio's pull request to wow-ai, opened 28 September 2026](https://github.com/chelinho139/wow-ai/pull/15), already records missing files returning nil and empty, garbage, truncated and valid files returning true on Mac. Its patch changes signal files to use presence rather than playable contents. This observation predates our experiments and deserves explicit credit alongside NeverQuestAlone.
+
 That distinction matters. Reusing a notification does not automatically make the payload reusable.
 
 We built our own probe on a Mac running Forever 1.60.1.70790, Interface 16001. In that client, an existing empty file returned a truthy first result from `PlaySoundFile`; a missing control file did not. Our own existing Lua and TOC test files also returned truthy results. The return value could therefore not be interpreted as proof that a file contained playable audio.
@@ -104,13 +106,19 @@ During the longer run, Lua reported 6,019 probes, 190.3 milliseconds of accumula
 
 The [full experiment record](return-block-slice-2026-11-06.md) includes failures, implementation corrections and measurement boundaries.
 
+## The underlying communication principle is older than WoW
+
+In [A Note on the Confinement Problem](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/acrobat-24.pdf), published in 1973, Butler Lampson describes using file interlocks as observable Boolean state. His example 5 sends a bit stream with data, send-clock and receive-clock files. Those interlock and timing examples are credited in the paper to A. G. Fraser.
+
+That is a different mechanism from probing presence through a game's sound API, but the general idea of constructing an acknowledged channel from shared observable resource state is well established. Neither bit encoding, clocking nor acknowledgement is a new communication principle introduced by Wisp.
+
 ## What is different about this experiment
 
 The screen channel is established territory. So are live game context, external AI companions, load-on-demand inboxes, and using sound-resource behavior to signal that something is ready.
 
-Our specific contribution is turning repeatedly observable file presence into a checked, acknowledged payload channel. The same 64 data filenames carry successive blocks and subsequent messages. A new filename is not consumed per block or answer.
+Our implementation applies that established communication pattern to repeatedly observable file presence through WoW Forever's sound API, with checked blocks and local OCR acknowledgements. The same 64 data filenames carry successive blocks and subsequent messages. A new filename is not consumed per block or answer.
 
-We did not identify this complete arrangement in the projects reviewed. That is a scoped comparison, not proof of worldwide novelty. In particular, credit for the reusable file-presence signal belongs in the explanation: reviewing NeverQuestAlone led us to the probe that made this work possible.
+In the reviewed revisions, NeverQuestAlone uses presence signals as notifications while reply contents arrive through slots; wow-ai also uses slots, and Forever Bridge uses font metrics. We did not find the same complete presence-based payload implementation in those comparisons. This is an implementation distinction, not a claim that the general technique is new or that Wisp is the first to apply it in WoW. See the [dated prior-work audit](transport-prior-work-audit-2026-11-07.md) for scope and remaining gaps. In particular, credit for the reusable file-presence signal belongs in the explanation: reviewing NeverQuestAlone led us to the probe that made this work possible.
 
 ## What an open-source release needs
 
