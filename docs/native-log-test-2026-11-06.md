@@ -1,77 +1,77 @@
-# Native Lua-logg — 6 november 2026
+# Native Lua logging on 6 November 2026
 
-Status: **genomfört**, inklusive en upprepning med rätt målfil och verifierad återställning. Ingen nätåtkomst eller GitHub-synk användes i detta test.
+Status: **completed**, including a repeat watching the correct target and verified restoration. This test used no internet access or GitHub synchronization.
 
-## Avgränsning
+## Scope
 
-Testa endast om `C_Log.LogMessage` finns för en addon och om **en** unik, ofarlig markör kan nå en lokal loggfil snabbt. Första hypotesen var `Logs/DeveloperLog.log`; faktisk destination visade sig vara `Logs/General.log`. Ingen spelarkontext, AI, chattöverföring, RAM-läsning, utfyllnad eller upprepad sändning ingår. Ögonblicksbild och AI-retur påbörjas inte.
+Check only whether `C_Log.LogMessage` is available to addons and whether **one** unique harmless marker reaches a local log quickly. Initially we expected `Logs/DeveloperLog.log`; the actual target was `Logs/General.log`. No player context, AI, chat transport, memory reading, filler or repeated send was included. Snapshot/AI-return work did not start.
 
-Förstapartsmodulen `apps/bridge-lab/native-log-probe.lua` laddas i en befintlig experimentinbox; ingen klientbinär eller TOC ändras. Laddning och `/wispnative status` läser bara funktionstyp och de tre berörda CVar-värdena.
+First-party `apps/bridge-lab/native-log-probe.lua` loads through an existing experimental inbox without modifying a client binary or TOC. Load and `/wispnative status` read only the function type and three relevant CVars.
 
-Ett uttryckligt `/wispnative test <run-id>`:
+An explicit `/wispnative test <run-id>`:
 
-1. Kontrollerar funktion och inställnings-/timer-API. Vid saknad funktion avbryts försöket utan ändringar.
-2. Sparar exakta ursprungsvärden för `developerLogFilterNormal`, `developerLogWriteToFile` och `developerLog`. Saknade eller oväntade värden gör att det avbryts före ändring.
-3. Aktiverar bara värden som inte redan är `1` och verifierar återläsningen. Vid fel görs återställning.
-4. Anropar `C_Log.LogMessage` exakt en gång med `WISPNATIVE1:<run-id>:<uptime>:<epoch>`. Samma ID kan inte återspelas.
-5. Återställer ändrade värden efter 60 sekunder, vid `/wispnative stop` eller på utloggnings-/reload-event. Återläsning verifieras och eventuella återställningsfel redovisas; vid fel finns manuellt återförsök. Ursprungsvärden och kvittenser stannar i Wisp Bridge Labs lokala SavedVariables.
+1. Checks function/settings/timer APIs; missing functions abort without changes.
+2. Saves exact `developerLogFilterNormal`, `developerLogWriteToFile` and `developerLog` values. Missing/unexpected values abort before changes.
+3. Enables only values not already 1 and verifies readback. Failure triggers restoration.
+4. Calls `C_Log.LogMessage` once with `WISPNATIVE1:<run-id>:<uptime>:<epoch>`. The same ID cannot be replayed.
+5. Restores changed values after 60 seconds, `/wispnative stop` or logout/reload events. Verifies restoration, reports failure and allows manual recovery. Original values/receipts remain in local Wisp Bridge Lab SavedVariables.
 
-Mätperioden avslutas innan reload görs för att spara kvittensen. En markör som först syns efter återställning, reload eller klientavslut ska särskiljas från snabb leverans medan testet var aktivt.
+The measurement interval ends before saving receipts through reload. Markers first appearing after restoration/reload/exit must be distinguished from fast active-period delivery. These historical exit checks are not accepted live-transport steps for later experiments.
 
-## Oberoende filmätning
+## Independent file measurement
 
-Vår befintliga read-only-mätare har fått ett separat `--protocol native`. Chatloggens tidigare protokoll är oförändrat. Första försöket följde endast `DeveloperLog.log`; den korrigerade upprepningen följde endast `General.log`. Mätaren utgår från filens ursprungliga slutposition, hanterar nyskapande/append/upptäckt trunkering och lagrar enbart exakt rätt markörs numeriska tider. Annan utvecklarloggtext sparas inte av mätaren. Originalfilen skrivs aldrig av mätaren.
+The existing read-only watcher gained `--protocol native`; the chat-log protocol stayed unchanged. Attempt one followed only `DeveloperLog.log`; the corrected repeat followed only `General.log`. It starts at the original file end, handles creation/append/detected truncation and retains only the matching marker's numeric times. No unrelated developer-log text is retained and the original file is never written.
 
-Nominellt pollintervall: 50 ms. Faktiskt största intervall, diskobservationens vägg-/monotona tid och eventuell native loggtidsstämpel registreras. Spelklockans förhållande till mätarklockan måste beaktas vid latensberäkning; heltalssekunder från Lua är inte millisekundprecision. Utfallet gäller denna klient, denna markör och denna trafikvolym.
+Nominal poll interval: 50 ms. Record actual maximum interval, observation wall/monotonic times and native timestamp if available. Relate game and watcher clocks before calculating latency; Lua integer seconds are not millisecond precision. Results apply to this client, marker and traffic volume.
 
-Körning: `5bf81eee6ba7`. Privata råkvittenser och filtrerade observationer finns i ignorerade `.cache/native-log-test/5bf81eee6ba7/`. Testet innehåller ingen allmän logginsamling och inga råa klientfiler publiceras.
+Run `5bf81eee6ba7` has private receipts/filtered observations under ignored `.cache/native-log-test/5bf81eee6ba7/`. No general log collection or raw client files are published.
 
-## Lokala förkontroller
+## Local preliminary checks
 
-- Lua-tester: inaktiv laddning/status, enda markör, blockering av omsändning, timeout-återställning, kastat loggfel, setter som ändrar innan fel, nekad setter, saknad funktion och saknad CVar.
-- Isolerat Python-fixturtest: rätt native-markör upptäcks, numeriska tider parsas och orelaterad loggtext hamnar inte i evidensfilen.
-- Go-test kördes med `GOPROXY=off` och `GOSUMDB=off`, med redan befintliga lokala beroenden. Inga externa paket eller tredjepartslösningar lades till.
+- Lua tests: inert loading/status, one marker, replay prevention, timeout restoration, thrown logging error, setter changing state before throwing, denied setter, missing function and missing CVar.
+- Isolated Python fixture: marker detection, numeric times and exclusion of unrelated text.
+- Go tests used `GOPROXY=off`, `GOSUMDB=off` and existing dependencies. No external packages or finished third-party solutions were added.
 
-## Första försöket: funktion och destination verifierade
+## First attempt established function and destination
 
-Klienten visade `C_Log.LogMessage=function`. Ursprungsvärden: `developerLog=0`, `developerLogWriteToFile=1`, `developerLogFilterNormal=1`. Endast `developerLog` ändrades. Kvittensen visar exakt ett accepterat anrop och automatisk återställning av `developerLog` till `0` efter 60 sekunder, utan återställningsfel. Användaren kontrollerade även att samtliga värden återgått till ursprungsläget före reload.
+The client displayed `C_Log.LogMessage=function`. Original values: `developerLog=0`, `developerLogWriteToFile=1`, `developerLogFilterNormal=1`. Only `developerLog` changed. The receipt shows one accepted call and automatic restoration to 0 after 60 seconds without errors. The user checked all original values before reload.
 
-Markören återfanns efter klientavslut som en `[N][Lua]`-rad i **`General.log`**, inte i `DeveloperLog.log`. Den första kontinuerliga mätaren följde därför fel destination. En riktad genomsökning av klientens loggfiler tidigare under försöket såg ingen markör, men den ersätter inte kontinuerlig mätning av rätt fil. **Det går inte att fastställa första diskögonblick eller avfärda realtid från det första försöket.** DeveloperLog-filens fortsatta tomhet är inte ett negativt resultat för skrivningen till General.log.
+After exit the marker appeared as an `[N][Lua]` line in **General.log**, not DeveloperLog.log. The continuous watcher had followed the wrong destination. An earlier targeted search found no marker, but cannot replace continuous measurement of the correct file. **The first attempt cannot establish first disk visibility or rule out live delivery.** DeveloperLog remaining empty is not a negative result for General.log writing.
 
-## Upprepning med rätt fil
+## Repeat with the correct file
 
-Körning `d2b6fb185c8d` använder samma förstapartsprobe, samma enmarkörsbegränsning och samma återställning, men filmätaren följer `General.log` från före klientstart. Den första markörens ID återanvändes inte. Evidens ligger separat under `.cache/native-log-test/d2b6fb185c8d/`.
+Run `d2b6fb185c8d` used the same first-party one-marker probe/restoration, watching General.log before startup. The first ID was not reused. Evidence is separate under `.cache/native-log-test/d2b6fb185c8d/`.
 
-Den riktiga Lua-kvittensen visar:
+Actual Lua receipts show:
 
-- klient 1.60.1 / build 70790 / Interface 16001;
-- exakt en markör skickad via ett accepterat anrop;
-- endast `developerLog` ändrades från `0` till `1`;
-- `developerLogWriteToFile` och `developerLogFilterNormal` var redan `1` och ändrades inte;
-- automatisk återställning av `developerLog` till `0` efter cirka 60 sekunder, verifierad återläsning och inga återställningsfel;
-- användaren verifierade samma slutvärden innan reload.
+- client 1.60.1/build 70790/Interface 16001;
+- exactly one marker submitted through an accepted call;
+- only `developerLog` changed 0 → 1;
+- the other two settings already 1 and unchanged;
+- automatic restoration after about 60 seconds, verified readback and no errors;
+- user verification of final values before reload.
 
-| Kontroll | Resultat |
-| --- | --- |
-| Funktionen tillgänglig i vanlig addon-Lua | Ja |
-| Ett märkt `C_Log.LogMessage`-anrop accepterat | Ja |
-| Markör på disk under 60-sekundersfönstret | Nej |
-| Markör på disk efter återställning och reload | Nej; General.log fortfarande 0 byte |
-| Markör vid normalt klientavslut | Ja; exakt en matchande rad i General.log |
-| Uppmätt native-loggtid → första diskobservation | **188,556 sekunder** |
+| Check | Result |
+|---|---|
+| Function available in ordinary addon Lua | Yes |
+| One labeled call accepted | Yes |
+| Marker on disk within 60 seconds | No |
+| Marker after restoration/reload | No; General.log still zero bytes |
+| Marker at normal client exit | Yes; one matching General.log line |
+| Native timestamp → first disk observation | **188.556 seconds** |
 
-Första diskobservation: **13:46:40,686 CET**. Den återfunna loggradens egen tidsstämpel var 13:43:32,130. Native-tiden och spel-uptime stämmer mot mätarens vägg-/monotona klocka inom cirka 0,7 ms. Nominell pollperiod var 50 ms; största uppmätta mellanrum var 104 ms. Pollosäkerheten är alltså liten i förhållande till den observerade fördröjningen.
+First disk observation: **13:46:40.686 CET**. Native line timestamp: 13:43:32.130. Native time/game uptime matched watcher wall/monotonic clocks within about 0.7 ms. Poll interval nominally 50 ms, maximum 104 ms, small relative to the delay.
 
-Fördröjningen är ett **manuellt, avslutsutlöst resultat**, inte normal medel- eller p95-latens. Inga utfyllnadsmeddelanden skickades. Den slutliga General.log var 39 138 byte, mindre än 64 KiB; det bevisar ingen buffertgräns. Det är fortfarande oprövat om en begränsad lokal volym eller en tillgänglig flushmekanism kan ge snabbare skrivning.
+This is a **manual exit-triggered result**, not mean/p95 latency. No filler was sent. Final General.log size was 39,138 bytes, below 64 KiB; this proves no buffer threshold. Bounded local volume or an available flush mechanism might produce earlier writes, but were not tested.
 
-## Slutsats och kvarvarande osäkerhet
+## Conclusion and uncertainty
 
-Vi har nu verifierat en **helt lokal utgående skrivväg från vanlig addon-Lua till General.log**. Den kräver inte självviskningar, AI, processminnesåtkomst eller pixlar. Men en liten enstaka markör gav **inte realtid** i den uppmätta körningen. Det är därför för tidigt att använda vägen som livekoppling eller kalla den omöjlig under alla andra villkor.
+We verified an **entirely local outbound write route from ordinary addon Lua to General.log**, without self-whispers, AI, process-memory access or pixels. A single small marker did **not deliver live** in the measured run. Do not adopt it as a live bridge or declare every other condition impossible.
 
-Båda försöken aktiverade `developerLog` tillfälligt. Eftersom destinationen visade sig vara General.log är det inte bevisat att den inställningen behövs för `C_Log.LogMessage`; den kan ha varit överflödig. Ingen sådan variant har testats.
+Both attempts temporarily enabled developerLog. Since the target was General.log, that setting's necessity remains unproven and it may have been redundant. No variant tested this.
 
-## Avslut och återställning
+## Cleanup and restoration
 
-Båda mätarprocesserna är stoppade. Den tillfälliga inbox 3 är återställd från sin exakta förtestkopia med WoW stängt. Originalets loggfiler har inte raderats eller skrivits om av våra verktyg. Lua-kvittenserna exporterades med vår data-only-parser, inte genom att exekvera SavedVariables. Filtrerad evidens och `summary.json` för upprepningen ligger endast i ignorerade cachekataloger. Ingen publicering eller nätåtkomst gjordes.
+Both watchers stopped. Temporary inbox 3 was restored byte-for-byte with WoW closed. Tools did not delete/rewrite original logs. Receipts were exported through the data-only parser rather than executing SavedVariables. Filtered evidence and repeat `summary.json` remain only in ignored caches. No publishing/network access occurred.
 
-Steg 2 och 3 i dagens plan har inte påbörjats. Eventuell nästa undersökning av buffertvolym är ett separat deltest av utgående transport och kräver en ny avgränsning.
+Steps 2/3 of that day's plan had not started. Further buffer-volume research would be a separately scoped outbound subtest.

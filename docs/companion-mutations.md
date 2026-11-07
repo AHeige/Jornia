@@ -20,7 +20,7 @@ Verification: Go tests cover duplicate requests, conflicting payloads/events, pe
 
 `demo.activate/v1` uses acknowledged feedback through `Mutations.submit`, with one in-flight activation per browser and the same persisted import receipt contract on the server. The canonical synthetic packet has stable event IDs and a reserved installation identity. A completed receipt proves SQLite committed the import; an authoritative state refresh selects the marked demo character. Repeated activation deduplicates events and preserves conversations. Definitive rejection retains the current character and shows the error beside the action. A lost response is recovered by receipt lookup without replay. Real imports cannot use the reserved identity. Demo labels and source statuses persist after process restart; a different character never receives demo memory. The existing forget action can delete the demo journal after its normal confirmation.
 
-The result is kept visually static to avoid moving the conversation while it is read. Button disabling and inline “Förbereder…” acknowledge activation immediately; no success or demo banner appears before the receipt and state read. Existing daisyUI input feedback is retained, including reduced-motion behavior. The connection check is read-only, sends no question and invokes no model.
+The result is kept visually static to avoid moving the conversation while it is read. Button disabling and inline “Preparing…” acknowledge activation immediately; no success or demo banner appears before the receipt and state read. Existing daisyUI input feedback is retained, including reduced-motion behavior. The connection check is read-only, sends no question and invokes no model.
 
 ## Local journal consent/configuration (v1)
 

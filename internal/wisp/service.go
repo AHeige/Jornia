@@ -184,14 +184,14 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		for _, e := range r.Journal {
 			for _, id := range a.EvidenceIDs {
 				if id == e.ID {
-					a.Sources = append(a.Sources, storage.Source{ID: e.ID, Title: "Valt lokalt journalutdrag", URI: "wisp-local:excerpt/" + e.ID, Revision: time.Unix(e.ObservedAt, 0).UTC().Format(time.RFC3339), License: "Privat spelarhistorik", ValidationStatus: "user_imported"})
+					a.Sources = append(a.Sources, storage.Source{ID: e.ID, Title: "Selected local journal excerpt", URI: "wisp-local:excerpt/" + e.ID, Revision: time.Unix(e.ObservedAt, 0).UTC().Format(time.RFC3339), License: "Private player history", ValidationStatus: "user_imported"})
 				}
 			}
 		}
 		if len(r.Journal) > 0 {
-			a.Warnings = append(a.Warnings, "Journalutdragen är sparade observationer, inte aktuell spelstatus.")
+			a.Warnings = append(a.Warnings, "Journal excerpts are saved observations, not current game state.")
 			if r.SyntheticJournal {
-				a.Warnings = append(a.Warnings, "Demojournalen är syntetisk och beskriver inte verkliga spelhändelser.")
+				a.Warnings = append(a.Warnings, "The demo journal is synthetic and does not describe real game events.")
 			}
 		}
 

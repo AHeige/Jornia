@@ -52,7 +52,7 @@ async def completion(request: Request):
         question = request.messages[-1].content.rsplit('\nQuestion:\n', 1)[-1].strip()
         if re.match(r'(?i)^(var|vem|vad|vilka|hur|berätta|kan du|hjälp)\b', question):
             # Explicit language control without another paid classification/translation call.
-            messages.insert(0, SystemMessage('Svara på svenska. Skriv hela fältet text på svenska, men behåll spelets egennamn och evidence_ids oförändrade.'))
+            messages.insert(0, SystemMessage('Reply in Swedish. Write the entire text field in Swedish, but preserve game proper names and evidence_ids.'))
         async with slots:
             result = await model.ainvoke(messages, config={'callbacks': []})
         if not isinstance(result.content, str):

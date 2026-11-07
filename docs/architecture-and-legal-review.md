@@ -1,87 +1,87 @@
-# Wisp: arkitektur och granskning av regler
+# Wisp architecture and policy review
 
-Granskat 2026-11-05 med Sverige/EU som utgångspunkt. Granskningen föregick companion-implementationen; aktuell testversion och återstående spelverifiering beskrivs i [testguiden](wow-first-test.md) och [verifieringsrapporten](verification.md). Detta är ett tekniskt beslutsunderlag utifrån publicerade regler, inte ett juridiskt utlåtande eller ett godkännande från Blizzard. Faktisk funktion, avtalspart, klientversion, distribution och finansiering måste bedömas tillsammans före publik lansering.
+Reviewed 5 November 2026 from a Sweden/EU perspective. This review predates the companion implementation; see the [test guide](wow-first-test.md) and [verification report](verification.md) for subsequent versions and outstanding game tests. This is technical decision support based on published rules, not legal advice or Blizzard approval. Actual behavior, contracting entity, client version, distribution and funding must be assessed together before a public launch.
 
-## Arkitektur vi utgår från
+## Baseline architecture
 
-- Central kunskapsgraf för offentlig världskunskap och källor.
-- Lokal SQLite-databas i companionen för spelarens händelser, historik och preferenser.
-- Inget obligatoriskt Wisp-konto och ingen automatisk synk av spelarhistorik till en central databas.
-- Central modellproxy håller Berget-nyckeln och tar emot bara det sammanhang som behövs för ett begärt svar.
-- Första companionversionen fungerar som en separat chatt med manuell inmatning/import. Automatisk spelkoppling är en separat fråga som ännu inte är godkänd eller implementerad.
+- Central knowledge graph for public world knowledge and sources.
+- Local SQLite in the companion for player events, history and preferences.
+- No mandatory Wisp account or automatic central synchronization of player history.
+- A central model proxy holds the Berget key and receives only context needed for a requested answer.
+- The first companion is separate chat with manual entry/import. Automatic game integration was a separate, unapproved and unimplemented question at the time of this review.
 
-SQLite är avsett för lokal applikationslagring och kräver ingen separat databasserver eller användaradministration. SQLite-kärnan anges vara public domain; licenserna för vald drivrutin, eventuella tillägg och installationspaket måste granskas separat. Se [användningsområden](https://www.sqlite.org/whentouse.html) och [licensbesked](https://www.sqlite.org/copyright.html).
+SQLite supports local application storage without a separate database server or user administration. Its core is public domain; driver, extension and installer licenses require separate review. See [use cases](https://www.sqlite.org/whentouse.html) and [licensing](https://www.sqlite.org/copyright.html).
 
-## Blizzard: avtalsregler och spelintegration
+## Blizzard contracts and game integration
 
-Blizzards [officiella addonpolicy](https://us.forums.blizzard.com/en/wow/t/ui-add-on-development-policy/24534/1) kräver gratis distribution och offentligt läsbar kod. Policyn förbjuder reklam och donationsuppmaningar i addonens spelgränssnitt, förbjuder skadlig påverkan på spel/andra spelare och hänvisar vidare till EULA och användarvillkor. Den omfattar också avgifter för addonrelaterade tjänster. En separat companion är inte automatiskt ett undantag från de reglerna.
+Blizzard's [addon policy](https://us.forums.blizzard.com/en/wow/t/ui-add-on-development-policy/24534/1) requires free distribution and publicly readable code. It prohibits advertising and donation requests in the in-game addon UI, harmful effects on the game/other players, and refers to the EULA and terms of use. It also addresses charges for addon-related services. A separate companion is not automatically exempt.
 
-**Konsekvens för Wisp:** håll addon och kopplade funktioner gratis under prototypen; bygg ingen betald AI-funktion, obligatorisk egen betalnyckel eller abonnemangslösning kopplad till addon utan en konkret avtalsbedömning. Donationer på en extern webbplats har ett uttryckligt utrymme i addonpolicyn, men ger inte generellt tillstånd för alla finansieringsmodeller.
+**Implication for Wisp:** keep the addon and connected prototype features free. Do not introduce paid AI features, mandatory proprietary payment keys or addon-linked subscriptions without a concrete contractual assessment. The policy expressly allows external website donations, but does not generally authorize every funding model.
 
-Blizzards [EULA](https://www.blizzard.com/en-gb/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement) begränsar bland annat otillåten insamling av speldata, obehöriga kopplingar och tredjepartsprogram. [Anti-cheating-avtalet](https://www.blizzard.com/en-us/legal/simple/cd5930c0-2784-420c-a23d-1e0d6ff8599b/anti-cheating-agreement) behandlar otillåten förändring av spelupplevelsen och insamling av information. Ett avtalsbrott och ett lagbrott är olika frågor; avtalsbrott kan ändå medföra att spelarkonton eller funktioner påverkas.
+Blizzard's [EULA](https://www.blizzard.com/en-gb/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement) restricts unauthorized game-data collection, connections and third-party software. Its [anti-cheating agreement](https://www.blizzard.com/en-us/legal/simple/cd5930c0-2784-420c-a23d-1e0d6ff8599b/anti-cheating-agreement) addresses unauthorized gameplay changes and information collection. Contract breaches and lawbreaking are distinct, but contractual violations can still affect accounts or functionality.
 
-**Teknisk gräns för prototypen:** ingen processinjektion, minnesläsning, paketavlyssning, kringgående av skydd, modifiering av klientfiler eller automatiska spelhandlingar. Att ett program bara läser eller inte används i strid är inte ensamt ett bevis på tillåtlighet.
+**Prototype boundary:** no process injection, memory reading, packet interception, protection bypass, client-file modification or automated gameplay. Read-only behavior or use outside combat alone does not prove permission.
 
-**Öppet:** det finns inget generellt godkännande i dessa dokument för vår kombination av Lua-addon, extern companion, SavedVariables-import och AI-kontext. Ett dokumenterat addon-API eller en tekniskt läsbar fil bevisar inte att all sekundär användning är tillåten. Utvärdera den exakta metoden, särskilt eventuell tvåvägs-/realtidsbrygga, innan den distribueras. En separat manuell chatt undviker många av de integrationsfrågorna men är inte ett generellt frikort för tredjepartsprogram.
+**Unresolved:** these documents do not give general approval for our combination of Lua addon, external companion, SavedVariables import and AI context. A documented API or readable file does not authorize every secondary use. Assess the exact method, especially a bidirectional/live bridge, before distributing it. Separate manual chat avoids many integration questions but is not a blanket exemption for third-party software.
 
-Addonpolicyn är en äldre, fortfarande publicerad allmän policy. Granskningen fann inget Forever-specifikt godkännande för Wisp. EULA/API-sidor gav HTTP 403 vid direkt hämtning; relevanta stycken granskades via indexerade utdrag från Blizzards egna sidor. Kontrollera avtalen som faktiskt gäller aktuell EU-användare och klient vid en lanseringsgranskning.
+The addon policy is old but still published. No Forever-specific Wisp approval was found. Direct EULA/API requests returned HTTP 403; relevant passages were reviewed through indexed excerpts from Blizzard's own pages. A launch review must check the contracts applying to the actual EU user and client.
 
-## Världskunskap och rättigheter
+## World knowledge and reuse rights
 
-Warcraft Wiki anger [CC BY-SA 4.0 för material som wikin kan licensiera](https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights). Det ger inte wikin rätt att vidarelicensiera all underliggande Blizzard-egendom. Wikins [egen upphovsrättspolicy](https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyright_policy) beskriver också beroendet av rättigheter till spelmaterial. Amerikansk fair use är inte ett generellt svenskt/EU-tillstånd.
+Warcraft Wiki specifies [CC BY-SA 4.0 for material it can license](https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyrights). That does not let it relicense all underlying Blizzard property. Its [copyright policy](https://warcraft.wiki.gg/wiki/Warcraft_Wiki:Copyright_policy) also describes reliance on rights to game material. US fair use is not general Swedish/EU permission.
 
-[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) kräver bland annat attribution, licenslänk och ändringsangivelse samt delning enligt samma/kompatibel licens av distribuerat bearbetat material. Det innebär inte automatiskt att hela applikationskoden får samma licens. Gränsen för en större blandad databas och dess eventuella databasskydd behöver granskas innan bulkimport eller publicering.
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) requires attribution, a license link, identification of changes and compatible share-alike licensing for distributed adaptations. It does not automatically impose that license on all application code. A large mixed database and possible database rights need review before bulk import or publication.
 
-Det nuvarande lilla Ashenvale-urvalet har attribution, licenslänkar, ändringsbeskrivning och granskningsbegränsningar i [datameddelandet](licenses/ashenvale-data.md). Detta är dokumenterade licensåtgärder, inte en fullständig rättighetsklarering. `source_checked` avser faktakälla och kompatibilitetsgranskning; det är inget juridiskt klartecken.
+The small existing Ashenvale selection includes attribution, license links, change descriptions and review limits in its [data notice](licenses/ashenvale-data.md). These are documented licensing measures, not complete rights clearance. `source_checked` describes factual sourcing/compatibility review, not legal approval.
 
-**Fortsatt princip:** korta strukturerade uppgifter, dokumenterad proveniens och egna beskrivningar. Kopiera inte hela questtexter, böcker, kartor, bilder, musik eller stora databasuttag utan verifierad rätt. Egen formulering och liten volym minskar vissa risker men avgör inte ensamma tillåtligheten. Import av QuestieDB, Wowhead och andra källor kräver separat granskning.
+**Continuing principle:** short structured facts, documented provenance and our own descriptions. Do not copy complete quest texts, books, maps, images, music or large database extracts without verified rights. Original wording and small scale can reduce some risks but do not settle permission. QuestieDB, Wowhead and other imports require separate review.
 
-Om [Blizzards Developer API](https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use) används tillkommer dess villkor, bland annat kring avgifter, hantering/vidaredistribution av data, API-nycklar, attribution och integritet. En offentligt tillgänglig API-post är inte automatiskt fritt återdistribuerbar. Håll API-material åtskilt från material som licensieras som ett öppet kunskapspaket. Ingen Blizzard-API-integration finns i nuvarande prototyp.
+Using [Blizzard's Developer API](https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use) adds terms covering charges, data handling/redistribution, keys, attribution and privacy. A public API record is not automatically freely redistributable. Separate API material from openly licensed knowledge packages. No Blizzard API integration existed in the prototype at the time of this review.
 
-Använd egen grafisk identitet och en tydlig upplysning om att Wisp är en oberoende tjänst. Kontrollera namnet Wisp separat före offentlig distribution; denna granskning är ingen varumärkessökning eller registrering.
+Use an independent visual identity and clearly state that Wisp is independent. Check the Wisp name before public distribution; this review is not a trademark search or registration.
 
-## Lokal historik och GDPR
+## Local history and GDPR
 
-Lokal lagring minskar vår centrala datamängd. Inget konto betyder däremot inte automatiskt anonymitet. IP-adresser och identifierbara användaruppgifter kan vara personuppgifter enligt [IMY](https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/introduktion-till-gdpr/personuppgifter/). Karaktärsnamn, meddelanden och händelsekombinationer kan också identifiera människor. Behandling kan ske även utan beständig serverlagring.
+Local storage reduces centrally held data. Account-free does not automatically mean anonymous. IP addresses and identifiable user information can be personal data under [IMY guidance](https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/introduktion-till-gdpr/personuppgifter/). Character names, messages and event combinations may also identify people. Processing can occur without persistent server storage.
 
-När Wisp bestämmer ändamål och medel för sin serverbehandling behöver Wisp-operatören normalt bedömas som personuppgiftsansvarig för den behandlingen. [IMY:s rollbeskrivning](https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/personuppgiftsansvariga-och-personuppgiftsbitraden/) hjälper att skilja detta från en leverantörs biträdesroll. Rollerna för ren lokal behandling behöver bedömas mot den faktiska implementationen.
+Where Wisp determines purposes and means of server processing, its operator normally needs assessment as controller for that processing. [IMY's role guidance](https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/personuppgiftsansvariga-och-personuppgiftsbitraden/) distinguishes this from a provider's processor role. Roles for purely local processing depend on the implementation.
 
-**Byggkrav före användartest med persondata:** definiera operatör och rättslig grund per ändamål; ge begriplig integritetsinformation; minimera data och mottagare; använd TLS och begränsad loggning; ange lagringstid och hantera rättigheter samt incidenter. Ett val att aktivera AI-kontext är en produktinställning och ersätter inte hela GDPR-bedömningen. Om samtycke används måste det uppfylla kraven för giltigt samtycke.
+**Before tests with personal data:** define operator and legal basis per purpose; provide understandable privacy information; minimize data and recipients; use TLS and bounded logging; define retention and handle rights/incidents. An AI-context toggle is a product setting, not a complete GDPR assessment. If relying on consent, it must satisfy valid-consent requirements.
 
-Lagra bara användarens avsedda spelhistorik. Samla inte rutinmässigt in guildchatt, whispers, andra spelares meddelanden eller Battle.net-uppgifter. Ta aldrig emot Blizzard-lösenord. Utforma export, radering och val för lokal retention. Lokal databaslagring är inte i sig kryptering eller skydd mot andra processer; använd OS-behörigheter och bedöm ytterligare skydd efter datainnehållet. Hantering av barn och åldersgräns behöver bestämmas före offentlig distribution.
+Store only the user's intended game history. Do not routinely collect guild chat, whispers, other players' messages or Battle.net details. Never receive Blizzard passwords. Provide export, deletion and local retention choices. Local database storage is not encryption or protection against other processes; use OS permissions and assess additional safeguards for the data. Determine handling of children and age limits before public distribution.
 
-[PTS beskriver](https://pts.se/internet-och-telefoni/kakor-cookies) reglerna om åtkomst/lagring på terminalutrustning och undantaget för funktioner som är nödvändiga för en begärd tjänst. Enbart ordet ”lokal” avgör inte samtyckesfrågan. Bedöm den konkreta appfunktionen och eventuell telemetri; anta inte att en vanlig lokal SQLite-fil kräver en generell kakbanner, och anta inte heller att all spårning i en desktopapp är undantagen.
+[PTS guidance](https://pts.se/internet-och-telefoni/kakor-cookies) covers storage/access on terminal equipment and the exception for functions necessary for a requested service. Calling something local does not settle consent. Assess the actual app function and telemetry; neither assume ordinary SQLite storage needs a general cookie banner nor that all desktop tracking is exempt.
 
 ## Berget
 
-Bergets nuvarande [villkor, avsnitt 7](https://berget.ai/en/terms) uppger att promptinnehåll och modellutdata inte lagras, men medger tekniska loggar och metadata. Uttrycket zero retention innebär därför inte att inga uppgifter behandlas eller att inga metadata finns. Villkoren riktar sig till verksamheter och professionella kunder, vilket passar ett operatörsägt backendkonto bättre än ett krav att varje spelare skaffar ett privat Berget-konto.
+Berget's [terms, section 7](https://berget.ai/en/terms) state that prompt/model-output contents are not retained, while allowing technical logs and metadata. Zero retention does not mean no processing or no metadata. The terms target business/professional customers, favoring an operator-owned backend account over requiring each player to obtain a personal Berget account.
 
-Bergets [DPA](https://berget.ai/en/dpa), direkt hämtat med uppdateringsdatum 2026-10-22, reglerar behandling av personuppgifter och listar underbiträden. Säkerställ att det gäller vårt konto och avsedda användning, och stäm av underbiträden, geografisk behandling, säkerhet och faktisk loggretention innan personhistorik skickas. En allmän [webbplatsintegritetspolicy](https://berget.ai/en/privacy) är inte ensam ett fullständigt avtal för vår inferensbehandling. Aktuella huvudvillkor hämtades med uppdateringsdatum 2026-10-16; vissa sökindexutdrag visade äldre datum.
+The directly retrieved [DPA](https://berget.ai/en/dpa), dated 22 October 2026, governs personal-data processing and lists subprocessors. Confirm applicability to our account/use, subprocessors, processing geography, security and actual log retention before sending personal history. A general [website privacy policy](https://berget.ai/en/privacy) alone is not a complete inference-processing agreement. The retrieved main terms were dated 16 October 2026; some indexed excerpts showed older dates.
 
-Nuvarande API behandlar frågan och offentlig grafkontext; inget personligt minne är implementerat. Applikationsloggarna skriver status, version, modell, tokenantal och kostnad men inte frågetext eller svarstext. Det är en kodobservation, inte en granskning av framtida proxy-, CDN-, APM- eller produktionsloggar. Sådana lager måste ingå innan vi lovar en viss integritetsnivå.
+At review time the API processed questions and public graph context; personal memory was not implemented. Application logs contained status, version, model, token counts and cost rather than question/answer text. This code observation does not cover future proxy, CDN, APM or production logs. Those layers must be included before promising a privacy level.
 
-## AI-information och installation
+## AI disclosure and installation
 
-EU-kommissionens [vägledning om artikel 50](https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act) anger att transparenskraven gäller från 2026-08-02. Gör det tydligt för spelaren att Wisp är AI. Granska även vilka övriga skyldigheter som gäller oss som systemleverantör och vilka som hanteras av modellleverantören; en AI-etikett är inte en fullständig AI Act-bedömning.
+The European Commission's [Article 50 guidance](https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act) states that transparency requirements apply from 2 August 2026. Clearly tell players that Wisp is AI. Also assess other obligations applying to us as system provider versus the model provider; an AI label is not a complete AI Act assessment.
 
-Installationen kan vara en vanlig användarinstallerad companion: appen skapar en SQLite-fil i användarprofilen och behöver ingen lokal PostgreSQL-server, Docker-installation eller databasadministration. Rekommenderad Windows-plats är `%LOCALAPPDATA%/Wisp/`. Det är en implementationsrekommendation, inte ett juridiskt krav. Addoninstallation kan behöva separat vald sökväg och filbehörighet.
+A normal user-installed companion can create SQLite in the user profile without local PostgreSQL, Docker or database administration. Recommended Windows location: `%LOCALAPPDATA%/Wisp/`. This is an implementation recommendation, not a legal requirement. Addon installation may need a separately chosen folder and file permission.
 
-Installern bör förklara filåtkomst, lokal lagring, AI-anrop och avinstallation. Signerade paket och verifierade uppdateringar är rekommenderade säkerhetsåtgärder; de är inte ett bevis på Blizzard-godkännande och beskrivs här inte som generella lagkrav. Kontrollera licensmeddelanden för alla levererade komponenter. Gör ingen generell antivirus-/anti-cheat- eller administratörsdispens till installationskrav.
+Explain file access, local storage, AI calls and uninstall behavior. Signed packages and verified updates are recommended safeguards, not Blizzard approval or a statement of general legal requirements. Check notices for every shipped component. Do not require a blanket antivirus/anti-cheat exception or administrator exemption.
 
-## Vad granskningen betyder för nästa steg
+## Consequences for next steps
 
-Vi kan fortsätta prototypa den centrala grafen och en separat companion med lokal historik, på testdata eller avsiktligt tillförda personliga anteckningar. Det är min riskbedömning, inte en garanti att produkten är rättsligt godkänd.
+Prototyping the central graph and separate local-history companion can continue with test data or deliberately supplied personal notes. This is a risk assessment, not a guarantee of legal approval.
 
-Före spelkoppling: dokumentera och stäm av exakt addon- och exportmetod. Före publik tjänst: klarlägg personuppgiftsansvar, Berget-avtal, integritetsinformation, data-/varumärkesrättigheter och distributionsvillkor. Före eventuell betalmodell kopplad till addon: separat avtalsgranskning. Lanseringsgranskningen bör göras av jurist med EU/Sverige- och spel/IP-erfarenhet när implementationen är konkret.
+Before game integration, document and assess the exact addon/export method. Before a public service, clarify controller responsibilities, Berget agreements, privacy information, data/trademark rights and distribution terms. Addon-linked payment models need separate contractual review. A lawyer familiar with EU/Swedish and gaming/IP matters should assess the concrete implementation before launch.
 
-### Förberett underlag till Blizzard – inte skickat
+### Questions prepared for Blizzard, not sent
 
-Vi vill beskriva en gratis, läsbar Lua-addon och en separat Windows-companion utan spelautomatisering. Följande behöver klarläggas för just Forever:
+Describe a free, readable Lua addon and separate Windows companion without gameplay automation. Clarify for Forever:
 
-1. Får addonens dokumenterade API:er användas för att registrera spelarens egna zonbyten och questhändelser i SavedVariables?
-2. Får användaren därefter importera denna sparade data till en lokal companion för privat historik och AI-samtal?
-3. Vilka begränsningar gäller om användaren väljer att sända ett begränsat utdrag till en extern inferenstjänst?
-4. Finns någon uttryckligen tillåten metod att föra companion-svar tillbaka till addonens UI? Vi förutsätter inte att det finns en sådan realtidsbrygga.
-5. Hur tillämpas addonpolicyn på den tillhörande gratis companionen och extern finansiering?
+1. May documented addon APIs record the player's own zone/quest events in SavedVariables?
+2. May the user import saved data into a local companion for private history and AI conversations?
+3. What restrictions apply to sending a chosen limited excerpt to external inference?
+4. Is any method expressly allowed for returning companion replies to addon UI? We do not assume an approved live bridge exists.
+5. How does the addon policy apply to a free companion and external funding?
 
-Addonpolicyn anger WoWUI@blizzard.com som kontaktväg. Ingen kontakt har tagits i denna granskning. Ett eventuellt svar måste läsas utifrån sin omfattning; frånvaro av svar är inte ett godkännande.
+The addon policy lists WoWUI@blizzard.com as a contact. No contact was made in this review. Any answer must be interpreted within its scope; no answer is not approval.

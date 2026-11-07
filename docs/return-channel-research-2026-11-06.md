@@ -1,111 +1,111 @@
-# Wisp: returkanal — kodgranskning och livekontroll, 6 november 2026
+# Wisp return-channel research and live verification
 
-## Slutsats
+6 November 2026.
 
-Vi behöver skilja på **cachade filinnehåll** och **levande kontroll av filnärvaro**. Laddade Lua-moduler kan inte användas som återläsbara brevlådor i den nuvarande lösningen. Men en annan observerbar egenskap — om en känd fil fortfarande finns — kan ändras flera gånger och avläsas inne i spelet.
+## Conclusion
 
-Efter granskning av andra projekts faktiska kod byggde vi en liten egen probe. På användarens Mac gav samma nollbytesfil **10 av/på-cykler och 20 observerade tillståndsbyten i Lua**, utan reload eller klientomstart. Detta bevisar en återanvändbar boolesk signal på denna klient. Det bevisar **inte ännu** en komplett eller snabb textkanal.
+Distinguish **cached resource content** from **live file-presence checks**. Loaded Lua modules cannot be reread as mailboxes in the current method. But whether a known file exists can change repeatedly and be observed inside the game.
 
-Rekommendation: testa först en egen liten filnärvarokanal för kontrollerade byte, därefter ett kort kontrollerat svar med CRC och kvittens. Behåll den fungerande OCR-vägen ut. Utöka inte blint mängden engångsaddoner.
+After reviewing external code we built a first-party probe. The user's Mac observed **ten off/on cycles and 20 Lua transitions** on one zero-byte filename without reload/restart. That proves a reusable boolean on this client, **not yet complete fast text transport** at this checkpoint.
 
-## Vad granskades?
+Next: bounded checked bytes, then a short text packet/acknowledgement. Preserve outbound OCR. Do not blindly enlarge one-shot addon pools.
 
-Publika källfiler hämtades till ignorerade `.cache/return-research-2026-11-06/`, med låsta Git-träd:
+## Reviewed material
 
-| Projekt | Granskat träd | Relevanta filer |
+Public sources were downloaded into ignored `.cache/return-research-2026-11-06/` with pinned trees:
+
+| Project | Revision | Relevant material |
 |---|---|---|
-| `chelinho139/wow-ai` | `60165ca5bb6c6452f18604dc7b4fe8678b607bed` | `bridge/protocol.js`, `bridge/install-slots.js`, `addon/WoWAI/WoWAI.lua`, arkitekturdokument |
-| `tommygeoco/neverquestalone` | `5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07` | `bridge/transport/signals.mjs`, `slots.mjs`, `publisher.mjs`, `addon/NeverQuestAlone/Transport.lua`, `tests/signals_test.mjs`, `docs/PROTOCOL.md` |
-| `0xInuarashi/wow-forever-codex` | `85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8` | `companion/native.py`, `Native.lua`, `NativeProtocol.lua`, font-/cachetester och dokument |
+| chelinho139/wow-ai | `60165ca5bb6c6452f18604dc7b4fe8678b607bed` | bridge/protocol.js, install-slots.js, WoWAI.lua, architecture |
+| tommygeoco/neverquestalone | `5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07` | signals.mjs, slots.mjs, publisher.mjs, Transport.lua, signals tests, PROTOCOL.md |
+| 0xInuarashi/wow-forever-codex | `85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8` | native.py, Native.lua, NativeProtocol.lua, font/cache tests and notes |
 
-Detta var läsning för mekanism och belägg, inte adoption. Ingen annans bibliotek, addon, app eller agentlösning installerades, kördes eller kopierades in i Wisp. Proben och pulskoden är våra egna.
+This was mechanism research, not permission to install, vendor, copy or wrap their implementations. All probe/product logic remains first-party under AGENTS.md.
 
-Vår befintliga implementation granskades i `apps/ocr-lab/WispOCR/WispOCR.lua` och `scripts/experiments/ocr/bridge.py`: varje väntetick kan förbruka en ny LoD-modul; publicering skriver till alla 96 filer; varje sänd-/tänker-/slutstatus kan kräva ytterligare inläsning. Denna kod ändrades inte under researchen.
+Our existing `apps/ocr-lab/WispOCR/WispOCR.lua` and `scripts/experiments/ocr/bridge.py` were also reviewed: waiting ticks can consume new LoD modules, publication writes all 96 inboxes, and sent/thinking/final updates can require further loads. That implementation was unchanged during the research.
 
-## 1. Den äldre ljudsignalen är inte samma sak som filnärvaro
+## 1. Older audio-content signals differ from presence
 
-I [wow-ai:s arkitektur](https://github.com/chelinho139/wow-ai/blob/60165ca5bb6c6452f18604dc7b4fe8678b607bed/docs/ARCHITECTURE.md#signals-the-empty-wav-trick) beskrivs tom → giltig WAV som en färdigflagga. Förbrukade ljudresurser kan förbli cachade. Projektet använder fortfarande 200 engångsmoduler och en vänteschemaläggning när signalerna inte fungerar. Fler moduler är en större ändlig buffert, inte återanvändning.
+[The wow-ai architecture](https://github.com/chelinho139/wow-ai/blob/60165ca5bb6c6452f18604dc7b4fe8678b607bed/docs/ARCHITECTURE.md#signals-the-empty-wav-trick) describes empty → valid WAV as a readiness flag. Loaded audio resources may remain cached. The project still uses 200 one-shot modules with scheduled polling when signals fail. More modules enlarge a finite buffer; they do not provide reuse.
 
-Min tidigare beskrivning av NeverQuestAlone som samma engångsmetod var för grov. Dess README beskrev en enklare bild, men den aktuella implementationen använder en annan mekanism. Den faktiska koden behöver väga tyngre än en sammanfattning.
+## 2. NeverQuestAlone uses removal and recreation
 
-## 2. NeverQuestAlone använder återkommande närvaropulser
+[signals.mjs lines 1–20/88–128](https://github.com/tommygeoco/neverquestalone/blob/5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07/bridge/transport/signals.mjs) pulses by **removing/recreating the same known filename**, not rewriting audio. Files are empty; paired names reduce startup-absence races.
 
-I [signals.mjs, rader 1–20 och 88–128](https://github.com/tommygeoco/neverquestalone/blob/5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07/bridge/transport/signals.mjs) är pulsen att **ta bort och återskapa samma redan kända fil**, inte att skriva nytt ljudinnehåll. Tomma filer används. Par av signalnamn minskar risken att en signal råkar saknas när gränssnittet laddas.
+[The Lua receiver](https://github.com/tommygeoco/neverquestalone/blob/5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07/addon/NeverQuestAlone/Transport.lua) calls PlaySoundFile, stops returned handles and interprets transitions. A permanent present control distinguishes missing signals from unavailable sound. [Protocol section 3](https://github.com/tommygeoco/neverquestalone/blob/5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07/docs/PROTOCOL.md#3-bridge--game-doorbells) associates this with Forever 1.60.1.70009.
 
-[Lua-mottagaren](https://github.com/tommygeoco/neverquestalone/blob/5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07/addon/NeverQuestAlone/Transport.lua) anropar `PlaySoundFile`, stoppar returnerade handles och tolkar övergångar. En permanent kontrollfil skiljer saknad signal från t.ex. ett otillgängligt ljudsystem. Författarens [protokoll §3](https://github.com/tommygeoco/neverquestalone/blob/5eb98d5c33ad0c294144d5d1b0962a9fd2a70e07/docs/PROTOCOL.md#3-bridge--game-doorbells) hänför beteendet till Forever 1.60.1.70009.
+The module has recovery/bounded pulses. Payload still lives in finite addon modules: presence announces **when** to load one. This does not automatically implement the proposed text bus below.
 
-Signalmodulen innehåller återställning och begränsade pulser. Returdata ligger ändå i ändliga addon-moduler: närvarosignalen talar om **när** en sådan ska laddas. Det projektet implementerar alltså inte automatiskt vår föreslagna textbuss nedan.
+Referenced verification file docs/VERIFICATION.md/E-015 could not be retrieved at that revision. Comments/tests are not independent live-client proof, so we performed our own probe.
 
-En hänvisad rå verifieringsfil, `docs/VERIFICATION.md` med E-015, gick inte att hämta på det granskade trädet. Kodkommentarer och tester är inte oberoende bevis för klientbeteendet. Därför genomförde vi den egna livekontrollen nedan.
+## 3. Fonts carry bytes but retain a filename bank
 
-## 3. Typsnitt kan bära text, men är fortfarande en filbank
+[The font writer](https://github.com/0xInuarashi/wow-forever-codex/blob/85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8/companion/native.py) encodes bytes in glyph widths. [Lua](https://github.com/0xInuarashi/wow-forever-codex/blob/85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8/addon/CodexPixelBridge/Native.lua) uses SetFont/SetText/GetStringWidth, calibration and packet checks before normal display. This transfers content without an addon module per packet.
 
-[Font-skrivaren](https://github.com/0xInuarashi/wow-forever-codex/blob/85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8/companion/native.py) kodar paket i teckenbredder. [Lua-mottagaren](https://github.com/0xInuarashi/wow-forever-codex/blob/85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8/addon/CodexPixelBridge/Native.lua) använder `SetFont`, `SetText` och `GetStringWidth`, kalibrerar mätningen och kontrollerar paketen innan vanlig text visas. Detta ger datainnehåll utan en addon-modul per paket.
+[Bank notes](https://github.com/0xInuarashi/wow-forever-codex/blob/85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8/docs/font-bank.md) describe 65,535 filenames/hardlinks sharing baseline files. Atomic replacement breaks one link; writing through it would affect siblings. Filenames/metadata still cost resources. We did not install the bank.
 
-Deras [bankdokumentation](https://github.com/0xInuarashi/wow-forever-codex/blob/85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8/docs/font-bank.md) beskriver 65 535 filnamn och hardlinks för att dela tomma basfiler. Atomiskt byte av en fil bryter dess länk; skrivning direkt genom länken skulle påverka andra namn. Filantal och metadata är fortfarande verkliga kostnader. Vi installerade inte denna bank.
+[Recycling tests](https://github.com/0xInuarashi/wow-forever-codex/blob/85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8/docs/font-recycling.md) concern two diagnostics on older 1.60.1.69913. Reuse occurs across a new client process, **not during uninterrupted play** or automatically across the full bank. Useful fallback capacity, not unlimited return.
 
-[Cacheexperimentet](https://github.com/0xInuarashi/wow-forever-codex/blob/85953dbecbc2e8f766e3264d3f4ea1b01cfbe2f8/docs/font-recycling.md) gäller två diagnostikfiler på en äldre Forever-build, 1.60.1.69913. Det beskriver återanvändning efter ett annat klientprocessliv, **inte** återanvändning under ett oavbrutet spelpass eller automatisk återvinning av hela banken. Detta är reservspår för praktisk kapacitet, inte belägg för obegränsad retur.
+## 4. Our live probe
 
-## 4. Vår egen livekontroll
+Mac, Forever 1.60.1.70790/Interface 16001, Cone Thrower, PID 8007. The user explicitly permitted game control. The client was already at character selection; we entered the selected character without causing logout/reload/restart or gameplay actions.
 
-Klient: macOS, Forever 1.60.1.70790 / Interface 16001, Cone Thrower, PID 8007. Användaren gav uttrycklig tillåtelse att styra WoW. Spelet stod redan på karaktärsvalet; vi gick in på vald karaktär. Vi orsakade ingen utloggning, reload eller processomstart. Inga spelhandlingar utfördes.
+Three owned resources were added to existing WispBridgeLab while at selection, before entering the world: two empty files and valid silent WAV. This does not establish new-name discovery during an already logged-in UI.
 
-Tre egna små testresurser lades i befintliga `WispBridgeLab/` medan karaktärsvalet visades, före inträdet i världen: två nollbytesfiler och en riktig tyst WAV. Detta fastställer inte upptäckt av nya namn under ett redan pågående inloggat UI.
+Our inert probe loaded through preinstalled unused WispBridgeInbox04. That consumes one slot **for measuring code**, not per signal. The probe changes no files, SavedVariables, AI or settings, samples every 250 ms and stops after 30 s.
 
-Egen Lua-probe laddades via den förinstallerade, ännu oanvända `WispBridgeInbox04`. Detta förbrukade en plats **för att installera mätkoden**, inte en plats per signal. Proben gör inga filändringar, SavedVariables-skrivningar, AI-anrop eller inställningsändringar. Den visar returnerade värden direkt på skärmen, läser var 250 ms och slutar efter 30 sekunder.
+Observed baseline:
 
-Baslinje, visuellt observerad:
-
-| Resurs | `PlaySoundFile` första returvärde |
+| Resource | PlaySoundFile first result |
 |---|---|
-| Fast tom kontrollfil | `true` |
-| Tom pulsfil | `true` |
-| Riktig tyst WAV | `true` |
-| Befintlig egen labb-Lua | `true` |
-| Befintlig egen labb-TOC | `true` |
-| Saknad Lua-kontroll | `nil` |
-| Saknad WAV-kontroll | `nil` |
+| Permanent empty present control | true |
+| Empty pulse file | true |
+| Valid silent WAV | true |
+| Existing owned lab Lua | true |
+| Existing owned lab TOC | true |
+| Missing Lua control | nil |
+| Missing WAV control | nil |
 
-Detta visar varför returvärdet inte kan tolkas som bevis för giltigt ljudinnehåll på denna klient. Inga ljudinställningar ändrades: `Sound_EnableAllSound` var 1.
+Thus truthiness is not evidence of valid audio on this build. Sound settings stayed unchanged, Sound_EnableAllSound 1.
 
-Den externa pulskoden ändrade endast vår disponibla nollbytesfil `wispreturn_pulse.wav`: saknas i 0,5 s → finns i 0,5 s, tio gånger. Den återställdes i `finally`. Resultatet i det verkliga Lua-fönstret var **120 prover, 20 övergångar**. De andra kontrollvärdena var oförändrade. Samma filnamn användes hela tiden. Ingen ytterligare LoD-laddning behövdes för dessa övergångar.
+External code toggled only owned empty wispreturn_pulse.wav: absent 0.5 s/present 0.5 s, ten cycles, restored in finally. Actual Lua showed **120 samples,20 transitions**; other controls unchanged. Same name throughout, no further LoD loading.
 
-En tidigare kort körning började nära den automatiska 30-sekundersgränsen: två av tre externa cykler hann observeras. Den användes inte som ett komplett trecykeltest. Den upprepade tiocykelkörningen genomfördes helt inom en ny mätperiod.
+An earlier short run approached the 30 s limit and observed two of three cycles. It was not counted as complete; the ten-cycle repeat fit the new interval.
 
-Efteråt återställdes inbox 04:s ursprungliga fil byte för byte, SHA-256 `86951c73c6c144f3e0ca568cc9822d0231303ff601fa2581262d89c0c0412277`. De tre egna probresurserna finns kvar för fortsatta tester. Lua-proben är stoppad efter 120 prover; `/wispreturn` kan starta en ny avgränsad period i detta UI. Inga produktionsjournaler eller hemligheter ändrades. Befintlig OCR/AI-kod ersattes inte.
+Inbox 04 restored byte-for-byte, SHA-256 `86951c73c6c144f3e0ca568cc9822d0231303ff601fa2581262d89c0c0412277`. Three probe resources remain. Probe auto-stopped after 120 samples; /wispreturn can rearm a bounded interval. No production journals/secrets changed; existing OCR/AI remained.
 
-Egen kod: `apps/bridge-lab/return-presence-probe.lua`, `scripts/experiments/pulse_return_presence.py`. Råa externa pulstider och sammanfattad observation finns i ignorerad `.cache/return-research-2026-11-06/wisp-probe/`. Det är två olika klockor, så detta är **inte** en exakt envägslatensmätning. 250 ms är samplingsintervallet, inte en uppmätt latensgaranti.
+Code: apps/bridge-lab/return-presence-probe.lua and scripts/experiments/pulse_return_presence.py. Private timings/observations remain under ignored .cache/return-research-2026-11-06/wisp-probe/. Two clocks mean this is **not exact one-way latency**;250 ms is the sampling interval, not a latency guarantee.
 
-## 5. Föreslagen återanvändbar textkanal — ännu inte implementerad
+## 5. Proposed reusable text bus at this checkpoint
 
-**Vår härledning från signalprovet:** om samma observerbara booleska filnärvaro kan ändras upprepade gånger, kan flera sådana filer representera bitar i ett datapaket. Lua rekonstruerar då själva svarstexten utan LoD-inboxar. NQA-koden visar dörrklockor, inte denna textöverföring.
+**Our inference:** repeatedly observable presence allows several filenames to represent packet bits. Lua could reconstruct text without LoD inboxes. NQA demonstrates doorbells, not this complete text channel.
 
-Exempel på ett litet test: åtta återanvändbara datafiler motsvarar en byte; en fast kontroll visar att kanalen är läsbar; separat giltighets-/sekvensinformation hindrar mottagaren från att läsa mitt i en filuppdatering. Datorappen lämnar paketet oförändrat tills Lua visar en kvittens som vår OCR kan läsa. Kvittensen måste knytas till session, karaktär, fråga och paketnummer.
+Eight known data files represent a byte; controls/validity/sequence prevent sampling during updates. Desktop freezes data until Lua displays an OCR-readable acknowledgement bound to session, character, question and sequence.
 
-Avsändaren får inte behandla en atomisk filoperation som en atomisk ändring av hela filgruppen. Därför behövs publiceringsordning, fullständig checksumma och omsändning vid avslag. Starta med en liten sekvens av kontrollerade byte, inklusive nollor och ettor; bygg inte direkt en AI-integration.
+One file rename is not atomic publication of all files. Require ordered writes, full checksum and bounded recovery on rejection. Start with controlled zero/one bytes, not AI integration.
 
-Krav för att kunna kalla det texttransport:
+Requirements:
 
-1. Samma filuppsättning ska leverera olika byte flera gånger, utan nya namn, reload eller omstart.
-2. Paket med fel kontrollsumma, gammal session, fel karaktär eller fel request-ID ska avvisas. Samma kvittens får inte skapa dubbla meddelanden eller betalda AI-anrop.
-3. Tappad skärmfångst, felordnade filuppdateringar, låg bildfrekvens och pausad/otillgänglig ljudkanal ska ge väntan eller avslag, inte falska nollbitar.
-4. Uppmätt API-/filkostnad, bytes/sekund och påverkan på bildfrekvens ska styra antal parallella bitfiler och läsintervall. Sju läsningar per prov i denna kontroll säger inget om kostnaden för exempelvis 256 samtidiga filer.
-5. Fråga → svar ska därefter testas från början till slut. Enstaka signalbyten är inte samma sak som ett färdigt svar.
+1. Same file set delivers changing bytes repeatedly without new names/reload/restart.
+2. Reject corrupt/stale/wrong-character/wrong-request packets. Repeated receipts must not duplicate messages/paid inference.
+3. Capture loss, reordered file updates, low FPS and unavailable sound yield wait/rejection, not false zeros.
+4. Measure API/file cost, bytes/s and frame impact before choosing parallelism. Seven probes here do not establish 256-probe cost.
+5. Verify question-to-answer E2E; single signal transitions are not finished replies.
 
-Teoretisk nyttolast före protokollkostnad: `N datafiler / 8` byte per stabil avläsning. Vid 64 filer är det 8 byte; vid 256 filer 32 byte. Faktisk hastighet blir lägre när skrivning, kontroll, kvittens, omsändning och UI-tidsbudget räknas in. Dessa tal är kapacitet per avläsning, **inte en benchmark eller ett löfte om hastighet**.
+Theoretical capacity before overhead: N files/8 bytes per stable sample. 64 files→8 bytes; 256→32 bytes. Writes, checks, receipts, recovery and UI budgets reduce throughput. These are capacities, **not benchmarks/promises**.
 
-## 6. Beslut efter researchen
+## 6. Decision at this stage
 
-| Spår | Bevisnivå för Wisp | Nästa användning |
+| Route | Evidence | Next role |
 |---|---|---|
-| Nuvarande LoD-inboxar | Riktigt AI-svar verifierat; ändlig pool | Bevara fungerande referens |
-| Återanvändbar filnärvaro | Tio cykler / tjugo övergångar på aktuell Mac | Nästa kandidat för egen byte-/texttransport |
-| Filnärvaro som enbart färdigsignal | Signalprimitiven verifierad, integration saknas | Kan minska tomma LoD-läsningar, men tar inte bort deras ändlighet |
-| Typsnittsbank | Kod och andra författares rapporter granskade | Reservspår; ingen Wisp-liveverifiering eller installation |
-| Omladdning av samma Lua-inbox | Ingen återanvändningsmekanism identifierad i granskad kod/API-yta | Ska inte utlovas |
+| Existing LoD inbox | Actual AI reply, finite pool | Preserve working reference |
+| Reusable presence | Ten cycles/20 transitions on current Mac | Candidate checked byte/text transport |
+| Presence readiness only | Primitive verified, integration absent | Reduce empty slot reads, not exhaustion |
+| Font bank | External code/reports reviewed | Fallback, not installed/live-verified by Wisp |
+| Reloading the same inbox | No reuse mechanism found | Do not promise |
 
-Den avgörande nya möjligheten är alltså **återanvändbar observerbar filnärvaro**, inte att återställa addon-laddaren. Vi har hittat och verifierat en signalprimitiv som kan vara grund för returen. Uthållig, snabb och tillförlitlig svarstext kräver fortfarande nästa protokollexperiment.
+The new possibility is **reusable observable presence**, not resetting the addon loader. Sustained fast reliable replies still require protocol experiments.
 
-## Uppföljning: första text-slice genomförd
+## Follow-up: byte transfer completed
 
-Efter användarens nästa instruktion byggdes egen byteöverföring med filnärvaro, alternerande klocka, Adler-32, sekvens-/karaktärsbindning och OCR-kvittens. Flera kontrollerade texter inklusive åäö kom fram genom samma återanvändbara bärare; ett skadat paket avvisades. Detta är mer än signalprovet ovan, men fortfarande en långsam, avgränsad testtransport utan AI-koppling. Se `docs/return-byte-slice-2026-11-06.md` för faktiska tider, återställning och kvarvarande arbete.
+A later instruction led to first-party byte transfer with clock, Adler-32, sequence/character correlation and OCR receipts. Several controlled texts including åäö used the same carriers; a damaged frame was rejected. More than a boolean probe, but still a slow bounded non-AI test. See [byte results](return-byte-slice-2026-11-06.md), then [block results](return-block-slice-2026-11-06.md) for later evidence.

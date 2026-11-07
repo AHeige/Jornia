@@ -42,7 +42,7 @@ make e2e       # requires an installed Playwright Chromium; see test docs for th
 make package   # creates Windows amd64 and macOS arm64 test ZIPs under dist/
 ```
 
-The Windows test bundle needs no Go, Python, Node, Docker or separate database installation. Start-Wisp.cmd uses the HTTPS endpoint and a separately supplied private test code. For the earlier developer Windows installation, `Start-Wisp-VM.cmd` opens a dedicated, host-key-pinned SSH tunnel to the VM. `Start-Wisp.cmd` runs locally without it; local memory remains usable offline. Select “Prova med demokaraktär” to try three explicitly synthetic Ashenvale events. The authenticated tester gateway and public release downloads run separately from the private API.
+The Windows test bundle needs no Go, Python, Node, Docker or separate database installation. Start-Wisp.cmd uses the HTTPS endpoint and a separately supplied private test code. For the earlier developer Windows installation, `Start-Wisp-VM.cmd` opens a dedicated, host-key-pinned SSH tunnel to the VM. `Start-Wisp.cmd` runs locally without it; local memory remains usable offline. Select “Try a demo character” to try three explicitly synthetic Ashenvale events. The authenticated tester gateway and public release downloads run separately from the private API.
 
 The original curated Ashenvale graph is supplemented by build-scoped Blizzard and ForeverDB importers. Source counts and usable detail coverage change as resumable imports run; catalog entries do not establish complete gameplay coverage. **It is not complete WoW Forever information.** Source reviews are community evidence with explicit limitations; the old synthetic fixture remains under its own version.
 

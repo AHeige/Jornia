@@ -15,7 +15,7 @@ import (
 )
 
 func packet() Export {
-	return Export{Schema: 1, InstallationID: "test-install", Character: Character{ID: "Player-1-abc", Name: "Testspelare", Realm: "Testrealm"}, Events: []Event{{ID: "test-install:Player-1-abc:1", Kind: "note", ObservedAt: time.Now().Add(-time.Minute).Unix(), Zone: "Ashenvale", Subzone: "Astranaar", Level: 24, Note: "Jag ville prata med Raene.", ClientVersion: "1.60.1", ClientBuild: "70790", Interface: 16001}}}
+	return Export{Schema: 1, InstallationID: "test-install", Character: Character{ID: "Player-1-abc", Name: "TestPlayer", Realm: "Testrealm"}, Events: []Event{{ID: "test-install:Player-1-abc:1", Kind: "note", ObservedAt: time.Now().Add(-time.Minute).Unix(), Zone: "Ashenvale", Subzone: "Astranaar", Level: 24, Note: "I wanted to talk to Raene.", ClientVersion: "1.60.1", ClientBuild: "70790", Interface: 16001}}}
 }
 func TestImportIntegrityAndRestart(t *testing.T) {
 	ctx := context.Background()
@@ -61,7 +61,7 @@ func TestImportIntegrityAndRestart(t *testing.T) {
 		t.Fatalf("pending request replayed or lost: %+v %v", receipt, err)
 	}
 	events, _ = s.Events(ctx, "test-install:Player-1-abc")
-	if len(events) != 1 || events[0].Note != "Jag ville prata med Raene." {
+	if len(events) != 1 || events[0].Note != "I wanted to talk to Raene." {
 		t.Fatal("history changed across restart")
 	}
 }

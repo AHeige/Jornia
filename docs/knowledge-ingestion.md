@@ -1,59 +1,59 @@
-# Forever-data: insamling, versioner och täckning
+# Forever data collection, versions and coverage
 
-Undersökt 2026-11-05. Målet är bred import av återanvändbar data och löpande uppdatering, med explicit redovisning av vad som saknas. Ingen källa som undersökts ger ett verifierat, komplett och fritt återpublicerbart Forever-korpus.
+Investigated 5 November 2026. The goal is broad import of reusable data with continuing updates and explicit gaps. No investigated source provides a verified, complete and freely redistributable Forever corpus. This document records the Blizzard-first ingestion stage; subsequent ForeverDB work is tracked separately.
 
-## Källval och faktisk åtkomst
+## Sources and actual access
 
-**Officiella Blizzard Game Data API:** förstahandskällan för denna implementation. Den nya Forever-ytan rapporteras av utvecklaren bakom [blizzard_api 0.8.0](https://github.com/Pinta365/blizzard_api/releases/tag/0.8.0), med identifierade namespace och skillnader mot Classic/Retail. Den rapporten var ett upptäcktsspår; Wisp gjorde därefter egna autentiserade anrop och verifierade svarens namespace. Första levande körningen angav `static-1.60.1_70399-forever-eu`, region EU, språk en_GB. Det är API:ts uppgivna version, inte ett påstående om att den är samma som senaste spelklienten.
+**Official Blizzard Game Data API:** the primary source for this implementation. The developer of [blizzard_api 0.8.0](https://github.com/Pinta365/blizzard_api/releases/tag/0.8.0) reported the new Forever surface, namespaces and differences from Classic/Retail. That report was a discovery lead; Wisp then made its own authenticated requests and verified response namespaces. The first live run reported `static-1.60.1_70399-forever-eu`, EU region, en_GB locale. This is the API's reported version, not a claim that it matches the latest game client.
 
-API-data används enligt [Blizzards Developer API Terms](https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use). §18 anger max 30 dagars TTL; Wisp använder 28 dagar och schemalagd rensning. Detta är ingen öppen datalicens. Nycklar finns endast i operatörens ignorerade `.env`, på utvecklingsmaskinen och den privata VM:n. De skickas i OAuth/Authorization-header, aldrig som URL-parametrar eller i klientpaket. Ingen spelarprofil, guild, auktion eller kontodata hämtas av denna worker.
+API data is used under [Blizzard's Developer API Terms](https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use). Section 18 specifies a maximum 30-day TTL; Wisp uses 28 days and scheduled cleanup. This is not an open-data license. Credentials stay in ignored operator `.env` files on the development machine/private VM. They travel in OAuth/Authorization headers, never URL parameters or client bundles. This worker fetches no player profiles, guilds, auctions or account data.
 
-**QuestieDB:** [LICENSE.md](https://raw.githubusercontent.com/Questie/QuestieDB/master/LICENSE.md), [PROVENANCE.md](https://raw.githubusercontent.com/Questie/QuestieDB/master/PROVENANCE.md) och [Forever-beskrivningen](https://raw.githubusercontent.com/Questie/QuestieDB/master/docs/forever.md) kontrollerades igen. Historiska rättigheter är fortfarande uttryckligen oklara och Forever-underlaget beskrivs som ofullständigt. Ingen bulkimport görs på antagandet att allt är GPL.
+**QuestieDB:** [LICENSE.md](https://raw.githubusercontent.com/Questie/QuestieDB/master/LICENSE.md), [PROVENANCE.md](https://raw.githubusercontent.com/Questie/QuestieDB/master/PROVENANCE.md) and the [Forever description](https://raw.githubusercontent.com/Questie/QuestieDB/master/docs/forever.md) were checked again. Historical rights remain explicitly uncertain and the Forever material is described as incomplete. No bulk import assumes everything is GPL.
 
-**ForeverDB:** [utvecklar-API:t](https://foreverdb.net/developers) erbjuder den typ av kompletterande quests, givar-/mottagarrelationer, positioner och observationer som Blizzard-katalogerna inte bevisar. Det kräver en separat godkänd utvecklaråtkomst, attribution och efterlevnad av dess regler. Det är en möjlig komplettering, inte en genomförd import eller ett antaget fritt databasuttag. Klassisk data och observationer måste hållas åtskilda även där.
+**ForeverDB:** its [developer API](https://foreverdb.net/developers) offers complementary quests, giver/recipient relationships, positions and observations not established by Blizzard catalogs. It requires separately approved developer access, attribution and compliance. At this stage it was a candidate, not a completed import or assumed free database extract. Classic data and observations must remain distinct there too.
 
-**Warcraft Wiki:** den befintliga smala handgranskade anpassningen behålls. Direkt bulkåtkomst returnerade 403; ingen sådan spärr har kringgåtts. **ForeverDiff/pfQuest, 60.tools och GearInsight** är kompletterande jämförelsekandidater. En Classic-baslinje eller en kodlicens innebär inte verifierad Forever-data eller en generell rätt att kopiera en annan webbplats databas.
+**Warcraft Wiki:** retain the narrow hand-reviewed adaptation. Direct bulk access returned 403; no restriction was bypassed. **ForeverDiff/pfQuest, 60.tools and GearInsight** are additional comparison candidates. A Classic baseline or code license proves neither Forever compatibility nor a general right to copy another site's database.
 
-## Vad workern gör
+## Worker behavior
 
-`apps/ingest` använder Go och den befintliga PostgreSQL-databasen. Den behöver ingen LLM, embeddings eller extra modellkostnad.
+`apps/ingest` uses Go and existing PostgreSQL. It needs no LLM, embeddings or extra model cost.
 
-1. Hämta ett OAuth Client Credentials-token på servern.
-2. Fråga Forever-klassindex för aktuell API-namespace. Kontrollera officiell värd och Forever-namespace i svars-/resurslänkar; inga Classic- eller Retail-fallbacks.
-3. Följ tillåtna publika game-data-index och resurslänkar. Upptäckt omfattar bland annat klasser, raser, specialiseringar, yrken, quests/kategorier/områden, föremål, spells, creatures, factions, item sets, journal-encounters/instances, mounts och achievements där API:t faktiskt svarar.
-4. För sök-API:n kan resultat kapas. Workern delar därför ett ID-intervall i mindre intervall tills resultatet kan pagineras inom gränserna. Ett kapat första resultat räknas aldrig som hela databasen. Sökintervallet är uttryckligen 0..2147483647; det bevisar inte att alla spelposter är publicerade i API:t.
-5. Spara API-payload, checksumma, hämtningstid och expiry. Projektera identifierare, namn, utvalda numeriska värden och uttryckliga API-referenser till grafen. Interna markörer som `[DNT]` avvisas från den serverade grafen. Ett faktiskt internt testyrke i API-indexet fångades av detta filter.
-6. Varje entitet och källa identifieras med namespace/build och språk. Samma numeriska ID i två builds blir olika grafposter. Servern använder den aktiva upptäckta API-builden; äldre rådata får finnas kvar endast inom sin TTL. Klassisk data och handgranskade communityuppgifter är egna källor, inte automatiska API-korrigeringar.
-7. Spara händelser/referenser atomiskt per API-svar. Ny indexdata ersätter bara sin egen projektion. En indexreferens får inte skriva över ett redan hämtat detaljsvar. Ett tomt fält är okänt, inte noll; en API-länk får inte automatiskt bli questkrav eller dropchans.
-8. Återuppta köade jobb efter avbrott, kontrollera nya källversioner, uppdatera resursdata normalt efter 24 timmar och rensa utgångna API-kopior. En ändrad projektion kan byggas om från giltig cache utan att förlänga dess ursprungliga expiry.
+1. Obtain a server-side OAuth Client Credentials token.
+2. Query the Forever class index for the current API namespace. Check official hosts and Forever namespaces in response/resource links; no Classic/Retail fallback.
+3. Follow allowed public game-data indexes and resource links. Discovery includes classes, races, specializations, professions, quests/categories/areas, items, spells, creatures, factions, item sets, journal encounters/instances, mounts and achievements where the API responds.
+4. Search results can be capped. Split an ID range into smaller ranges until pagination fits limits. A capped first result never counts as the whole database. The explicit search range is 0..2147483647; it does not prove all game records are published.
+5. Save API payload, checksum, retrieval time and expiry. Project IDs, names, selected numerical values and explicit references into the graph. Reject internal markers such as `[DNT]` from the served graph. This caught an actual internal test profession in an API index.
+6. Identify each entity/source by namespace/build and locale. The same numerical ID in two builds becomes distinct graph records. Serve the active discovered API build; retain older raw data only within TTL. Classic and hand-reviewed community data remain separate sources, not automatic API corrections.
+7. Save records/references atomically per response. New index data replaces only its own projection. Index references cannot overwrite fetched details. Empty fields mean unknown, not zero; a link does not establish quest prerequisites or drop probability.
+8. Resume queued jobs after interruption, detect source versions, normally refresh resources after 24 hours and purge expired API copies. Reprojecting valid cache never extends its original expiry.
 
-På VM:n har en batch nu högst 500 game-data-anrop var 15:e minut, minst en sekund mellan anrop och högst tolv minuters körtid. Fel/404/429 sparas som retry/not_available/rate_limited, inte som nya spelfakta. API-token och hemligheter loggas inte. Hårdvaruresurser begränsas separat i VM:s Compose-profil. Grafen, dokumenten och jobbstatus tillhör endast Wisp.
+VM batches allow at most 500 game-data calls every 15 minutes, at least one second between requests and at most twelve minutes per run. Errors/404/429 persist as retry/not_available/rate_limited, not game facts. Tokens and secrets are not logged. The VM Compose profile separately caps resources. Graphs, documents and job state belong only to Wisp.
 
-## Rådata, graf och täckning är olika saker
+## Raw data, graph and coverage differ
 
-En indexpost med ett questnamn är inte ett komplett quest. Fulla tillgängliga JSON-svar behålls tidsbegränsat, men alla deras fält är inte färdigmodellerade eller tillgängliga i svarsroutningen. Grafprojektionen innehåller initialt valda katalogfakta och källreferenser. NPC-spawns, dropchanser, fulla mål, kedjor och behörighetsvillkor ska inte härledas ur att ett ID förekommer.
+An indexed quest name is not a complete quest. Full available JSON responses are retained temporarily, but not all fields are modeled or available to answer routing. Initial projection contains selected catalog facts and source references. NPC spawns, drop chances, full objectives, chains and eligibility must not be inferred merely from an ID.
 
-`GET /api/knowledge/coverage` anger därför alltid `complete: false`, antal serverbara poster per datatyp, aktiva API-namespace/språk, antal dokument, detaljdokument per resurstyp och köstatus. `record_counts_are_not_field_completeness` markerar uttryckligen att antal poster inte är ett mått på fullständiga fält. Totalmängden i själva spelet är okänd. 404, tomma index, kapade sökningar och API-lag får aldrig döljas som 100 procents täckning.
+`GET /api/knowledge/coverage` therefore always reports `complete: false`, servable records by type, active namespaces/locales, documents, details by resource type and queue status. `record_counts_are_not_field_completeness` explicitly distinguishes counts from complete fields. The total in-game dataset is unknown. Never hide 404 s, empty indexes, capped searches or API lag behind a 100% claim.
 
-SQL-sökning med GIN-ordindex hittar ankare före en begränsad tvåhoppshämtning. Det gamla upplägget som bara laddade de första 100 posterna är ersatt i serverflödet. Go äger urval, källor och versioner; LangChain förblir ett tunt modellsteg. Modellkontext har en separat storleksbudget och ingester använder inga modell-anrop.
+GIN word-index SQL finds anchors before bounded two-hop retrieval. The former first-100-record approach has been replaced in the server path. Go owns selection, sources and versions; at this stage LangChain remained a thin model step. Model context has a separate size budget. Ingestion makes no model calls.
 
-## Köra och granska
+## Running and reviewing
 
 ```sh
 python3 scripts/ingest.py --max-requests 200
 TEST_DATABASE_URL='postgres://wisp:wisp-local-only@127.0.0.1:55471/wisp?sslmode=disable' make check
 ```
 
-På VM:n finns den separata Compose-profilen `ingestion`, med kommandot `wisp-ingest`. Scheduler och faktisk driftsättning redovisas i VM-dokumentationen. Den centrala modellen lagrar inga privata spelarjournaler.
+The VM has a separate `ingestion` Compose profile and `wisp-ingest` command. Scheduling and deployment are documented in the VM notes. The central model does not store private player journals.
 
-Råkopior får inte arkiveras obegränsat i dumpfiler, loggar eller distributionspaket. Tillfällig överföringsdump tas bort efter inläsning. Framtida databasbackuper som innehåller API-data behöver samma eller kortare retention. Klienter som cachelagrar svar med `expires_at` rensar dem vid nästa användning; avstängda klienter kan inte utföra fysisk rensning. Det är en begränsning att hantera före publik distribution, inte ett löfte om ständig radering på en avstängd dator. Egna spelhändelser är separata och raderas inte av denna cachepolicy.
+Do not retain raw copies indefinitely in dumps, logs or release bundles. Delete temporary transfer dumps after import. Future backups containing API data need the same or shorter retention. Clients purge cached answers carrying `expires_at` at next use; powered-off clients cannot physically purge. Handle this limit before public distribution rather than promising continuous deletion on a powered-off computer. Player-owned events are separate and are not removed by API cache policy.
 
-## Driftuppdatering 2026-11-06
+## Operational update, 6 November 2026
 
-Projektion v2 bevarar ytterligare uttryckliga API-fält (bland annat krav, belöningar, kvalitet, klasser och item-tooltips) som begränsad JSON i entitetens beskrivning. Länkar/media tas bort, fältstorlek begränsas och ingen relation ges starkare betydelse än källan visar. Questberättelser ingår inte i denna faktaprojektion. Saknade/utelämnade fält förblir okända. Varken ett länkat föremål eller en referens bevisar en dropchans eller att något finns i den aktuella spelvärlden.
+Projection v2 retains additional explicit API fields, including requirements, rewards, quality, classes and item tooltips, as bounded JSON in entity descriptions. Links/media are removed, field size is capped and relationships are no stronger than their sources. Quest narratives are excluded. Missing/omitted fields remain unknown. An item link/reference establishes neither drop probability nor availability in the current world.
 
-Giltiga cachedokument med äldre projektion byggs om, normalt 200 per batch. `-reproject-limit 2000 -max-requests 1` gör en avgränsad större ombyggnad med en enda namespace-probe. Ursprunglig hämtningstid, expiry och nästa faktiska uppdateringsdeadline behålls. Den lokala CLI-standarden är 200 nätanrop; VM-runnern väljer 500. Ingen ökning av databasens eller andra tjänsters resursgränser.
+Valid documents with older projections are rebuilt, normally 200 per batch. `-reproject-limit 2000 -max-requests 1` performs a bounded larger rebuild with one namespace probe. Original retrieval time, expiry and actual refresh deadline remain. The local CLI default is 200 network calls; the VM runner chooses 500. No database or unrelated service resource limits were raised.
 
-Servern har separata Wisp-cronjobb för refresh var 15:e minut och `-purge-only` dagligen 03:17 (VM-tid). Lås, resursvakt och atomisk exitstatus finns i `infrastructure/vm/refresh-knowledge.sh`. Rensningen kontaktar inte en provider och behöver ingen giltig API-nyckel. För kopior i backuper/cache gäller samma TTL; statistik utan API-innehåll kan behållas för driftuppföljning. Se [leveranschecklistan](delivery-knowledge-character-2026-11-06.md) för verkliga resultat och frågetester.
+Separate Wisp cron jobs refresh every 15 minutes and run `-purge-only` daily at 03:17 VM time. `infrastructure/vm/refresh-knowledge.sh` provides locking, resource guards and atomic exit status. Purge contacts no provider and needs no valid API key. Backups/cache have the same TTL; content-free operational statistics can remain. See the [delivery checklist](delivery-knowledge-character-2026-11-06.md) for results and question tests.
 
-ForeverDB:s dokumenterade API erbjuder kompletterande uppgifter men kräver en separat godkänd nyckel och synlig attribution. Ingen sådan nyckel har tillhandahållits i detta arbete. QuestieDB:s historiska rättigheter är fortsatt oklara; ingen bulkimport aktiverades. Originalkällornas status kontrollerades på nytt 6 november 2026.
+At this update, ForeverDB's documented API required a separate approved key and visible attribution; no key had yet been supplied. QuestieDB historical rights remained uncertain and no bulk import was enabled. Original source status was rechecked on 6 November 2026. Later approved ForeverDB integration is described in [its delivery checklist](foreverdb-chat-delivery.md).

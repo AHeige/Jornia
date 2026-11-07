@@ -14,7 +14,7 @@ import (
 
 func TestDirectoryDiscoveryAndJournalIdentity(t *testing.T) {
 	root := t.TempDir()
-	for _, name := range []string{"Testspelare", "Second"} {
+	for _, name := range []string{"TestPlayer", "Second"} {
 		if err := os.MkdirAll(filepath.Join(root, "WTF", "Account", "private-account", "Testrealm", name, "SavedVariables"), 0700); err != nil {
 			t.Fatal(err)
 		}
@@ -38,7 +38,7 @@ func TestDirectoryDiscoveryAndJournalIdentity(t *testing.T) {
 		if !c.Discovered {
 			t.Fatal("missing directory origin")
 		}
-		if c.Name == "Testspelare" {
+		if c.Name == "TestPlayer" {
 			selected = c.ID
 		}
 		events, _ := store.Events(context.Background(), c.ID)
@@ -47,7 +47,7 @@ func TestDirectoryDiscoveryAndJournalIdentity(t *testing.T) {
 		}
 	}
 	p := packet()
-	marker := filepath.Join(root, "WTF", "Account", "private-account", "Testrealm", "Testspelare", "SavedVariables", "Wisp.lua")
+	marker := filepath.Join(root, "WTF", "Account", "private-account", "Testrealm", "TestPlayer", "SavedVariables", "Wisp.lua")
 	if err := os.WriteFile(marker, []byte(identityFixture(p)), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestDirectoryDiscoveryAndJournalIdentity(t *testing.T) {
 
 func TestForgetMappedDirectoryAndJournalDoesNotResurrect(t *testing.T) {
 	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, "WTF", "Account", "account", "Testrealm", "Testspelare", "SavedVariables"), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, "WTF", "Account", "account", "Testrealm", "TestPlayer", "SavedVariables"), 0700); err != nil {
 		t.Fatal(err)
 	}
 	store, err := Open(filepath.Join(t.TempDir(), "player.db"))
@@ -87,7 +87,7 @@ func TestForgetMappedDirectoryAndJournalDoesNotResurrect(t *testing.T) {
 	defer store.DB.Close()
 	_, _ = store.DiscoverCharacters(context.Background(), root)
 	p := packet()
-	marker := filepath.Join(root, "WTF", "Account", "account", "Testrealm", "Testspelare", "SavedVariables", "Wisp.lua")
+	marker := filepath.Join(root, "WTF", "Account", "account", "Testrealm", "TestPlayer", "SavedVariables", "Wisp.lua")
 	if err := os.WriteFile(marker, []byte(identityFixture(p)), 0600); err != nil {
 		t.Fatal(err)
 	}

@@ -1,98 +1,96 @@
-# Wisp: visuell OCR-transport, 6 november 2026
+# Wisp visual OCR transport on 6 November 2026
 
-## Användarens nya riktning
+## New user direction
 
-En egen Lua-chatt är öppen inne i WoW. När spelaren trycker Enter ska frågan kunna läsas av från rutan och skickas till Wisp → backend → Berget → backend → ett svar i addonen. Detta prioriteras nu före SpeakText. Inga reload-, utloggnings- eller klientavslutssteg ska behövas för transporten.
+A dedicated Lua chat is open in WoW. Enter should make the question readable from that window and send it through Wisp → backend → Berget → backend → addon reply. This now takes priority over SpeakText. Transport must not require reload, logout or client exit.
 
-## Första lokala beviset
+## First local evidence
 
-Vi körde egen Objective-C-kod mot macOS inbyggda Vision-API på en av användarens redan bifogade WoW-bilder. Inga nya skärmbilder togs, inga tangenttryckningar övervakades, inga OS-behörigheter ändrades och ingen bild eller OCR-text skickades till en server.
+Our Objective-C code ran macOS Vision on a previously attached user WoW image. No new screenshots, key monitoring, OS-permission changes or server uploads of image/OCR text occurred.
 
-- Nio textrader upptäcktes.
-- `C_Log.LogMessage=function` och de synliga inställningsvärdena gick att läsa.
-- Första anropet tog 7,673 sekunder; två efterföljande körningar tog 0,210 respektive 0,185 sekunder.
-- Ett långt funktionsnamn fick ett extra mellanslag, trots rapporterad confidence 1. Confidence är inte ett bevis på korrekt text.
+- Nine text lines detected.
+- C_Log.LogMessage=function and visible settings were readable.
+- First call: 7.673 seconds; subsequent calls: 0.210 and 0.185 seconds.
+- A long function name gained a space despite confidence 1. Confidence does not prove correctness.
 
-Detta är en **filbaserad OCR-kontroll**, inte ett verifierat liveflöde. Bilden är en beskuren faktisk WoW-bild, inte en fullskärmsbenchmark eller ett test av en färdig Wisp-utkorg. Ingen precision/latens för den färdiga produkten kan utlovas från dessa tre körningar.
+This is a **file-based OCR check**, not verified live capture. The image is a real game crop, not a fullscreen benchmark or a finished Wisp-outbox test. Three runs cannot establish product accuracy/latency.
 
-Koden finns i `scripts/experiments/read_image_ocr.m`. Den använder bara plattformens Foundation/Vision för OCR-primitiven; all produktlogik ägs av Wisp. Ingen extern OCR-distribution eller färdig companion-lösning installerades. Swift-varianten stötte på ett lokalt compiler/SDK-moduleproblem; det fungerande beviset använder Objective-C. Systemets utvecklarverktyg ändrades inte.
+Code: `scripts/experiments/read_image_ocr.m`, using Foundation/Vision primitives with first-party product logic. No external OCR distribution/finished companion was installed. Swift hit a local compiler/SDK-module issue; Objective-C worked. System development tools were unchanged.
 
-## Föreslaget Enter-flöde
+## Proposed Enter flow
 
-1. Lua hanterar Enter i sitt eget textfält och skapar ett stabilt, läsbart **utkorgskort** med frågan, ett unikt request-ID och karaktärskoppling. Kortet ligger kvar; det är ingen enbildsblinkning som en bildläsare lätt missar.
-2. Companion hittar Wisp-panelens avgränsning i det uttryckligt valda WoW-fönstret. För själva läsningen används panelregionen. Vanlig chatt, andra appar och hela skärmen ska inte skickas till backend.
-3. Lokal OCR läser och validerar kortet. Identifierare, avgränsare och en kontrollsumma bör vara tåliga att läsa och ge ett säkert avslag vid fel. Flera identiska läsningar kan hjälpa men ersätter inte validering. Samma request-ID får aldrig orsaka upprepade betalda anrop.
-4. Endast den validerade frågetexten och den uttryckligt valda kontexten går till befintligt Wisp-API. Ingen generell tangentlogger behövs för att upptäcka en stabil synlig utkorg. Bilden behöver inte lämna datorn för denna lösning.
-5. Lua visar begriplig status för väntande/sänd/besvarad fråga. Status ska motsvara en riktig kvittens, inte bara ett OCR-försök. Karaktärsbyte eller ett gammalt kort får inte kunna koppla ett svar till fel karaktär.
+1. Lua handles Enter in its edit box and creates a stable readable **outbox card** with question, request ID and character correlation. It remains visible rather than flashing for one frame.
+2. The companion locates the panel in the explicitly selected WoW window and reads its region. Ordinary chat, other apps and the full screen must not reach the backend.
+3. Local OCR reads/validates IDs, delimiters and checksum, rejecting errors. Multiple identical reads can help but do not replace validation. One request ID must never trigger repeated paid calls.
+4. Only validated question text and explicitly selected context reach the existing API. No global keylogger is needed and images can stay local.
+5. Lua shows understandable pending/sent/answered states backed by actual receipts. Character changes/stale cards must not misroute answers.
 
-Live skärmfångst på Mac kräver separat hantering av macOS skärmåtkomst. Ingen sådan åtkomst begärdes i filtestet. Exakt fönsteridentifiering, lokalisering efter flytt/skalning, textstorlek, radbrytning och läsfel behöver verifieras i den riktiga klienten. En förberedd OCR-läsbar layout är en del av lösningen, inte kosmetik.
+Live Mac capture needs separate screen-access handling, not requested in the file test. Window identity, moving/scaling, font size, wrapping and reading errors require real-client checks. OCR-readable layout is part of the transport.
 
-## Returvägen är fortfarande separat
+## Return is a separate problem
 
-OCR löser endast utgående data. Två svar genom lokala, ännu oladdade addon-inboxar är tidigare verifierade. Dessa har ett ändligt antal platser och en plats laddas en gång per UI-livstid. Hur addonen får veta att svaret är redo innan en plats används, samt uthållighet för många turer, är ännu inte löst.
+At the initial stage, two local unloaded-addon replies were proven. Each finite slot loads once per UI lifetime; readiness detection and many-turn endurance remained unresolved. A single correlated known-inbox reply can test E2E but is not unlimited finished chat. The OCR proposal does not silently authorize memory writes, hidden input or an untested return mechanism.
 
-Det första e2e-testet kan pröva ett enskilt korrelerat svar med en känd inbox. Detta ska inte presenteras som obegränsad eller färdig automatisk chatt. Ingen minnesskrivning, osynlig tangentinmatning eller ny otestad returmekanism införs som en underförstådd del av OCR-förslaget.
+## Initial bounded test
 
-## Nästa avgränsade test
+**One question, no AI:** show a controlled Lua outbox, Enter, read locally during play. Require correct question/character/ID, no duplicates and measured Enter-to-validation. Reject malformed/clipped text. Only afterward test that request through AI/return.
 
-**En fråga, ingen AI ännu:** visa en kontrollerad fråga i en egen Lua-utkorg; tryck Enter; läs den lokalt från den pågående bilden medan spelet fortsätter. Kräv rätt fråga, karaktär och request-ID, ingen dubbelsändning och uppmätt Enter → validerad läsning. Prova felaktig/avklippt text som avslag. Först därefter prövas samma request genom AI och retur-inbox.
+At that checkpoint image OCR was verified but live capture, outbox UI, Enter detection and AI return were not. No network access/GitHub push occurred.
 
-Status: lokal bild-OCR verifierad. Livefångst, utkorgs-UI, Enter-detektion och hela AI-returen är ännu inte implementerade/verifierade i detta experiment. Ingen nätåtkomst eller GitHub-push användes.
+## E2E lab implemented later that day
 
-## Implementerad e2e-labb, samma dag
+A later instruction prioritized the whole chain. We built separate Wisp OCR Lab, a Python-standard-library controller, native Objective-C ScreenCaptureKit/Vision capture and explicit `-ocr-lab` in the Go companion. No large new dependency. See `scripts/experiments/ocr/README.md` for running/data limits.
 
-Den senare användarinstruktionen prioriterade hela e2e-kedjan. Därför finns nu en separat `Wisp OCR Lab`, egen Python-controller (standardbibliotek), native Objective-C-fångst med ScreenCaptureKit/Vision och ett uttryckligt `-ocr-lab`-läge i befintlig Go-companion. Ingen ny stor dependency infördes. Se `scripts/experiments/ocr/README.md` för körning, datagränser och begränsningar.
+Return now used 96 preinstalled LoD slots rather than one manually loaded inbox. The addon consumed the next slot every 600 ms while pending; the controller wrote sent/received/final state to all owned inboxes only on actual state changes. This finite cost does not prove unlimited chat.
 
-Returhypotesen ovan är nu implementerad med 96 separata förinstallerade LoD-platser, inte en enstaka manuellt utlöst inbox. Addonen förbrukar nästa plats var 600 ms medan en fråga väntar. Controllern skriver sänd-/mottagen-/slutstatus till samtliga egna inboxfiler när status faktiskt ändras. Detta kostar ett ändligt antal platser och bevisar inte obegränsad chatt.
+Outbound validation required two identical complete reads and a checksum over ID/character/question. The initial lab capped questions at 160 ASCII characters. No automatic journal sharing; real excerpts require separate review. The initial bounded-test section above records the earlier plan, not remaining implementation status.
 
-Utgående kontroll kräver två identiska, kompletta läsningar och kontrollsumma över request-ID, karaktärsbindning och fråga. Frågan är begränsad till 160 ASCII-tecken i labben. Ingen journal skickas automatiskt. Faktiska journalutdrag kräver fortsatt separat granskning. Det gamla `Nästa avgränsade test`-avsnittet ovan beskriver tidigare plan, inte kvarvarande implementeringsstatus.
+### First real-client run
 
-### Första körningen i verklig WoW-klient
+After normal startup following installation, the user asked `What can you tell me about Ashenvale?` on Cone Thrower. Request `272478521793971663000001`:
 
-Användaren startade WoW normalt efter installation och skrev `What can you tell me about Ashenvale?` på Cone Thrower. Request `272478521793971663000001`:
+- Final validating scan: **59.3 ms OCR**, **207.0 ms capture/localization/OCR**.
+- Two matching scans required; not a full Enter-to-receipt measurement.
+- Native `Question received — Wisp is thinking…` visibly confirmed outbound OCR → local companion → automatic inbox acknowledgement.
+- AI failed: VM API logged `inference returned HTTP 502`. Controller API/file stage took 5,275 ms before publishing the error.
+- Automatic `Could not finish — your question is kept` appeared in the same window, without reload/logout/exit/manual inbox loading.
+- A separate small VM model check later succeeded through LangChain/Berget. The initial cause was then unknown and the original request was not automatically replayed.
 
-- Sista validerande läsningen: **59,3 ms OCR**, **207,0 ms fångst + lokalisering + OCR**.
-- Två matchande läsningar krävdes; detta är inte ett mått på hela Enter→fråga-mottagen.
-- Native Lua-status `Question received — Wisp is thinking…` observerades visuellt i det pågående spelet. Därmed fungerade utgående OCR → lokal companion → kvittens via automatisk fil-inbox.
-- AI-steget misslyckades: API-loggen på VM:n visade `inference returned HTTP 502`. Controllerns API-/filsteg tog 5 275 ms innan fel publicerades.
-- Även felet kom tillbaka automatiskt och observerades i samma WoW-fönster: `Could not finish — your question is kept`. Ingen reload, utloggning, klientstängning eller manuell inboxladdning användes.
-- En separat liten modellkontroll på VM:n lyckades därefter via befintlig LangChain/Berget. Grundorsaken till det föregående modellfelet är inte belagd. Den ursprungliga frågan skickades inte om automatiskt.
+Three Python protocol/return/error tests and companion Go tests passed, including Lua 5.1 correlated replies, wrong character, waiting and duplicate-send rejection. A synthetic crop/OCR fixture validated a control line Vision split into two observations: 149.6–214.4 ms. No browser/internet research or GitHub push; server/Berget calls served the requested test.
 
-Tre Python-protokoll-/retur-/feltester samt companion-paketets Go-tester passerade, inklusive Lua 5.1-körning med korrelerade svar, fel karaktär, vänteläge och avslag på dubbelsändning. Ett syntetiskt crop/OCR-test läste och validerade en kontrollrad som Vision delade upp i två observationer; 149,6–214,4 ms i de lokala fixture-körningarna. Ingen browser-/internetresearch eller GitHub-push användes; server-/Berget-anrop avsåg det uttryckligt begärda e2e-testet.
+At that checkpoint live OCR, API receipt and automatic error return were proven; a successful AI reply still awaited confirmation.
 
-Status vid denna anteckning: live OCR, API-kvittens och automatisk felretur verifierade; ett **riktigt AI-svar hela vägen tillbaka** återstår att bekräfta.
+### Completed real Berget reply in Lua
 
-### Slutförd kedja: riktigt Berget-svar i Lua
+Two more failed runs (`…000002`: 81.1 ms OCR; `…000003`: 47.6 ms) led to safe diagnostics identifying **LengthFinishReasonError** in the model adapter. The old 220-output-token limit could abort structured responses. This was not established as transient/OCR failure; the SDK/adapter converted the abort to HTTP 502.
 
-Efter två ytterligare felkörningar (`…000002`: 81,1 ms OCR; `…000003`: 47,6 ms OCR) isolerades orsaken med säker feldiagnostik: **`LengthFinishReasonError`** i modelladaptern. Den gamla maxgränsen på 220 output-token kunde avbryta det strukturerade svaret. Felet var alltså inte bevisat tillfälligt eller ett OCR-fel. SDK-/modelladaptern omvandlade avbrottet till HTTP 502.
+Fix: Go API/adapter allow at most **512 output tokens**. Go retains a concise-answer instruction: at most 60 words and four directly relevant evidence IDs; narrow answers if more evidence is needed. This is a prompt instruction, not a guaranteed word cap. No automatic retries/new libraries. Incomplete/invalid responses remain failures, never fabricated success.
 
-Åtgärd: Go-API:t och modelladaptern accepterar nu högst **512 output-token**. Go äger fortsatt instruktionen om kort svar: högst 60 ord och högst fyra direkt relevanta evidence-ID:n; välj ett smalare svar om fler belägg skulle krävas. Detta är en promptinstruktion, inte en garanterad ordgräns. Inga automatiska återförsök eller nya bibliotek infördes. Oavslutade/ogiltiga svar förblir fel, aldrig fabricerade lyckade svar.
+**Request `272478521793972374000004` succeeded and was visually confirmed in the same uninterrupted Cone Thrower session.** The same Ashenvale question produced zone/named-place facts, sources and a warning that source_checked does not confirm current game state.
 
-**Request `272478521793972374000004` lyckades och observerades visuellt i samma oavbrutna WoW-session på Cone Thrower.** Det var samma Ashenvale-fråga. Svaret beskrev zonen och namngivna platser, med källor samt varningen om att source_checked inte bekräftar aktuellt spelstate.
-
-| Mätning | Uppmätt värde |
+| Measurement | Value |
 |---|---:|
-| OCR, sista av två matchande läsningar | 46,2 ms |
-| Fångst + lokalisering + OCR, samma läsning | 212,4 ms |
-| Backendens rapporterade svarstid | 4 382 ms |
-| Lokal API-acceptans/pollning + publicering av svarsfiler | 4 631,5 ms |
-| Enter → verklig Lua-callback, visat i spelet | **6,1 sekunder** |
+| Final OCR of two matching scans | 46.2 ms |
+| Capture/localization/OCR for that scan | 212.4 ms |
+| Backend-reported response time | 4,382 ms |
+| Local API acceptance/polling and reply publication | 4,631.5 ms |
+| Enter → actual Lua callback shown in game | **6.1 seconds** |
 
-Operationens route var `berget` och modellen `mistralai/Mistral-Small-3.2-24B-Instruct-2506`. Den bekräftade användningen var 5 823 prompt-token och **229 svarstoken**; rapporterad uppskattad kostnad €0,0018156. Det färdiga svaret behövde alltså fler än den gamla gränsens 220 svarstoken. `reply_files_written` användes inte ensamt som leveransbevis: den verkliga Lua-rutan visade `Reply received — 6.1 s total` och själva svaret. Mätvärdena överlappar och ska inte summeras som oberoende steg. Den fördröjning som återstår utöver backend omfattar bl.a. två OCR-läsningar, pollningsintervall och kvittensleverans.
+Route `berget`, model `mistralai/Mistral-Small-3.2-24B-Instruct-2506`. Confirmed usage: 5,823 prompt tokens/**229 output tokens**, estimated EUR 0.0018156. Output exceeded the former 220-token cap. File writes alone were not proof: Lua displayed `Reply received — 6.1 s total` and the answer. Metrics overlap and must not be summed. Additional latency includes two scans, polling and acknowledgement delivery.
 
-Samtliga Go-pakettester (`go test ./...`), tre Python-bridge-tester och två modelladaptertester passerade. Modelltesterna körde nätverksisolerat med falsk provider, inklusive kontroll att frågetext/nycklar inte hamnar i felloggar. Native-helpern kompilerades mot lokal SDK. Riktig on-screen-väntan, fel och lyckat svar kontrollerades med CUA. Ingen reducerad-rörelseinställning behöver ändra labben: statisk text valdes uttryckligen för läsbarhet och OCR-stabilitet.
+All Go packages, three Python bridge tests and two model-adapter tests passed. Fake-provider model tests were network-isolated and checked secrets/question text stay out of error logs. Native helper compiled against local SDK. CUA verified waiting, failures and success. Static text was chosen for readability/OCR stability; reduced-motion settings need not change.
 
-### Drift och kvarvarande begränsningar
+### Operations and remaining limits
 
-- VM: modell `wisp-private-model:20261106-ocr2`, API `wisp-private-api:20261106-ocr1`. Endast Wisp modell/API återskapades, med befintliga resursgränser och portar. De **20 övriga** löpande containrarnas ID:n var oförändrade efter slutuppdateringen. Diagnostiksteget före detta ändrade endast modellcontainern och bevarade övriga 21 ID:n.
-- Föregående images finns kvar. Ägarprivata `.env.pre-ocr-model-diagnostics` och `.env.pre-ocr-output-fix` finns i VM-projektet för återgång; inga nycklar skrivs i denna dokumentation. Ingen prune, databasändring eller brandväggsändring utfördes.
-- Macens installerade companion kör tillfälligt med det uttryckliga `-ocr-lab`-läget, på 8788 och med användarens befintliga databas. Normala launcher ändrades inte. Läsaren kör bara medan dess lokala process lever. Offentliga releases och nedladdningssidan ändrades inte.
-- Returpoolen är fortfarande **ändlig**. Vi har visat en fungerande E2E-tur och felreturer, inte hur många normala samtal som fungerar eller hur obegränsad retur ska lösas.
-- Labbens svarsyta har fast höjd; långa källtitlar/timingtext kan klippas. Själva lyckade svarstexten och osäkerhetsnotisen var synliga. Scrollbar historik, beständig väntestatus, bred språk-/teckentäckning, fler upplösningar och karaktärsbytes-test i verkligt spel återstår.
-- Detta test skickade **bara frågetext**, inte aktuell questlista eller journalutdrag. Personligt/live questunderlag är nästa separat avgränsade steg. Att chatttransporten fungerar bevisar inte komplett eller korrekt Forever-världsdata.
+- VM model `wisp-private-model:20261106-ocr2`, API `wisp-private-api:20261106-ocr1`. Only these were recreated with existing limits/ports. **Twenty unrelated** running IDs remained; the preceding diagnostic step changed only model and preserved the other 21.
+- Previous images/private rollback files `.env.pre-ocr-model-diagnostics` and `.env.pre-ocr-output-fix` remain. No keys here; no prune/database/firewall changes.
+- Mac companion temporarily runs explicit -ocr-lab on 8788 with the existing database. Normal launcher unchanged; reader works only while its process runs. Public downloads/site unchanged.
+- Return pool remains **finite**. One success/error returns do not establish normal conversation capacity or unlimited return.
+- Fixed-height lab responses can clip long source titles/timing. Successful answer/uncertainty note were visible. Scrollable history, durable pending state, language/character coverage, resolutions and actual character-switch tests remain.
+- This test sent **only question text**, not current quests/journal. Personal/current context is a separate slice. Working transport proves neither complete nor correct world data.
 
-**Aktuell status: första riktiga OCR → AI → Lua-kedjan är verifierad utan reload, utloggning, klientavslut, minnesläsning eller global tangentövervakning.**
+**Checkpoint status: first real OCR → AI → Lua chain verified without reload/logout/exit/memory reading/global key monitoring.**
 
-## Uppföljning: möjlig återanvändbar returprimitiv
+## Follow-up: reusable return primitive
 
-Senare samma dag granskades aktuell källkod för externa projekt. En egen liveprobe bekräftade att samma redan kända filnamn kunde ge 20 filnärvaroövergångar över 10 cykler via `PlaySoundFile`. Filinnehåll och filnärvaro har alltså olika observerbart beteende på denna Mac-build. Vår fungerande OCR/LoD-implementation ändrades inte; full byte-/texttransport över denna signal är ännu inte implementerad. Fortsättning och belägg: `docs/return-channel-research-2026-11-06.md`.
+Later source review led to an independent live probe observing 20 file-presence transitions over ten cycles through PlaySoundFile on the same known filename. File contents and file presence have different observable behavior on this build. The working finite OCR/LoD flow remained unchanged at this checkpoint; full byte/text transport was not yet implemented. See `docs/return-channel-research-2026-11-06.md` and subsequent byte/block reports for continuation.

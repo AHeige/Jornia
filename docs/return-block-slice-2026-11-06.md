@@ -1,56 +1,56 @@
-# Wisp: blockretur i pågående WoW-session
+# Wisp acknowledged block return on 6 November 2026
 
-## Resultat
+## Result
 
-Åtta byte per kvittens fungerar mellan datorn och vår Lua-ruta. Samma 64 databärare och en klockfil återanvändes mellan överföringarna. Inga inboxar förbrukas per datablock eller svar. Inga AI-/nätverksanrop, reload, utloggning eller klientomstarter ingick.
+Eight bytes per acknowledgement work between desktop and Lua. The same 64 data carriers and clock were reused. No inbox is consumed per block/reply. No AI/network/reload/logout/restart was involved.
 
-| Liveprov | Nyttolast | Wire / block | Transporttid | Resultat |
+| Trial | Payload | Wire bytes / blocks | Transport time | Result |
 |---|---:|---:|---:|---|
-| Ny bytevis referens, `Again` | 5 byte | 12 / 12 bytekvittenser | 5 329,9 ms | Mottagen text |
-| Block, `Again`, första versionen | 5 byte | 24 / 3 | 1 284,7 ms | Mottagen text |
-| Block, `Again`, slutlig version | 5 byte | 24 / 3 | 1 438,7 ms | Mottagen text |
-| Längre text inklusive åäö | 257 byte | 272 / 34 | 14 977,4 ms | Hela texten verifierad och visad |
-| Avsiktligt skadad checksumma | 3 byte | 24 / 3 | 1 336,9 ms | Avvisad; ingen svarstext |
-| Fel överföringsnonce | 3 byte | Första blocket av 3 | 423,9 ms | Avvisad direkt; ingen svarstext |
+| New byte reference, Again | 5 bytes | 12 / 12 byte receipts | 5,329.9 ms | Delivered |
+| Block, Again, first version | 5 bytes | 24 / 3 | 1,284.7 ms | Delivered |
+| Block, Again, final version | 5 bytes | 24 / 3 | 1,438.7 ms | Delivered |
+| Longer text including åäö | 257 bytes | 272 / 34 | 14,977.4 ms | Complete text verified/displayed |
+| Deliberately bad checksum | 3 bytes | 24 / 3 | 1,336.9 ms | Rejected, no text |
+| Wrong transfer nonce | 3 bytes | First of three blocks | 423.9 ms | Immediately rejected, no text |
 
-Den slutliga korta blockkörningen var cirka **3,7 gånger snabbare** än referensen. Detta är enstaka körningar, inte ett statistiskt benchmark. Det längre paketet gav **17,16 nyttolastbyte/s**. Det är fortfarande för långsamt för långa AI-svar med en snabb chattkänsla. Tiden börjar vid första publicerade blocket och slutar vid avläst, kontrollerad slutkvittens; uppvärmning och AI-generering ingår inte.
+The final short block trial was about **3.7× faster** than the reference. Single runs, not statistical benchmarks. Long-packet payload rate: **17.16 bytes/s**, still too slow for long quick-chat answers. Timing starts at first block publication and ends at checked final OCR receipt; warm-up/inference excluded.
 
-Referensen mättes om eftersom skärmläget ändrats sedan föregående slice. Samtliga nya prov kördes på Mac, Cone Thrower, Forever 1.60.1.70790 / Interface 16001, samma klientprocess PID 8007, med UI-bild 1920×1080. CUA användes för att visuellt kontrollera text, fel och prestandarader. Ingen bild skickades till en modell eller server.
+The byte reference was remeasured after screen changes. All trials used Mac/Cone Thrower/Forever 1.60.1.70790/Interface 16001, same PID 8007,1920×1080. CUA checked text/errors/metrics. No images reached a model/server.
 
 ## Implementation
 
-- `apps/bridge-lab/return-block-bus.lua`: egen mottagare, 64 parallella bitar, två stabila prover, kontroller, aktuell karaktär och överföringsnonce, prefixkvittens, full paketkontroll och skrollbar svarsyta.
-- `scripts/experiments/return_bus/block.py`: Python stdlib, frysta datablock tills korrekt OCR-kvittens, tidsgränser, felinjektion och återställning. Befintlig native Vision/ScreenCaptureKit-helper används lokalt.
-- `bus.py` stöder två fasta bärarbanker: gamla åtta bitar och nya 64. Inga godtyckliga sökvägar från manifest används vid återställning.
+- `apps/bridge-lab/return-block-bus.lua`: first-party 64-bit receiver, two stable samples, controls, current character/nonce, prefix receipts, complete validation and scrollable response.
+- `scripts/experiments/return_bus/block.py`: Python stdlib, blocks frozen until checked OCR acknowledgement, timeout, fault injection/restoration. Uses our existing native Vision/ScreenCaptureKit helper.
+- `bus.py` supports only fixed 8-bit/64-bit carrier banks. Recovery never accepts arbitrary manifest paths.
 
-Wire: `WB`, version 1, nonce uint32, karaktärsbindning uint16, nyttolastlängd uint16, nyttolast, Adler-32 uint32. Heltalsfält är big-endian. Paketet nollutfylls till åttabytesblock; databitar inom varje byte är little-endian på filbärarna. Taket är 1 024 nyttolastbyte, men det längsta verkliga provet var 257 byte. 1 024 täcks bara i lokalt protokolltest.
+Wire: WB, version 1, nonce uint32, character binding uint16, payload length uint16, payload, Adler-32 uint32. Integers big-endian; pad to eight-byte blocks; each byte's carrier bits little-endian. Payload cap 1,024 UTF-8 bytes; largest live trial 257. Full 1,024-byte size is only locally protocol-tested.
 
-Datafilernas närvaro ställs först; klockfilens närvaro växlas sist. Lua läser vid en ny klocknivå och kräver två identiska dataprover med nominellt 50 ms intervall och giltiga kontrollfiler. Sändaren väntar på rätt nonce, bindning, sekvens, mottagen prefixlängd och prefixdigest innan nästa block publiceras. Slutlig text visas först när hela paketets checksumma och utfyllnad stämmer.
+Set data first, toggle clock last. Lua detects the edge and requires two identical samples nominally 50 ms apart plus valid controls. Sender requires matching nonce/binding/sequence/prefix length/digest before publishing another block. Display text only after full checksum/padding validation.
 
-Kvittensen innehåller fasta fältlängder och egen kontrollsumma. OCR får utelämna mellanslagen mellan sifferfält, men får inte ändra siffror utan att kontrollsumman underkänns. Detta är skydd mot oavsiktlig korruption och gamla paket, inte kryptografisk autentisering.
+Receipt fields are fixed-width with their own checksum. OCR may omit spaces between numeric fields, but altered digits must fail validation. This detects accidental corruption/stale packets, not cryptographic authentication.
 
-## Problem hittade under liveproven
+## Issues found live
 
-Första långa försöket kom inte till sändning: Vision slog ihop digest och kvittenskontroll till ett sifferfält. Läsaren korrigerades för fasta fältlängder utan att ta bort kontrollsumman. Ett regressionstest använder den faktiskt observerade OCR-raden.
+First long attempt never sent: Vision merged digest/receipt-checksum numbers. Fixed-width parsing was corrected without removing checksums. A regression fixture uses the actual observed line.
 
-Ett omförsök överlappade omarmering med startad sändare och tog en föregående READY. Det avbröts och filerna återställdes. **Armera först, starta sedan sändaren; armera inte om under en överföring.** Ingen automatisk omsändning görs.
+One retry overlapped rearming/sender startup and accepted an earlier READY. It stopped/restored. **Arm before starting the sender; never rearm mid-transfer.** No automatic resend.
 
-Det första längre paketet fastnade därefter vid block 4: prefixdigest 2 673 674 982 passerade gränsen för ett signerat 32-bitars heltal och ingen ny kvittens visades. Efter byte från `%010d` till `%010.0f` fungerade hela paketet, inklusive slutdigest 3 876 742 076. Det pekar på WoW:s heltalsformatering; inget felstackspår hämtades. Lokala tester har nu en extra vakt mot att använda heltalsformat för digest, eftersom värdens Lua-testmiljö inte själv reproducerade denna begränsning.
+The first long transfer then stalled at block 4: prefix digest 2,673,674,982 exceeded signed 32-bit formatting and Lua emitted no acknowledgement. Replacing `%010d` with `%010.0f` allowed full delivery, including final digest 3,876,742,076. This points to WoW integer formatting; no error stack was collected. Tests guard against integer digest formats because host Lua does not reproduce the limit.
 
-Misslyckade prov räknas inte som levererade svar. Råloggarna bevaras tillsammans med lyckade prov i ignorerad `.cache/return-block-2026-11-06/`.
+Failed attempts are not counted as delivered. Private logs include successes/failures in ignored `.cache/return-block-2026-11-06/`.
 
-## Spelkostnad och begränsningar
+## Game cost and limits
 
-Vid det lyckade 257-byteprovet visade Lua 6 019 prober, 190,3 ms summerad instrumenterad callbacktid, 1,75 ms maximal callback och noll API-undantag. FPS-raden visade baseline/min/medel 60/60/60. Räknaren omfattar även väntan efter armering, men inte självtestets startkostnad, metrics-rendering eller hela spelets CPU/GPU-arbete. FPS var begränsad till 60 i ett stillastående, kort prov; detta bevisar inte frånvaro av påverkan i strid eller på andra datorer.
+Successful 257-byte trial:6,019 probes,190.3 ms accumulated instrumented callback work,1.75 ms maximum callback,zero API exceptions. FPS baseline/min/mean 60/60/60. Counter includes waiting after arm, not self-test startup, metrics rendering or whole-game CPU/GPU work. A short stationary 60 FPS-capped run proves no general combat/hardware performance claim.
 
-Det finns ingen flerprocesslåsning, kö, automatisk återhämtning, omsändning, streaming eller produktkoppling till Berget i denna slice. Kör endast en sändare och ingen updater/annan OCR-läsare samtidigt. Förlorad kvittens ger stopp, inte ett nytt AI-anrop. Windows, andra ljudinställningar och klientversioner är oprövade. Bitfilernas synlighet är fortfarande en experimentell klientegenskap.
+This slice has no interprocess lock, queue, automatic recovery/resend, streaming or Berget product integration. One sender only; no concurrent updater/OCR reader. Lost receipts stop, never trigger new inference. Windows/sound settings/client variants are untested. Presence visibility remains an empirical client property.
 
-## Bootstrap och återställning
+## Bootstrap and restoration
 
-Den första mottagaren laddades från redan installerade, oanvända `WispBridgeInbox01`. Formateringskorrigeringen laddades från redan installerade `WispOCRInbox096`, efter en läsande kontroll att den var oladdad. Ett eget `/run C_AddOns.LoadAddOn(...)` användes för denna labbbootstrap; det är inget slutanvändarflöde. Därefter använde alla paket samma återanvändbara filer och `/wispblock` för omarmering, utan fler addonladdningar.
+Initial receiver loaded through preinstalled unused WispBridgeInbox01. Formatting fix loaded through unused WispOCRInbox096 after read-only verification. Our `/run C_AddOns.LoadAddOn(...)` bootstrapped test code, not an end-user workflow. All packets then used the same reusable files and `/wispblock` rearming, without more addon loads.
 
-Bärarna är tillfälligt lånade **egna** `WispOCRInbox001..064/*_Camelot.toc` och vår tomma `WispBridgeLab/wispreturn_pulse.wav`. Dedikerade transportfiler krävs för produktinstallation. Alla 65 filer återställdes och innehållskontrollerades; inga `.wispbus-hold` finns kvar. Bootstrapfilerna 01 och 096 återställdes byte för byte från backup. Labbpanelen stoppades/doldes och den normala OCR/AI-läsaren återstartades till `Ready`, utan någon ny fråga.
+Carriers temporarily borrowed **our own** WispOCRInbox001..064/*_Camelot.toc plus empty WispBridgeLab/wispreturn_pulse.wav. Dedicated product carriers remain necessary. All 65 files were restored/content-checked, no `.wispbus-hold` left. Bootstrap 01/096 restored byte-for-byte. Lab stopped/hidden; ordinary OCR/AI reader resumed Ready without a question.
 
-Sex Python-tester samt hela `internal/companion` passerar. Tester täcker binärgränser, UTF-8, längdtak, återanvändning/återställning, korrupt och upprepad kvittens, skadad checksumma/utfyllnad, gammal nonce, karaktärsbyte och otillgänglig ljudkontroll. De senare två är simulerade, inte ändringar av spelarens riktiga karaktär eller ljudinställningar.
+Six Python tests and all internal/companion tests passed. Coverage includes binary boundaries, UTF-8, length limits, reuse/restoration, corrupt/repeated receipts, checksums/padding, stale nonce, character change and unavailable sound control. Last two are simulations, not actual player/settings changes.
 
-Nästa avgränsning är att minska OCR-kvittensens rundresor ytterligare och sedan koppla den återanvändbara returen till AI-flödet. Det gamla OCR/AI-flödet använder fortfarande sina ändliga engångsinboxar; det har inte tyst bytt transport genom denna labb.
+Next: reduce acknowledgement round trips and integrate reusable return with AI. At this slice's checkpoint the old OCR/AI flow still used finite inboxes; it did not silently adopt this channel.

@@ -1,45 +1,44 @@
-# Lokal automatisk äventyrsjournal — 0.3.0
+# Automatic local adventure journal
 
-Wisp får ett minne per karaktär. Den centrala världsgrafen och Berget-anropen ändras inte av denna funktion. SQLite innehåller originalobservationer och en lokal, återbyggbar graf; ingen separat grafserver installeras hos spelaren.
+The initial 0.3.0 journal gives Wisp a memory for each character. This feature does not change the central world graph or Berget calls. SQLite stores original observations and a rebuildable local graph; the player needs no separate graph server. The later 0.7.2 state extension is described below.
 
-## Första användningen
+## First use
 
-1. Addonen frågar vid första inloggningen innan den startar automatisk registrering. Godkännandet sparas för installationen; nya karaktärer börjar därefter registrera vid inloggning. Varje karaktär kan pausas med `/wisp stop` och återupptas med `/wisp start`.
-2. I companionens **Automatisk äventyrsjournal**, välj den absoluta sökvägen till klientmappen som innehåller `WTF`. Godkänn lokal filinläsning och välj **Aktivera och läs in journaler**.
-3. Companionen läser befintliga Wisp-journaler för samtliga karaktärer i dessa filer. Därefter kontrollerar den nya sparningar var tredje sekund medan programmet körs. Inställningen återupptas automatiskt efter omstart av companionen.
-4. Välj karaktär och öppna **Din resa**, eller fråga **Visa min resa**. Tidsstämpeln visar när informationen observerades i spelet. Senaste filinläsning är ett annat klockslag och visas separat.
+1. On first login the addon asks before enabling automatic recording. Consent is saved for the installation; subsequent characters start recording on login. Pause a character with `/wisp stop` and resume with `/wisp start`.
+2. In the companion's **Automatic adventure journal** section, select the absolute path to the client folder containing `WTF`. Approve local file access and choose **Enable and import journals**.
+3. The companion imports existing Wisp journals for all characters in those files, then checks for new saves every three seconds while running. The setting resumes automatically after restarting the companion.
+4. Select a character and open **Your journey**, or ask **Show my journey**. The timestamp indicates when the game observation occurred. The latest file import is a different timestamp and is displayed separately.
 
-Detta installerar inte autostart vid Windows-inloggning. Companionen behöver vara igång för att läsa nya filer. Saknas Wisp-data behöver karaktären först loggas in med addonen. Vanliga WoW-inställningar kan inte återskapa en äldre resa. Andra addons behöver egna, uttryckligt avgränsade importadaptrar och läses inte här.
+This does not install Windows-login autostart. The companion must run to read new files. A character without Wisp data must first log in with the addon. Ordinary WoW settings cannot reconstruct an earlier journey. Other addons require separate, explicitly scoped adapters and are not imported here.
 
-## Vad som registreras
+## Recorded observations
 
-Start/slut på registreringspass, zon/delområde, tidpunkt, nivå, nivåökningar, inlämnade quest-ID:n, egna anteckningar, karaktärens ID/namn/realm samt klientversion/build. Ett registreringspass börjar vid accepterad start/inloggning/UI-reload; det är inte en garanti för en sammanhängande verklig spelsession. Ingen XP-, inventory-, utrustnings-, talang-, aktiv-quest- eller chattinsamling är implementerad i denna version.
+The initial version records recording-session start/end, zone/subzone, time, level, level-ups, turned-in quest IDs, personal notes, character identity/name/realm and client version/build. A recording session begins at an accepted start/login/UI reload; it does not guarantee a continuous real play session. XP, inventory, equipment, talents, active quests and chat were not collected in the initial version.
 
-Addonen observerar händelser under spelandet, men SavedVariables skrivs normalt vid `/reload` eller utloggning. Companionen får inte löpande livepositioner genom denna mekanism. Den tvingar inte fram reload, läser inte spelprocessens minne och styr inte spelet. Funktion och lagring behöver fortfarande verifieras i användarens verkliga Forever-klient; Lua-simulering är inte ett sådant speltest.
+The addon observes events while playing, but SavedVariables normally reaches disk on `/reload` or logout. This mechanism does not provide continuous live positions to the companion. It forces no reload, reads no game-process memory and does not control gameplay. At the initial implementation stage, behavior and persistence still required verification in the user's actual Forever client; Lua simulation was not a substitute.
 
-## Lokal graf och prestanda
+## Local graph and performance
 
-Grafen har karaktär → registreringspass/observationsgrupp → händelse → plats/quest. Äldre händelser utan sessions-ID grupperas efter UTC-datum som importerade observationer, inte som bevis för en verklig session. Alla noder och relationer avgränsas med karaktärens lokala identitet. Plats- och questnoder dedupliceras. Varje ny händelse och dess grafprojektion skrivs atomiskt tillsammans med importkvittot. Grafen kan byggas om från originalhändelserna efter en uppgradering.
+The graph follows character → recording session/observation group → event → place/quest. Older events without session IDs are grouped by UTC date as imported observations, not proof of a real session. Every node and edge is scoped to the local character identity. Place and quest nodes are deduplicated. New events and graph projections are written atomically with the import receipt. The graph can be rebuilt from original events after an upgrade.
 
-Ingen LLM behövs för projektion eller resesammanfattning. Händelser registreras vid förändringar, inte per bildruta. Oförändrade filers storlek/tidsstämpel används för att undvika innehållsläsning; förändrat innehåll får checksumma. Stabila händelse-ID:n gör att upprepade sparningar inte skapar dubbletter. Motstridigt innehåll under samma ID bevarar tidigare fakta och ger ett fel i stället för att tyst skriva över dem.
+Projection and journey summaries need no LLM. Events are recorded on change, not per frame. Unchanged file sizes/timestamps avoid content reads; changed content receives a checksum. Stable event IDs prevent duplicate saves from creating duplicate events. Conflicting content under the same ID preserves earlier facts and returns an error rather than silently overwriting them.
 
-Addonen håller högst 2 000 händelser per karaktär; äldre poster faller ur addonbufferten om de inte hunnit importeras. Manuellt kopierat exportpaket innehåller de senaste 100. Automatinläsning delar större journaler i paket om högst 100, med mindre adaptiva paket för detaljerat state/framsteg. Begränsningar: 8 MiB per fil, högst 100 karaktärer per fil, högst 100 journalfiler och 20 000 traverserade katalogposter per kontroll, begränsat katalogdjup. Gränsöverskridande ger synligt fel, inte ett påstående om komplett historik. Lokalt importerade observationer sparas tills användaren raderar dem. Tidslinjen visar de senaste 50; exporten innehåller hela den lokala händelse- och samtalshistoriken.
+The addon retains at most 2,000 events per character; older events can fall out before import. A manually copied export contains the latest 100. Automatic import splits larger journals into batches of at most 100, with smaller adaptive batches for detailed state/progress. Limits: 8 MiB per file, 100 characters per file, 100 journal files and 20,000 traversed directory entries per check, plus bounded directory depth. Exceeding a limit gives a visible error rather than a completeness claim. Imported local observations remain until deleted. The timeline shows the latest 50; export includes the complete local event and conversation history.
 
-## Filåtkomst, paus och radering
+## File access, pause and deletion
 
-Inläsaren söker enbart `Wisp.lua` i `SavedVariables` under den valda klientens `WTF/Account`. Andra filers innehåll läses inte. Den kör aldrig Lua från disk: endast en begränsad dataliteral `WispDB = {...}` accepteras. Kod, andra globala variabler, orimliga storlekar/djup och ofullständiga filer avvisas. En ofullständig fil provas igen vid senare kontroller; redan sparad historik behålls. Källfilen ändras inte.
+The reader searches only for `Wisp.lua` in `SavedVariables` under the selected client's `WTF/Account`. It does not read other file contents or execute Lua from disk: only a bounded data literal `WispDB = {...}` is accepted. Code, other globals, excessive size/depth and incomplete files are rejected. Incomplete files are retried on later checks; saved history remains. Source files are unchanged.
 
-**Pausa automatisk inläsning** stoppar companionens läsning och bevarar lokal historik. `/wisp stop` stoppar addonens registrering för aktuell karaktär. Det är två olika aktiviteter och båda förklaras i gränssnittet.
+**Pause automatic import** stops companion reads and preserves local history. `/wisp stop` stops addon recording for the current character. The interface explains these as separate activities.
 
-**Glöm vald karaktär** raderar även den lokala grafen och spärrar automatisk återimport av samma karaktär. Spärren använder ett lokalt hashvärde av identiteten; detta är ingen anonymitetsgaranti. Addonens originalfil ligger kvar. En senare uttrycklig manuell import häver spärren. Befintliga exporter/säkerhetskopior påverkas inte av raderingen.
+**Forget selected character** also deletes the local graph and blocks automatic reimport of that character. The block uses a local hash of its identity; this is not an anonymity guarantee. The original addon file remains. An explicit later manual import lifts the block. Existing exports/backups are unaffected.
 
-Journal, graf och samtal stannar lokalt. Världsfrågor skickar fortfarande bara frågan och spelversionen till servern. Valda historiska journalutdrag kan skickas per AI-fråga efter granskning. Den experimentella ingame-bryggan kan bifoga en färsk snapshot, med eget val per fråga; detta är inte en kontinuerlig livefeed. Lokal lagring innebär inte kryptering.
+Journals, graphs and conversations remain local. World questions send the question and game version to the server. Selected historical excerpts can accompany an AI request after review. The experimental in-game bridge can include a fresh snapshot through a separate per-question choice; this is not a continuous live feed. Local storage does not imply encryption.
 
+## Rich state in local prototype 0.7.2
 
-## Rikt state, lokal prototyp 0.7.2
+The addon reads current state in Lua memory and saves a dated per-character checkpoint: level/XP, zone/subzone, class/race IDs, up to 50 active quests with bounded objectives/counters, equipped item IDs and professions where supported. Journey events include quest changes, equipment and death/resurrection. Paused recording stops new persistent events/checkpoints. Chat and other players' data are not collected.
 
-Addonen läser aktuellt state i Lua-minnet och sparar ett daterat checkpoint per karaktär: level/XP, zon/subzon, klass/ras-ID, upp till 50 aktiva quests med begränsade mål/räknare, utrustade item-ID:n och professioner när klientens API stöder dem. Journey får förändringar för quests, utrustning och död/återuppståndelse. Pausad inspelning stoppar bestående nya händelser/checkpoints. Inga chattar eller andra spelares uppgifter samlas.
+SQLite separates checkpoints from historical events. An older file cannot overwrite a newer checkpoint. Reimport retains each event once. Empty Lua tables are normalized only for schema-defined lists; SavedVariables are never executed. Unavailable APIs and truncated lists are explicit. Complete history is not guaranteed if addon-buffer or file limits are exceeded.
 
-SQLite skiljer checkpoint från historiska händelser. En äldre fil kan inte skriva över ett nyare checkpoint. Återimport ger samma händelse en gång. Tomma Lua-tabeller normaliseras bara för schemaangivna listor; SavedVariables körs aldrig som kod. Otillgängliga API:er och begränsade listor märks explicit. Komplett historik garanteras inte om addonbufferten eller filgränsen överskrids.
-
-För en godkänd fråga läser addonen om state vid skicket. Den begränsade frågesnapshoten kan bära upp till fyra quests, målräknare, gear-ID:n och professioner. Saknade fält och trunkering följer med. Inläsning från SavedVariables får aldrig ensam skapa ett live-markerat AI-underlag.
+For an approved question the addon refreshes state at send time. Its bounded question snapshot can carry up to four quests, objective counters, gear IDs and professions. Missing fields and truncation travel with it. Reading SavedVariables alone must never create context labeled live.

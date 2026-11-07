@@ -74,7 +74,7 @@ func projectEvent(ctx context.Context, tx *sql.Tx, char string, e Event) error {
 	sessionLabel := "Spelsession"
 	if e.SessionID == "" {
 		session = "observations:" + time.Unix(e.ObservedAt, 0).UTC().Format("2006-01-02")
-		sessionLabel = "Importerade observationer · " + time.Unix(e.ObservedAt, 0).UTC().Format("2006-01-02")
+		sessionLabel = "Imported observations · " + time.Unix(e.ObservedAt, 0).UTC().Format("2006-01-02")
 	}
 	ev := "event:" + e.ID
 	place := "place:" + Fingerprint([]string{e.Zone, e.Subzone})
@@ -155,6 +155,7 @@ func (s *Store) Journey(ctx context.Context, char string) (Journey, error) {
 	return j, err
 }
 
+// journeyAnswer is the Swedish response variant; default English prompts use englishMemory.
 func (s *Server) journeyAnswer(ctx context.Context, char string) (wisp.Answer, error) {
 	a, err := s.memory(ctx, char)
 	if err != nil || a.Status != "answered" {

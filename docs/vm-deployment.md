@@ -1,29 +1,28 @@
-# Privat VM-installation — 2026-11-05
+# Private VM installation on 5 November 2026
 
-Wisp kör på `ubuntu-dev`, användare `leon`, under `/home/leon/wisp-private`.
-Anslutning från utvecklings-Macen:
+Wisp runs on `ubuntu-dev` as `leon` under `/home/leon/wisp-private`. Development Mac connection:
 
 ```sh
 ssh -i ~/.ssh/ubuntu_dev -p 2222 leon@178.174.244.160
 ```
 
-## Befintlig miljö
+## Existing environment
 
-Inventeringen hittade 11 aktiva containrar för Allokerat (webb, inbox, workers och Neo4j), Sefira document preview (index, Caddy och Neo4j), två Temporal-miljöer och en kind/Kubernetes-testmiljö. Portarna 80/443 används redan av Sefiras Caddy. Dessa projekt, nätverk, volymer, proxy och brandvägg ändrades inte. Efter Wisp-installationen var samtliga ursprungliga container-ID:n fortfarande igång med RestartCount 0.
+Inventory found 11 active containers for Allokerat (web/inbox/workers/Neo4j), Sefira document preview (index/Caddy/Neo4j), two Temporal environments and a kind/Kubernetes test environment. Ports 80/443 already belong to Sefira Caddy. Those projects/networks/volumes/proxy/firewall were unchanged. All original IDs remained running with RestartCount 0 after installation.
 
-VM:n har 6 vCPU och 15 GiB RAM, med cirka 8,7 GiB tillgängligt före installation. Rotdisken är 47 GiB; efter installation var 19 GiB ledigt. Ingen global Docker-prune, daemonuppdatering, tjänsteomstart eller diskändring utfördes.
+The VM has 6 vCPUs/15 GiB RAM, about 8.7 GiB available before installation. Root disk: 47 GiB; 19 GiB free afterward. No global Docker prune, daemon update, service restart or disk modification.
 
-## Isolering och drift
+## Isolation and operations
 
-- Compose-projekt: `wisp-private`; definition i `infrastructure/vm/compose.yaml`.
-- API: endast `127.0.0.1:18090` på VM:n. Databas och modellservice saknar publicerade portar.
-- Egen PostgreSQL-volym och privata nätverk; befintliga databaser används inte.
-- Minne begränsat till 512 MiB för PostgreSQL, 384 MiB för LangChain och 192 MiB för API. Init-jobbet har separat gräns 192 MiB. CPU-gränser 0,5 / 0,75 / 0,5 kärnor respektive.
-- Vid uppmätt tomgång: API cirka 2 MiB, databas 22 MiB, modellservice 88 MiB. Detta är ingen garanti om belastning under större importer.
-- Loggrotation: högst tre filer à 5 MB per tjänst.
-- API/modell kör utan root, med skrivskyddat filsystem och tappade capabilities. Databasen kör som postgres.
-- Berget-nyckel och separat slumpgenererat databaslösenord ligger i VM-projektets `.env` med mode 600. Inga hemligheter ingår i versionshanterade filer eller images.
-- Go-binären korskompilerades på Mac. Containerbyggen på VM:n begränsades till en CPU och 512 MiB RAM, ett i taget. Inga systempaket installerades på VM-värden.
+- Compose project `wisp-private`; definition `infrastructure/vm/compose.yaml`.
+- API binds only VM 127.0.0.1:18090. Database/model have no published ports.
+- Own PostgreSQL volume/private networks, no reuse of other databases.
+- Memory caps: PostgreSQL 512 MiB, LangChain 384 MiB, API/init 192 MiB each. CPU: 0.5/0.75/0.5 cores respectively.
+- Observed idle memory: API about 2 MiB, database 22 MiB, model 88 MiB; not a large-import guarantee.
+- Logs: at most three 5 MB files per service.
+- API/model run nonroot with read-only filesystems and dropped capabilities; database runs as postgres.
+- Berget key/random database password in VM `.env`, mode 600. No secrets in tracked files/images.
+- Go cross-built on Mac. Sequential VM container builds capped at one CPU/512 MiB. No host system packages installed.
 
 ```sh
 cd /home/leon/wisp-private
@@ -32,46 +31,45 @@ curl -fsS http://127.0.0.1:18090/healthz
 docker compose logs --tail=30 api model
 ```
 
-Stoppa endast Wisp med `docker compose stop` i denna katalog. Detta behåller datavolymen. Använd inte `down -v` för normal drift.
+Stop only Wisp using `docker compose stop` in this directory, preserving its volume. Do not use `down -v` in normal operations.
 
-## Verifiering
+## Verification
 
-Healthcheck, upprepad idempotent bootstrap samt 30/30 API-acceptansfall passerade mot VM:n över en SSH-tunnel. Ett verkligt anrop körde VM API → LangChain → Berget/Mistral Small 3.2 och svarade med Astranaar samt källreferenser; 767 prompttoken, 61 svarstoken, uppskattad kostnad €0,0002484 och modellstegslatens 1551 ms.
+Health, repeated idempotent bootstrap and 30/30 acceptance cases passed through SSH. One real VM API → LangChain → Berget/Mistral Small 3.2 call answered with Astranaar/citations: 767 input tokens, 61 output tokens, estimated EUR 0.0002484 and 1,551 ms model latency.
 
-Windows 0.2.0 ansluter nu genom en separat SSH-identitet på Windows och värdens befintliga VirtualBox-mappning på 127.0.0.1:2222. Endast Wisp-API:t på VM:ns 127.0.0.1:18090 tillåts som tunnelmål. Servernyckeln är pinnad; ingen publik API-port eller ändring av proxy/brandvägg har gjorts. En pg_dump i custom-format togs före uppdateringen och innehållsförteckningen kontrollerades med pg_restore. Automatisk backup och full återläsningsövning återstår.
+Windows 0.2.0 uses its own SSH identity and the host's existing VirtualBox mapping at 127.0.0.1:2222. Only VM 127.0.0.1:18090 is an allowed tunnel destination. Host key pinned; no public API port or proxy/firewall change. A custom-format pg_dump preceded the update and pg_restore inspected its contents. Automated backups/full restore drill remained outstanding.
 
-## Windows-värdens lagring
+## Windows host storage
 
-Läsande PowerShell-inventering visade ASUS Z170-P, en Kingston A400 `SA400S37120G` (SATA, ungefär 112 GiB), samt C: med ungefär 39 GiB ledigt. Ingen ytterligare fysisk disk rapporterades. Exakt fysisk SATA-port, lediga strömkontakter och monteringsplats har inte verifierats. ASUS-manualen anger fyra SATA-portar och en M.2 Socket 3 för 2242/2260/2280, SATA/PCIe. För mer utvecklingsutrymme rekommenderas 2 TB som planeringsval; befintlig SSD behöver inte ersättas om en extra disk kan anslutas.
+Read-only PowerShell inventory reported ASUS Z170-P, Kingston A400 `SA400S37120G` (SATA, about 112 GiB), and C: with about 39 GiB free. No additional physical disk reported. Physical SATA port, spare power and mounting space were not verified. ASUS manual specifies four SATA ports and one M.2 Socket3 for 2242/2260/2280, SATA/PCIe. A 2 TB additional disk was the planning recommendation; replacing the existing SSD is unnecessary if another can connect.
 
+## Version 0.2.0 update
 
-## Uppdatering 0.2.0
+API image `wisp-private-api:20261105-2`; model unchanged. Bootstrap idempotent; 46/46 VM fact tests pass, graph 49 reviewed entities/67 relations. Backups: `.env.pre-0.2.0`, previous image and `backups/pre-0.2.0.dump`. All 14 unrelated inventoried containers retained IDs/RestartCount 0. No global cleanup.
 
-API-image: `wisp-private-api:20261105-2`; modell-image oförändrad. Initieringen är idempotent. 46/46 faktatester passerar på VM:n; grafen har 49 granskade entiteter och 67 relationer. Före uppdateringen sparades `.env.pre-0.2.0`, föregående image och `backups/pre-0.2.0.dump`. Övriga 14 inventerade containrar behöll sina container-ID:n och hade RestartCount 0 efter uppdateringen. Inga globala rensningar utfördes.
+Windows launches `Start-Wisp-VM.cmd` in Desktop/Wisp-0.2.0/wisp-0.2.0-windows-amd64. `Start-Wisp.cmd` uses the same local journal without tunneling. Private Wisp key remains in `%LOCALAPPDATA%/Wisp/connection`, limited to user/SYSTEM. A separate authorized_keys entry uses `restrict`, permitted forwarding, `permitopen="127.0.0.1:18090"`, `permitlisten="127.0.0.1:18090"` and `command="/bin/false"`. No shell, PTY, agent or X11 forwarding. This is private-machine configuration, not public installation design.
 
-Windows startar med `Start-Wisp-VM.cmd` i Desktop/Wisp-0.2.0/wisp-0.2.0-windows-amd64. `Start-Wisp.cmd` använder samma lokala SQLite-journal utan VM-tunnel. Den privata Wisp-nyckeln stannar under `%LOCALAPPDATA%/Wisp/connection`, med rättigheter för användaren och SYSTEM. VM:ns authorized_keys innehåller en separat rad med `restrict`, tillåten port-forwarding, `permitopen="127.0.0.1:18090"`, `permitlisten="127.0.0.1:18090"` och `command="/bin/false"`. Vanlig SSH-shell, PTY, agent- och X11-forwarding ges inte. Detta är en konfiguration för denna privata testdator, inte en publik installationslösning.
+## OCR E2E on 6 November 2026
 
-## OCR e2e, 2026-11-06
+After verified Mac testing: API `wisp-private-api:20261106-ocr1`, model `wisp-private-model:20261106-ocr2`. Gateway/database and other services were not recreated; 20 other running IDs remained unchanged. No networks/ports/libraries/migrations/resource increases. API/model health passed.
 
-Aktiva Wisp-images efter det verifierade Mac-testet: API `wisp-private-api:20261106-ocr1`, modell `wisp-private-model:20261106-ocr2`. Övriga tjänster inklusive gateway/databas återskapades inte; 20 övriga löpande container-ID:n var oförändrade efter slutuppdateringen. Inga nya nätverk, portar, bibliotek, migrationer eller resursökningar. Modell-/API-healthcheck passerade.
+Model-adapter diagnostics now log error class/optional upstream status only, excluding exception text, questions, answers and keys. LengthFinishReasonError identified the old 220-token limit aborting answers. Limit now 512, with Go instructing concise text/few relevant citations. No automatic paid retry. Go and two isolated model tests pass. Successful reply used 229 output tokens and appeared in WoW after 6.1 s.
 
-Modelladaptern loggar nu bara felklass och eventuell upstream HTTP-status vid fel; inga exception-strängar, frågor, svar eller provider-nycklar. `LengthFinishReasonError` visade att den tidigare gränsen 220 output-token avbröt svar. Gränsen är nu 512, med instruktion i Go om kort text och få relevanta belägg. Ingen automatisk betald retry. Go-pakettesterna och två nätverksisolerade modelltester passerade. Berget-svaret i den lyckade körningen använde 229 output-token och visades i WoW efter 6,1 s.
+Private rollback files `.env.pre-ocr-model-diagnostics` and `.env.pre-ocr-output-fix` remain with prior images. See `docs/ocr-transport-2026-11-06.md` for measurements/limits.
 
-Privata miljöbackuper för återgång finns under projektet som `.env.pre-ocr-model-diagnostics` och `.env.pre-ocr-output-fix`; befintliga image-taggar behölls. Läs `docs/ocr-transport-2026-11-06.md` för mätning och kvarvarande begränsningar.
+## Knowledge and character questions 0.6.0 on 6 November 2026
 
-## Kunskap och karaktärsfrågor 0.6.0, 2026-11-06
+Final API `wisp-private-api:20261106-knowledge5`; separate ingester `wisp-private-ingest:20261106-knowledge2`, built from the existing API base without new system packages. Model `20261106-ocr2`, gateway and database retained image/container identities. Only API was recreated for context/question rules. Before/after checks found no unrelated changes. No global cleanup, proxy/firewall/disk changes.
 
-Slutlig API-image: `wisp-private-api:20261106-knowledge5`. Ingester har en separat image `wisp-private-ingest:20261106-knowledge2`, byggd från befintlig API-bas utan nya systempaket. Modell `20261106-ocr2`, gateway och databas behöll sina image-/containeridentiteter. Endast Wisp-API:t återskapades för de ändrade fråge-/kontextreglerna. Kontroller direkt före/efter visade inga andra ändrade löpande containrar. Ingen global rensning, proxy-, brandväggs- eller diskändring gjordes.
-
-User-cron under leon:
+User cron for leon:
 
 ```cron
 */15 * * * * /home/leon/wisp-private/refresh-knowledge.sh refresh # wisp-knowledge-refresh
 17 3 * * * /home/leon/wisp-private/refresh-knowledge.sh purge # wisp-knowledge-purge
 ```
 
-Runnern har lås, resursvakt (3 GiB ledig disk/512 MiB tillgängligt RAM), två begränsade loggfiler och atomisk `ingestion-status.json` med exitkod och tider. `-purge-only` fungerar utan credentials/nätanrop. Ingester behåller 192 MiB/0,5 CPU, 500 requests per batch, minst en sekund mellan anrop och 12 minuters deadline. Schemat följer VM-tid, körloggar använder UTC. Cron-batch 16:00:01–16:08:49 UTC slutförde 500 anrop och 200 cacheombyggnader. En separat begränsad körning byggde om 2 000 cachedokument med en namespace-probe. Detta förlängde inte källornas expiry eller refreshdeadline.
+Runner has locking, a 3 GiB free-disk/512 MiB available-RAM guard, two bounded log files and atomic `ingestion-status.json` with exit/times. Purge-only requires no credentials/network. Ingester caps: 192 MiB/0.5 CPU, 500 requests, one-second spacing, twelve-minute deadline. Cron uses VM time; logs use UTC. Batch 16:00:01–16:08:49 UTC completed 500 requests/200 reprojections. A separate bounded run reprojected 2,000 documents with one namespace probe, preserving expiry/deadlines.
 
-Rollbackunderlag finns som `compose.yaml.pre-knowledge-20261106`, `.env.pre-knowledge-20261106`, `refresh-knowledge.sh.pre-knowledge-20261106` och `crontab.pre-knowledge-20261106`. Återställ endast Wisp-fälten i aktuell `.env`/cron om andra projekt ändrats senare; ersätt inte användarens hela nya crontab blint. Befintliga images är kvar. Cacheprojektion v2 kräver ingen destruktiv migration. Vid framtida binäröverföring: sätt `chmod 755` på de egna korsbyggda inputbinärerna innan Docker bygger, eftersom scp/VM-umask annars kan ge 700.
+Rollback files: `compose.yaml.pre-knowledge-20261106`, `.env.pre-knowledge-20261106`, `refresh-knowledge.sh.pre-knowledge-20261106`, `crontab.pre-knowledge-20261106`. Restore only Wisp entries if other projects changed later; never blindly replace a newer full crontab. Prior images remain. Projection v2 needs no destructive migration. Future cross-built uploads require `chmod 755` before Docker builds: scp/umask may produce mode 700.
 
-Publika ZIPs och webbsida ligger på personliga GitHub `AHeige/wisp-site`, inte på Logos. VM:n betjänar fortsatt det redan konfigurerade skyddade API:t. 0.6.0 ger explicit granskad daterad karaktärskontext, inga automatiska uppladdningar av privata journaler. Se [leveranschecklistan](delivery-knowledge-character-2026-11-06.md) för täckning, testfall, paket och kvarvarande gränser.
+Public ZIPs/site use personal `AHeige/wisp-site`, not Logos. The VM continues serving the configured protected API. Version 0.6.0 provides explicitly reviewed dated character context, without automatic journal uploads. See the [delivery checklist](delivery-knowledge-character-2026-11-06.md) for coverage/tests/packages/limits.

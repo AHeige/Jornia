@@ -154,7 +154,7 @@ func (s *Server) Handler() http.Handler {
 		}
 		receipt, err := s.Store.Import(r.Context(), req.ID, DemoExport())
 		if err != nil {
-			reply(w, 409, map[string]string{"error": "Demojournalen kunde inte sparas."})
+			reply(w, 409, map[string]string{"error": "The demo journal could not be saved."})
 			return
 		}
 		reply(w, 200, receipt)
@@ -162,7 +162,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /local/operation", func(w http.ResponseWriter, r *http.Request) {
 		receipt, err := s.Store.Operation(r.Context(), r.URL.Query().Get("id"))
 		if err != nil {
-			reply(w, 404, map[string]string{"error": "Operationen finns inte."})
+			reply(w, 404, map[string]string{"error": "Operation not found."})
 			return
 		}
 		reply(w, 200, receipt)
@@ -483,6 +483,8 @@ func (s *Server) answer(ctx context.Context, req Ask) (wisp.Answer, error) {
 	}
 	return out, nil
 }
+
+// memory renders the retained Swedish-language response path. English prompts use englishMemory.
 func (s *Server) memory(ctx context.Context, char string) (wisp.Answer, error) {
 	zero := 0.0
 	a := wisp.Answer{Status: "unknown", Text: "Jag har ingen importerad historik för den här karaktären. Använd /wisp export i spelet och importera paketet här.", GameVersion: "forever", Route: "local_memory", Sources: []storage.Source{}, EvidenceIDs: []string{}, Warnings: []string{}, EstimatedCostEUR: &zero}

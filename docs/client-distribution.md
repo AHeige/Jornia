@@ -1,27 +1,27 @@
-# Privat kompisalpha: distribution och AI-anslutning
+# Private tester alpha distribution and AI connection
 
-Uppdaterat 2026-11-06: webb/nedladdning **https://aheige.github.io/wisp-site/**, skyddat API **https://wisp.logosab.com**. Aktuell klient är 0.6.0, ett portabelt ZIP för Windows amd64 och Mac arm64. Publicerade versionsfiler och SHA-256 behålls; nya byggen får nytt versionsnummer. Denna alpha har ingen signerad installer eller automatisk uppdatering. Ladda ned nästa ZIP och stäng den äldre processen före start; samma lokala datakatalog används.
+Updated 6 November 2026: website/downloads **https://aheige.github.io/wisp-site/**, protected API **https://wisp.logosab.com**. At this stage the client was 0.6.0, a portable ZIP for Windows amd64 and Mac arm64. Published versioned files and SHA-256 checksums are retained; new builds receive a new version number. This alpha has no signed installer or automatic updater. Download the next ZIP and close the older process before starting it; the same local data directory is used.
 
-## Spelarens flöde
+## Player flow
 
-Ladda ned, packa upp och starta `Start-Wisp.cmd`. Under AI-anslutning anges en separat privat testkod. Journalen kan provas med demo utan WoW och fungerar lokalt utan anslutning. Addoninstallationen och två uttryckliga samtycken till registrering respektive filinläsning beskrivs i START-HERE. AI-användning av journalutdrag är ett eget val per fråga, med förhandsvisning.
+Download, extract and run `Start-Wisp.cmd`. Enter a separately supplied private test code under AI connection. The journal can be tried in demo mode without WoW and works locally offline. START-HERE explains addon installation and separate consent for recording and file import. Using journal excerpts in AI requests is a separate per-question choice with a preview.
 
-Testkoden är en 256-bitars slumphemlighet. Den skickas i Authorization-header över HTTPS, sparas bara i companionens lokala SQLite-inställningar och utesluts från historikexport och operationskvitton. Den publika ZIP-filen har inga testkoder, providerhemligheter eller privata SSH-nycklar. Servern lagrar endast kodens SHA-256, etikett, utgångstid och kvot. Den första kompisinbjudan gäller i 30 dagar med högst 50 serverfrågor per UTC-dygn; lokala minnesfrågor räknas inte. Inbjudan är personlig och ska skickas separat från den publika länken.
+The test code is a random 256-bit secret. It is sent in an Authorization header over HTTPS, stored only in the companion's local SQLite settings, and excluded from history exports and operation receipts. The public ZIP contains no test codes, provider secrets or private SSH keys. The server stores only the code's SHA-256 hash, label, expiry and quota. The first friend invitation lasts 30 days with at most 50 server requests per UTC day; local memory questions do not count. An invitation is personal and must be sent separately from the public link.
 
-Återkalla en inbjudan genom att sätta `tester_access.revoked=true` för dess etikett/hash i Wisp-databasen. Nästa serveranrop avvisas, medan lokal journal finns kvar. Detta är privat teståtkomst, inte ett fullständigt kontosystem eller en betalprodukt.
+Revoke an invitation by setting `tester_access.revoked=true` for its label/hash in Wisp's database. The next server request is rejected while the local journal remains available. This is private test access, not a complete account system or paid product.
 
-## VM och avgränsning
+## VM boundaries
 
-- Egen Wisp-gateway med 96 MiB minnesgräns och 0,25 CPU; endast nedladdningsfiler, startsida, autentiserad hälsa och autentiserad ask-route exponeras.
-- Befintlig Caddy hanterar TLS för en separat virtuell värd. Bara Wisp-gatewayen delar proxyns nätverk. Databasen och modellproxyn exponeras inte publikt.
-- Wisp-API:t har fortsatt global gräns på sex modellförsök/minut och två samtidiga. Modellsteget är Python/LangChain → Berget med begränsad output och utan automatisk retry eller tracing.
-- Kvot och anropsidentiteter sparas i PostgreSQL. Samma kod/anrops-ID godtas bara en gång, även efter omstart. En upprepning returnerar 409; inget nytt modellförsök sker automatiskt. Servern lagrar inte frågetext, journalutdrag eller modellsvaret för återspelning. Ett förlorat resultat kan därför fortfarande kräva uppmärksamhet.
-- Privata journalkontexter används inte som världsfakta. Wisp-API:t loggar bara aggregerad anropsmetadata, inte innehållet. Ingen garanti om externa leverantörers retention följer av detta.
+- Dedicated Wisp gateway limited to 96 MiB and 0.25 CPU; only downloads, the landing page, authenticated health and the authenticated ask route are exposed.
+- Existing Caddy handles TLS for a separate virtual host. Only the Wisp gateway shares the proxy network. Neither the database nor model proxy is publicly exposed.
+- The Wisp API retains a global limit of six model attempts per minute and two concurrent attempts. At this deployment stage, Python/LangChain calls Berget with bounded output and no automatic retries or tracing.
+- Quotas and request identities persist in PostgreSQL. The same code/request ID is accepted only once, including after restart. A repeat returns 409; no model attempt is automatically repeated. The server does not retain question text, journal excerpts or model answers for replay. A lost result can therefore still require attention.
+- Private journal context is not treated as world knowledge. The Wisp API logs aggregate request metadata only. This does not guarantee external providers' retention behavior.
 
-Caddyfile och Wisp-konfiguration/databas säkerhetskopierades före ändringen. Caddy 2.11.7 läste om den validerade filen med SIGUSR1 utan containeromstart. Det befintliga dokumentindexets HTTPS-hälsa var 200 före och efter. Samtliga 14 andra containers hade samma ID och körde fortsatt efter driftsättningen. Ingen annan applikation eller VM:n startades om.
+The Caddyfile and Wisp configuration/database were backed up before the change. Caddy 2.11.7 reloaded the validated file through SIGUSR1 without a container restart. The existing document index returned HTTPS health 200 before and after. All 14 unrelated containers retained their IDs and kept running. Neither another application nor the VM was restarted.
 
-## Senare signerad installation
+## Future signed installation
 
-MSIX/App Installer över HTTPS är ett möjligt nästa steg. Det kräver en betrodd signeringsidentitet, stabil paketidentitet och verifierad migrering av datakatalogen. Bygg/signera utanför VM:n och håll signeringshemligheter borta från releasemappen. Behåll manuell återställning och offlinejournal när uppdateringsservern inte kan nås.
+MSIX/App Installer over HTTPS is a possible next step. It requires a trusted signing identity, stable package identity and verified data-directory migration. Build/sign outside the VM and keep signing secrets out of release directories. Preserve manual recovery and the offline journal if the update server cannot be reached.
 
-Källor: [Microsofts uppdateringsinställningar](https://learn.microsoft.com/en-us/windows/msix/app-installer/update-settings), [signeringskrav](https://learn.microsoft.com/en-us/windows/msix/package/signing-package-overview), [paketerade appars filhantering](https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-behind-the-scenes), [Caddys omladdningssignal](https://caddyserver.com/docs/command-line).
+Sources: [Microsoft update settings](https://learn.microsoft.com/en-us/windows/msix/app-installer/update-settings), [signing requirements](https://learn.microsoft.com/en-us/windows/msix/package/signing-package-overview), [packaged application file handling](https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-behind-the-scenes), [Caddy reload signal](https://caddyserver.com/docs/command-line).

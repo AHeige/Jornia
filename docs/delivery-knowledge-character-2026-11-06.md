@@ -1,72 +1,72 @@
-# Wisp – världskunskap, karaktärsfrågor och testpaket
+# Wisp world knowledge, character questions and test packages
 
-Beställt 2026-11-06. Arbeta i ordning och bocka endast av verifierade resultat.
+Requested 6 November 2026. Work in order and check off only verified results.
 
-- [x] 1. Inventera nuvarande datakällor, databas, VM-resurser och befintliga scheman.
-- [x] 2. Uppdatera tillgänglig Forever-världskunskap och förbättra fortsatt insamling utan att blanda spelversioner eller tillskriva okända källor återanvändningsrätt.
-- [x] 3. Installera/verifiera avgränsade schemalagda serverkörningar, återupptagning, aktualitet, rensning och driftstatus.
-- [x] 4. Verifiera och vid behov komplettera AI-frågor om vald karaktär, utrustning, aktiva quests och lokal journey med korrekt aktualitet och karaktärsisolering.
-- [x] 5. Kör en bred frågematris: värld, Forever-skillnader, karaktär/journey, saknade fakta, konflikter och fel. Redovisa verkliga AI-körningar separat från deterministiska tester.
-- [x] 6. Bygg och verifiera nedladdningspaket med dokumenterade funktioner och begränsningar. Publicera inom tidigare godkänd GitHub-distribution om befintligt releaseflöde stöder det.
-- [x] 7. Kontrollera installation/drift, uppdatera dokumentation och rapportera resultat samt kvarvarande dataluckor.
+- [x] 1. Inventory sources, database, VM resources and schedules.
+- [x] 2. Update available Forever knowledge and improve collection without mixing versions or assuming unknown reuse rights.
+- [x] 3. Install/verify bounded scheduled server jobs, resumption, freshness, purge and operational status.
+- [x] 4. Verify/extend selected-character, equipment, active-quest and journey questions with correct freshness/isolation.
+- [x] 5. Broad question matrix: world, Forever differences, character/journey, unknown facts, conflicts and failures. Report real AI calls separately from deterministic tests.
+- [x] 6. Build/verify packages with documented capabilities/limits. Publish through the previously approved GitHub flow if supported.
+- [x] 7. Verify installation/operations, update documentation and report results/gaps.
 
-## Avgränsning
+## Scope
 
-”All fakta ever” är ambitionsnivån för täckning, inte en mätbar färdigstatus. Inga källor bevisar komplett kunskap om hela spelet. Importera brett från tillåtna källor, visa faktisk täckning och behåll explicit okänt där underlag saknas. Spelarjournaler förblir lokala; privata karaktärsdata ska inte bli centrala världsfakta. Paketering ska inte påstå att den experimentella återanvändbara Lua-returen redan är integrerad.
+“All facts ever” is a coverage ambition, not a measurable completion state. No source establishes complete game knowledge. Import broadly from permitted sources, show coverage and retain explicit unknowns. Journals remain local; private character data must not become central world facts. Packaging must not imply the reusable experimental Lua return is integrated.
 
-## Resultat per steg
+## Results by step
 
-Påbörjat. Mätvärden, körningar och artefakter förs in efter verifiering.
+Measurements, runs and artifacts were recorded after verification.
 
-### 1. Inventering
+### 1. Inventory
 
-VM har 11 GiB ledig disk och cirka 5,3 GiB tillgängligt RAM. Wisp-databasen är 72 MB. Befintlig halvtimmesimport fungerar redan: 30 329 entiteter, 6 888 rå-/detaljdokument, 24 215 köade jobb; senaste åtta batcher lyckades. Detta är inte fullständiga quest-/NPC-fakta. Aktiv API-version är `static-1.60.1_70399-forever-eu`, äldre än testklientens 70790. Övriga containrar inventerades före ändringar. ForeverDB kräver godkänd utvecklaråtkomst; QuestieDB:s historiska rättigheter är fortfarande oklara. Ingen sådan databas kopieras utan klarlagd åtkomst.
+The VM had 11 GiB free disk and about 5.3 GiB available RAM; Wisp's database was 72 MB. Existing half-hourly ingestion worked: 30,329 entities, 6,888 raw/detail documents, 24,215 queued jobs; the last eight batches succeeded. These are not complete quest/NPC facts. Active API namespace `static-1.60.1_70399-forever-eu` predates test client 70790. Unrelated containers were inventoried first. ForeverDB required approved developer access; QuestieDB historical rights remained unclear. Neither database was copied without clarified access.
 
-### 2–3. Insamling och drift
+### 2–3. Collection and operations
 
-En ny 500-anropsbatch slutfördes 15:54:49 UTC, följd av ombyggnad av 2 000 giltiga cachedokument till projektion v2. Fakta som API:t uttryckligen ger om krav, belöningar, kvalitet, föremålsklass och tooltips kan nu användas. Cacheombyggnad behåller ursprunglig hämtningstid, expiry och uppdateringsdeadline. Ingen questberättelse, spelgrafik eller separat communitydatabas bulkimporterades.
+A new 500-request batch finished at 15:54:49 UTC, followed by reprojection of 2,000 valid cached documents to v2. Explicit API facts about requirements, rewards, quality, item class and tooltips became usable. Reprojection retained original retrieval time, expiry and refresh deadline. No quest narratives, game artwork or separate community database were bulk-imported.
 
-Befintlig cronrad ersattes: var 15:e minut, högst 500 anrop, minst en sekund mellan anrop, 12 minuters arbetsdeadline. Daglig credential-oberoende rensning 03:17 enligt VM:ns tidszon. `flock` och databaslås förhindrar överlapp. Refresh avstår under 3 GiB ledig disk eller 512 MiB tillgängligt RAM; rensning tillåts även då. Ingester har fortsatt 192 MiB RAM/0,5 CPU. Inga ändringar i andra projekts containrar, proxy eller brandvägg. Separat importer-image gör att importern kan uppdateras utan API-/modell-/databasomstart.
+The old cron line was replaced: every 15 minutes, up to 500 requests, at least one second apart, with a twelve-minute deadline. Credential-independent purge runs daily at 03:17 in the VM timezone. `flock` and a database lock prevent overlap. Refresh skips below 3 GiB free disk or 512 MiB available RAM; purge may still run. The ingester retains 192 MiB/0.5 CPU limits. Unrelated containers, proxy and firewall were unchanged. A separate importer image allows updates without API/model/database restarts.
 
-Rensningen gav `purged`, runner gav exit 0, och cron startade nästa verkliga batch 16:00:01 UTC. Jobb återupptas från PostgreSQL. `ingestion-last.log`, föregående logg och atomisk `ingestion-status.json` är begränsad driftdiagnostik; `ingestion_runs` och `/api/knowledge/coverage` visar faktisk körstatus/täckning. Saknad källa eller 404/429 skapar inga nya fakta. Fullständighet redovisas fortfarande som falsk.
+Purge reported `purged`, the runner exited 0, and cron started the next real batch at 16:00:01 UTC. Jobs resume from PostgreSQL. `ingestion-last.log`, its predecessor and atomic `ingestion-status.json` provide bounded diagnostics; `ingestion_runs` and `/api/knowledge/coverage` report actual status/coverage. Missing sources/404/429 create no facts. Completeness remains false.
 
-### 4. Personliga frågor
+### 4. Personal questions
 
-Vanliga frågor om nivå, klass och utrustning fungerar lokalt/offline när respektive källa finns. AI kan få en uttryckligen granskad projektion av journal + daterad Armory, även med endast profil och tom journal. Namn, GUID, realm, porträtt, anteckningar och konversationshistorik lämnas utanför. Profiländring/expiry gör gammalt godkännande ogiltigt. Karaktärsbyte och bekräftat svar nollställer delning. Källa `character:profile` binds till datum/expiry; journalens nivå hålls åtskild från den äldre profilen.
+Ordinary level/class/equipment questions work offline when their evidence exists. AI can receive an explicitly reviewed projection of journal plus dated Armory, including profile-only context with an empty journal. Names, GUIDs, realm, portraits, notes and conversation history are excluded. Profile change/expiry invalidates approval. Character switching and confirmed completion reset sharing. `character:profile` carries date/expiry; journal level is distinct from an older profile.
 
-Aktiva quests, väskor, guld och talanger finns inte i denna releases underlag. Frågor om dessa ska avstå från att gissa; de är inte implementerade som liveinsamling. Detta har uttryckliga negativa tester. Webbläsartester visar förhandsgranskning och samtycke på desktop/mobil och med reducerad rörelse.
+Active quests, bags, gold and talents were not provided in this release. Questions must decline to guess; live collection was not implemented. Explicit negative tests cover this. Browser tests verified preview/consent on desktop/mobile and reduced motion.
 
-### 5. Frågetester
+### 5. Question tests
 
-Slutlig verifiering hittills: 46/46 befintliga acceptansfall mot VM, 50/50 nya deterministiska fall (representanter från 18 API-datatyper på två språk + okända fakta/spelversionsgränser), 40/40 lokala frågor i den faktiskt uppackade Mac-binären och 18/18 verkliga AI-frågor mot Berget. AI-skriptets 32/32 inkluderar dessutom 14 negativa icke-modellfall som redan finns i den breda matrisen; de dubbelräknas inte. Totalt 154 frågefall innan separat HTTPS-paketprov. Detta är en avgränsad regression, inte ett löfte om att alla möjliga frågor blir rätt.
+Final verification at this stage: 46/46 existing VM acceptance cases, 50/50 new deterministic cases (18 API-type representatives in two languages plus unknowns/version boundaries), 40/40 local questions in the extracted Mac binary, and 18/18 real Berget questions. The AI script's 32/32 also includes 14 negative non-model cases already counted in the broad matrix; they are not double-counted. Total: 154 question cases before the separate HTTPS package test. This bounded regression does not guarantee arbitrary answers.
 
-Testningen hittade och rättade: API-katalogpost med samma namn som en granskad quest skymde relationer; slutparentes gav missad SQL-träff; för stor världskontext blockerade annars besvarbara personliga frågor; modellen behövde tydligare åtskillnad mellan profil och journal. Första AI-omgången var 29/32, omgången efter rättning 32/32. Cache-/promptändringar prövades med nya avsiktliga testanrop, inga osäkra betalda anrop spelades om automatiskt.
+Testing found/fixed: API catalog entries with names matching reviewed quests obscured relations; a closing parenthesis caused a missed SQL match; oversized world context blocked otherwise answerable personal questions; prompts needed clearer journal/profile separation. Initial AI run: 29/32; corrected run: 32/32. New intentional calls tested changes; uncertain paid requests were not automatically replayed.
 
-Go-tester och vet passerar, liksom PostgreSQL-integrationsfall i separata tillfälliga scheman och fyra webbläsarsviter. Både utvecklingsbinären och uppackade Mac-paketet har genomgått test av förhandsgranskning, profildelning, identitetsmaskning, offlinehjälp, mobilvy och reducerad rörelse. Modellsvar kontrollerades för status, förväntade fakta och tillåtna källhänvisningar; de personliga svaren granskades också manuellt. Slutlig AI-matris hade uppskattad modellkostnad 0,011606 EUR, första omgången 0,010887 EUR. API-importerna gör inga modell-anrop.
+Go tests/vet, PostgreSQL cases in isolated temporary schemas and four browser suites passed. Development and extracted Mac binaries passed preview, profile sharing, identity masking, offline help, mobile and reduced-motion checks. Model responses were checked for status, expected facts and allowed citations; personal answers were manually reviewed. Estimated final AI-matrix cost: EUR 0.011606; first run EUR 0.010887. API import makes no model calls.
 
-### 6. Paket
+### 6. Packages
 
-0.6.0 för Windows amd64 och Mac arm64 är byggt. SHA-256:
+Version 0.6.0 built for Windows amd64 and Mac arm64. SHA-256:
 
 - Windows: `4fd19b1f617f6a8a1ba541718c95e5fe470254c7b4e7183661ce36250ea3a42a`
 - Mac: `91be60f95dcc2f57c7b0c76271b91cb4af067d25b38836e53cc6093420ca92ba`
 
-Arkivintegritet, arkitektur (PE32+ x86-64 / Mach-O arm64) och kontroll mot privata filer/faktiskt konfigurerade hemligheter passerade. Uppackade Mac-binären testades i nytt datalager. 40 offlinefrågor + fyra verkliga HTTPS-frågor genom gateway → Go → LangChain → Berget passerade med syntetisk profil/journal. Bland annat blev svaret korrekt att journalen registrerat nivå 16 medan den äldre profilen visar 15. Den kortlivade testkoden återkallades och tokenfilen togs bort. Kompisens kvot/kod ändrades inte.
+Archive integrity, architecture (PE32+ x86-64 / Mach-O arm64), private-file checks and checks against configured secrets passed. The extracted Mac binary ran with a fresh data store. Forty offline questions and four real HTTPS questions through gateway → Go → LangChain → Berget passed with synthetic profile/journal. One correctly distinguished journal level 16 from older profile level 15. The short-lived test code was revoked and its token file deleted. The friend's invitation/quota remained unchanged.
 
-Paketet innehåller produktaddonen och desktopchatten. OCR/blockretur ingår inte. Windows-binären är korskompilerad, inte körd på kompisens dator; båda binärerna är osignerade. Den privata källkoden hålls separat från den publika webb-/release-repon.
+Packages contain the product addon and desktop chat, not OCR/block return. Windows was cross-compiled, not run on the friend's machine. Both binaries are unsigned. At this delivery stage private source was separate from the public website/release repository.
 
-### 7. Samlad täckning och gränser
+### 7. Coverage and limits
 
-Efter manuella och schemalagda uppdateringar: 30,578 serverbara entiteter, 7,886 giltiga API-dokument, 23,467 kvarvarande jobb. Vid start var det 30 329 entiteter och 6 888 dokument. Antalet rå-/detaljdokument ökade med 998; två klassindexprober ersatte befintliga dokument. Databasen är 87 MB och VM:n har cirka 11 GiB ledigt. Aktiv namespace är fortfarande `static-1.60.1_70399-forever-eu`: ingen ny klientbuild har hittats eller påståtts vara verifierad.
+After manual/scheduled refresh: 30,578 servable entities, 7,886 valid API documents and 23,467 remaining jobs. Initially: 30,329 entities/6,888 documents. Raw/detail documents increased by 998; two class-index probes replaced existing documents. Database: 87 MB; VM free disk about 11 GiB. Active namespace remained `static-1.60.1_70399-forever-eu`; no new client build was discovered or claimed verified.
 
-Detta omfattar bland annat 7,051 questposter, 17,537 föremål, 877 NPC-poster och 1,895 abilities. Antal är inte fullständiga mål, dropptabeller eller spawnpositioner. Nya batcher fortsätter automatiskt, men kan aldrig garanteras ge ”all fakta ever” när källan saknar uppgifter. ForeverDB-access är nästa kompletterande källberoende; ingen nyckel eller generell återpubliceringsrätt har antagits.
+Coverage included 7,051 quest records, 17,537 items, 877 NPC records and 1,895 abilities. Counts do not establish full objectives, drop tables or spawn positions. Automatic batches continue but cannot guarantee all facts absent from the source. ForeverDB access was the next dependency; no key or blanket redistribution right was assumed.
 
-Alla 158 slutliga frågefall passerade (154 + fyra HTTPS-paketfall). Testning kan inte bevisa korrekthet för godtyckliga frågor. Båda ZIP-filerna är osignerade och Windows har inte körts i denna leverans. Realtids-/blockkanalen är fortfarande separat forskning. Inga personliga spelhändelser från användaren behövde skickas för verifieringen.
+All 158 final question cases passed: 154 plus four HTTPS package cases. This does not prove arbitrary correctness. Both ZIPs are unsigned and Windows was not run in this delivery. Live/block channels remain separate research. No personal player events were needed for verification.
 
-Publicerad release: [v0.6.0](https://github.com/AHeige/wisp-site/releases/tag/v0.6.0). Båda ZIP-filer laddades därefter ned anonymt och matchade exakt de lokalt testade SHA-256-värdena. Nedladdningssidans uppdatering finns i publicerade commit `1213876`; Pages-driftsättning kontrolleras separat innan slutrapport.
+Published release: [v0.6.0](https://github.com/AHeige/wisp-site/releases/tag/v0.6.0). Both ZIPs were downloaded anonymously and exactly matched the locally tested hashes. The download-page update is commit `1213876`; Pages deployment was checked separately.
 
-Slutkontroll: GitHub Pages rapporterar `built`, workflow `success`, och den verkliga sidan visar 0.6.0 samt rätt Windows-/Mac-länkar. Publicerad webbcommit: `1213876`. Slutlig API-image `20261106-knowledge5` är healthy; separat ingester `20261106-knowledge2`, modell/gateway/databas är kvar. Ogiltig användning av Forever-profil med Retail-scope avvisades med HTTP 400 före modellsteget. Tidszonen är Europe/Stockholm, alltså daglig rensning 03:17 svensk VM-tid. Alla inventerade andra projekts containrar behöll sina ID:n under arbetet.
+Final checks: GitHub Pages reported `built`, workflow `success`, and the live page showed 0.6.0 with correct Windows/Mac links. Web commit: `1213876`. API image `20261106-knowledge5` was healthy; separate ingester `20261106-knowledge2` and model/gateway/database remained. A Forever profile request with Retail scope returned HTTP 400 before inference. Timezone: Europe/Stockholm, so purge is 03:17 Swedish VM time. All inventoried unrelated project containers retained their IDs.
 
-[Nedladdning](https://aheige.github.io/wisp-site/) · [Release och SHA-256](https://github.com/AHeige/wisp-site/releases/tag/v0.6.0).
+[Downloads](https://aheige.github.io/wisp-site/) · [Release/checksums](https://github.com/AHeige/wisp-site/releases/tag/v0.6.0).
 
-Checklistan är slutförd för den verifierade leveransen. Komplett spelkunskap, godkänd ForeverDB-access, liveinsamling av aktiva quests och integrerad ingame-retur kvarstår som produktarbete, inte som påstått färdiga funktioner.
+This checklist is complete for the verified delivery. Complete game knowledge, approved ForeverDB access, active-quest live collection and integrated in-game return remained product work at that stage, not finished features.

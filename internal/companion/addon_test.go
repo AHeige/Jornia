@@ -18,7 +18,7 @@ func TestAddonExportRunsInLua51(t *testing.T) {
  function CreateFrame() return setmetatable({},meta) end
  UIParent={}; UISpecialFrames={}; SlashCmdList={}
  function UnitGUID() return 'Player-1-test' end
- function UnitName() return 'Testspelare' end
+ function UnitName() return 'TestPlayer' end
  function GetRealmName() return 'Testrealm' end
  function GetBuildInfo() return '1.60.1','70790','Nov 2026',16001 end
  function UnitLevel() return 24 end
@@ -38,7 +38,7 @@ func TestAddonExportRunsInLua51(t *testing.T) {
 	if err = vm.DoString(string(b)); err != nil {
 		t.Fatal(err)
 	}
-	if err = vm.DoString(`SlashCmdList.WISP('mark'); SlashCmdList.WISP('note Jag vill prata med "Raene" — utan spoilers.'); SlashCmdList.WISP('export')`); err != nil {
+	if err = vm.DoString(`SlashCmdList.WISP('mark'); SlashCmdList.WISP('note I want to talk to "Raene" — no spoilers.'); SlashCmdList.WISP('export')`); err != nil {
 		t.Fatal(err)
 	}
 	raw := vm.GetGlobal("LAST_TEXT").String()

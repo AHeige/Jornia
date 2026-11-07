@@ -84,14 +84,14 @@ The lab is separate from the 0.5.2 downloadable addon and normal Wisp import rea
 
 Technical feasibility and permission to distribute/run a transport are separate questions. This note records mechanisms and evidence, not a claim that Blizzard permits a process reader or that the experiment is production-ready.
 
-## Uppföljning: uppmätt chatlogg 6 november
+## Follow-up: measured chat logs on 6 November
 
-[Det genomförda A/B-testet](chatlog-test-2026-11-06.md) gav åtta mottagna självviskningar men ingen diskleverans före klientavslut. Tre direkta av/på-växlingar och en av-period på faktiskt 270 ms ändrade inte det. Alla åtta markörer observerades först vid normalt avslut. Det tidigare öppna loggspåret har därmed ett konkret negativt realtidsresultat för den prövade byggversionen och trafikvolymen, med en lyckad positivkontroll. Eventuella volymtrösklar är inte testade.
+The [A/B test](chatlog-test-2026-11-06.md) received eight self-whispers but no disk delivery before client exit. Three immediate off/on toggles and one actual 270 ms off interval did not change this. All eight markers appeared only at normal exit. This establishes a negative live-delivery result for the tested build/traffic volume, with a successful positive control. Volume thresholds remain untested.
 
-## Uppföljning: offlineanalys av klientfiler
+## Follow-up: offline client-file analysis
 
-[Den lokala filanalysen](local-client-file-audit-2026-11-06.md), genomförd utan internet, hittade den exakta native-signaturen `C_Log.LogMessage(message)` samt utvecklarloggens fil och konfigurationssträngar i den installerade klienten. Nästa föreslagna utgående test är en enda uttryckligt märkt native loggpost. API-tillgänglighet, rättigheter och diskfördröjning är ännu inte prövade. Inga klientinställningar eller binärer ändrades i analysen.
+The [local audit](local-client-file-audit-2026-11-06.md), performed without internet, found the exact native signature `C_Log.LogMessage(message)` plus developer-log filename/configuration strings. The next proposed outbound test was one explicitly labeled native marker. API availability, permissions and disk latency were not yet tested. No client settings or binaries changed.
 
-## Uppföljning: native Lua-logg mätt
+## Follow-up: native Lua logging measured
 
-[Enmarkörstestet](native-log-test-2026-11-06.md) verifierade en lokal addon → C_Log.LogMessage → **General.log**-väg. Första försöket bevakade fel fil, så det användes bara för destination/funktionskontroll. En ny markör med korrekt kontinuerlig mätning blev synlig först vid klientavslut, efter cirka 189 sekunder. Den prövade lilla payloaden ger alltså inte verifierad realtid. Buffertvolym, nödvändigheten av developerLog-inställningen och alternativa flushmekanismer är oprövade. Inställningar och testinbox återställdes.
+The [single-marker test](native-log-test-2026-11-06.md) verified addon → C_Log.LogMessage → **General.log**. The first attempt watched the wrong file and established only function/destination. A fresh, correctly monitored marker appeared only at exit after about 189 seconds. This small payload did not establish live delivery. Buffer volume, developerLog necessity and alternative flush mechanisms remain untested. Settings and test inbox were restored.
