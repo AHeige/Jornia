@@ -32,7 +32,8 @@ local function initialize()
     if id == "" then return false end
     local c = WispDB.characters[id]
     if not c then c = { id = id, sequence = 0, events = {}, recording = WispDB.consent == "accepted" }; WispDB.characters[id] = c end
-    c.name = text(UnitName("player")); c.realm = text(GetRealmName())
+    local name,surname=UnitName("player");c.realm=text(GetRealmName());c.name=text(name)
+    if type(surname)=="string" and surname~="" and surname~=c.realm then c.name=c.name.." "..text(surname) end
     -- WoW saves this in the actual character directory. It links that directory
     -- to the account journal without guessing from names or numeric realms.
     WispCharacterDB = { schema = 1, installation_id = WispDB.installation_id, character_id = id }
@@ -53,10 +54,22 @@ local function record(kind, note, questID, observedLevel)
         level = level, note = text(note), quest_id = number(questID),
         client_version = text(version), client_build = text(build), interface = number(interface), session_id = text(current.session_id)
     }
+    if kind == "quest_completed" and WispClientState then
+        local q=WispClientState.Quest(questID)
+        if q then event.quest_title=q.title;event.objectives=q.objectives end
+    end
     table.insert(current.events, event)
     while #current.events > 2000 do table.remove(current.events, 1); current.dropped = (current.dropped or 0) + 1 end
     lastZone = zone .. ":" .. subzone
 end
+WispJournalRuntime={
+ Current=function() if not current then initialize() end;return current end,
+ Record=function(kind,questID,level,details)
+  if not current or not current.recording or WispDB.consent~="accepted" then return end
+  record(kind,nil,questID,level)
+  if details then local e=current.events[#current.events];for k,v in pairs(details)do e[k]=v end end
+ end
+}
 local function export()
     if not current and not initialize() then say("Log in to a character first."); return end
     if #current.events == 0 then record("snapshot") end
@@ -94,11 +107,12 @@ local function beginSession()
 end
 local function acceptJournal()
     WispDB.consent = "accepted"; current.recording = true; beginSession()
+    if WispClientState then WispClientState.RecordingChanged() end
     say("Journal active. Your locations, level-ups, completed quest IDs and notes stay local. /wisp stop pauses this character. The companion reads saved files after /reload or logout.")
 end
 if StaticPopupDialogs then
     StaticPopupDialogs.WISP_JOURNAL_CONSENT = {
-        text = "Wisp can automatically keep a local adventure journal for your characters: sessions, areas, levels, completed quest IDs and your notes. No chat is collected or uploaded. The companion can read Wisp's saved file after /reload or logout. You can pause with /wisp stop. Start recording?",
+        text = "Wisp can automatically keep a local adventure journal for your characters: sessions, areas, levels, quest progress, equipped item IDs, professions and your notes. No chat is collected or uploaded. The companion can read Wisp's saved file after /reload or logout. You can pause with /wisp stop. Start recording?",
         button1 = "Start journal", button2 = "Not now", timeout = 0, whileDead = true, hideOnEscape = true,
         OnAccept = function() acceptJournal() end,
         OnCancel = function() WispDB.consent = "declined"; current.recording = false end

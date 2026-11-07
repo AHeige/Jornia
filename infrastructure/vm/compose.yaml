@@ -105,6 +105,36 @@ services:
     depends_on:
       init: {condition: service_completed_successfully}
 
+  foreverdb:
+    <<: *service
+    image: ${WISP_FOREVERDB_IMAGE:?Set the versioned ForeverDB worker image}
+    profiles: [foreverdb]
+    restart: "no"
+    mem_limit: 192m
+    cpus: 0.5
+    read_only: true
+    environment:
+      DATABASE_URL: postgres://wisp:${WISP_DB_PASSWORD}@db:5432/wisp?sslmode=disable
+      FOREVERDB_API_KEY: ${FOREVERDB_API_KEY:-}
+      FOREVERDB_DEVELOPER_ID: ${FOREVERDB_DEVELOPER_ID:-}
+      GOMEMLIMIT: 128MiB
+    networks: [backend, inference-egress]
+
+  admin:
+    <<: *service
+    image: ${WISP_ADMIN_IMAGE:-wisp-private-admin:20261106-1}
+    profiles: [admin]
+    mem_limit: 96m
+    cpus: 0.25
+    read_only: true
+    environment:
+      DATABASE_URL: ${WISP_ADMIN_DATABASE_URL:-}
+      WISP_ADMIN_PASSWORD: ${WISP_ADMIN_PASSWORD:-}
+      WISP_ADMIN_ORIGIN: http://127.0.0.1:18983
+      LISTEN_ADDR: :8091
+      GOMEMLIMIT: 64MiB
+    networks: [backend]
+
   gateway:
     <<: *service
     image: ${WISP_GATEWAY_IMAGE:?Set the versioned gateway image}

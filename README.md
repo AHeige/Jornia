@@ -2,13 +2,15 @@
 
 An experimental World of Warcraft: Forever companion with a central knowledge graph and a private local adventure journal.
 
-**Product direction: chat and journey belong inside WoW in a Lua interface.** The external chat in 0.5.1 is a technical alpha. The companion is background infrastructure; a verified bidirectional game bridge remains to be built. See [ingame experience](docs/ingame-experience.md) and the [rendered Lua prototype](apps/addon-preview/WispPanel.lua).
+**Start with the transport research:** [Sending text into WoW through a sound API](docs/sending-text-through-wow-sound-api.md). Our Mac experiments reconstruct checked UTF-8 messages from reusable file-presence signals observed through `PlaySoundFile`, with local OCR acknowledgements. The same carrier filenames can transmit successive messages without consuming an inbox per reply. This is an experimental client behavior, not a supported IPC API or a Blizzard-approved integration.
 
-The first end-to-end slice includes a Lua addon with user-initiated export, a self-contained Go companion with SQLite and a local chat UI, a central Go/PostgreSQL knowledge API, and a bounded Python/LangChain model step calling Berget. First-use opt-in enables automatic reads of Wisp SavedVariables from the selected WoW folder and a per-character journey graph in SQLite. Explicit per-question preview can now include recent journal excerpts in an AI answer. There is no agent harness, mandatory player account, automatic personal-history upload, or real-time bridge back into WoW.
+Wisp combines a Lua addon, a Go desktop companion with private SQLite character journals, and a Go/PostgreSQL backend calling Berget. The addon maintains current character state; selected, dated state and journal excerpts can accompany a question. World facts retain source/build labels. SavedVariables persistence remains delayed until WoW saves; it is separate from the live transport.
 
-Personal repository: **https://github.com/AHeige/Wisp** (private).
+**Status:** developer alpha. A real OCR → AI → native Lua exchange has been verified on Mac; reusable return blocks have separate measured success and corruption tests. Windows real-time transport, long-session reliability, signed installation and a self-contained setup for the current bridge remain unfinished. Historical experiment notes describe their own implementation stage, not necessarily today's complete product.
 
-Private alpha download: **https://aheige.github.io/wisp-site/** (0.5.1). Testers receive a separate revocable access code; no provider key is distributed.
+Source: **https://github.com/AHeige/Wisp**. Original software and documentation are MIT-licensed; see [LICENSE](LICENSE) and [NOTICE](NOTICE.md). Provider datasets, third-party material and game imagery are not relicensed by this repository. No provider database dump is included.
+
+The existing [download page](https://aheige.github.io/wisp-site/) provides the older 0.7.0 Windows desktop/journal alpha, not a packaged release of the current reusable native bridge. Testers receive a separate revocable access code; no provider key is distributed.
 
 - [Client installation and VM-hosted updates](docs/client-distribution.md)
 - [Automatic local journey: first-use consent, import and limits](docs/automatic-journal.md)
@@ -29,7 +31,7 @@ make up
 make companion
 ```
 
-On this Mac use `DOCKER_CONTEXT=colima-logos-graph make up COMPOSE=./.cache/docker-compose`. Berget credentials stay in the model service's environment; they are not included in companion bundles.
+On this Mac use `DOCKER_CONTEXT=colima-logos-graph make up COMPOSE=./.cache/docker-compose`. Berget credentials stay in the backend environment; they are not included in companion bundles.
 
 ```sh
 make check
@@ -42,7 +44,7 @@ make package   # creates Windows amd64 and macOS arm64 test ZIPs under dist/
 
 The Windows test bundle needs no Go, Python, Node, Docker or separate database installation. Start-Wisp.cmd uses the HTTPS endpoint and a separately supplied private test code. For the earlier developer Windows installation, `Start-Wisp-VM.cmd` opens a dedicated, host-key-pinned SSH tunnel to the VM. `Start-Wisp.cmd` runs locally without it; local memory remains usable offline. Select “Prova med demokaraktär” to try three explicitly synthetic Ashenvale events. The authenticated tester gateway and public release downloads run separately from the private API.
 
-The curated graph has 49 entities and 67 relationships around Ashenvale, alongside a growing build-scoped Blizzard API metadata cache. **It is not complete WoW Forever information.** Source reviews are community evidence with explicit limitations; the old synthetic fixture remains under its own version.
+The original curated Ashenvale graph is supplemented by build-scoped Blizzard and ForeverDB importers. Source counts and usable detail coverage change as resumable imports run; catalog entries do not establish complete gameplay coverage. **It is not complete WoW Forever information.** Source reviews are community evidence with explicit limitations; the old synthetic fixture remains under its own version.
 
 ## Character-first experience (0.5.1)
 

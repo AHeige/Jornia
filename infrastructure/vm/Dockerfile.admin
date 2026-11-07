@@ -1,0 +1,5 @@
+ARG WISP_BASE_IMAGE
+FROM ${WISP_BASE_IMAGE}
+COPY wisp-admin /usr/local/bin/wisp-admin
+ENTRYPOINT ["wisp-admin"]
+CMD []

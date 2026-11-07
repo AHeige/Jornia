@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+	"wisp/internal/wisp"
 
 	_ "modernc.org/sqlite"
 )
@@ -26,24 +27,29 @@ type Character struct {
 	Discovered bool   `json:"discovered,omitempty"`
 }
 type Event struct {
-	ID            string `json:"id"`
-	Kind          string `json:"kind"`
-	ObservedAt    int64  `json:"observed_at"`
-	Zone          string `json:"zone"`
-	Subzone       string `json:"subzone"`
-	Level         int    `json:"level"`
-	Note          string `json:"note"`
-	QuestID       int    `json:"quest_id"`
-	ClientVersion string `json:"client_version"`
-	ClientBuild   string `json:"client_build"`
-	Interface     int    `json:"interface"`
-	SessionID     string `json:"session_id,omitempty"`
+	QuestTitle    string               `json:"quest_title,omitempty"`
+	Objectives    []wisp.GameObjective `json:"objectives,omitempty"`
+	ItemID        int                  `json:"item_id,omitempty"`
+	Slot          int                  `json:"slot,omitempty"`
+	ID            string               `json:"id"`
+	Kind          string               `json:"kind"`
+	ObservedAt    int64                `json:"observed_at"`
+	Zone          string               `json:"zone"`
+	Subzone       string               `json:"subzone"`
+	Level         int                  `json:"level"`
+	Note          string               `json:"note"`
+	QuestID       int                  `json:"quest_id"`
+	ClientVersion string               `json:"client_version"`
+	ClientBuild   string               `json:"client_build"`
+	Interface     int                  `json:"interface"`
+	SessionID     string               `json:"session_id,omitempty"`
 }
 type Export struct {
-	Schema         int       `json:"schema"`
-	InstallationID string    `json:"installation_id"`
-	Character      Character `json:"character"`
-	Events         []Event   `json:"events"`
+	CurrentState   *LocalState `json:"current_state,omitempty"`
+	Schema         int         `json:"schema"`
+	InstallationID string      `json:"installation_id"`
+	Character      Character   `json:"character"`
+	Events         []Event     `json:"events"`
 }
 type Receipt struct {
 	Question    string          `json:"question,omitempty"`
@@ -77,6 +83,7 @@ func Open(path string) (*Store, error) {
 	s := &Store{DB: db}
 	_, err = db.Exec(`PRAGMA secure_delete=ON; PRAGMA locking_mode=EXCLUSIVE; PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
  CREATE TABLE IF NOT EXISTS characters(id TEXT PRIMARY KEY,name TEXT NOT NULL,realm TEXT NOT NULL);
+ CREATE TABLE IF NOT EXISTS character_checkpoints(character_id TEXT PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,observed_at INTEGER NOT NULL,revision INTEGER NOT NULL,body TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,observed_at INTEGER NOT NULL,body TEXT NOT NULL);
  CREATE INDEX IF NOT EXISTS events_character ON events(character_id,observed_at);
  CREATE TABLE IF NOT EXISTS operations(id TEXT PRIMARY KEY,kind TEXT NOT NULL,character_id TEXT NOT NULL,payload_hash TEXT NOT NULL,status TEXT NOT NULL,result TEXT,error TEXT NOT NULL DEFAULT '',created_at TEXT NOT NULL,request_json TEXT NOT NULL DEFAULT '{}');
@@ -151,6 +158,9 @@ func ParseExport(raw string) (Export, error) {
 	if out.Schema != 1 || out.InstallationID == "" || len(out.InstallationID) > 100 || out.Character.ID == "" || len(out.Character.ID) > 100 || len(out.Character.Name) > 256 || len(out.Character.Realm) > 256 || len(out.Events) == 0 || len(out.Events) > 100 {
 		return out, errors.New("unsupported export version or contents")
 	}
+	if err := validateLocalState(out.CurrentState); err != nil {
+		return out, err
+	}
 	seen := map[string]bool{}
 	for _, e := range out.Events {
 		if e.ID == "" || len(e.ID) > 256 || seen[e.ID] || !strings.HasPrefix(e.ID, out.InstallationID+":"+out.Character.ID+":") {
@@ -163,8 +173,11 @@ func ParseExport(raw string) (Export, error) {
 		if len(e.Zone) > 1024 || len(e.Subzone) > 1024 || len(e.Note) > 1024 || len(e.ClientBuild) > 100 || len(e.SessionID) > 256 {
 			return out, errors.New("event text is too long")
 		}
+		if len(e.QuestTitle) > 200 || !utf8.ValidString(e.QuestTitle) || e.ItemID < 0 || e.Slot < 0 || e.Slot > 19 || validateObjectives(e.Objectives) != nil {
+			return out, errors.New("invalid event detail")
+		}
 		switch e.Kind {
-		case "snapshot", "zone", "level_up", "quest_completed", "note", "session_start", "session_end":
+		case "snapshot", "zone", "level_up", "quest_completed", "note", "session_start", "session_end", "quest_accepted", "quest_removed", "quest_progress", "equipment_changed", "death", "resurrected":
 		default:
 			return out, errors.New("unknown event type")
 		}
@@ -275,6 +288,13 @@ func (s *Store) importData(ctx context.Context, id string, data Export, automati
 	}
 	if _, err = tx.ExecContext(ctx, `INSERT INTO journal_aliases(alias,character_id) VALUES(?,?) ON CONFLICT(alias) DO NOTHING`, alias, charID); err != nil {
 		return fail(err)
+	}
+	if data.CurrentState != nil {
+		state := data.CurrentState
+		body, _ := json.Marshal(state)
+		if _, err = tx.ExecContext(ctx, `INSERT INTO character_checkpoints(character_id,observed_at,revision,body) VALUES(?,?,?,?) ON CONFLICT(character_id) DO UPDATE SET observed_at=excluded.observed_at,revision=excluded.revision,body=excluded.body WHERE excluded.observed_at>character_checkpoints.observed_at OR (excluded.observed_at=character_checkpoints.observed_at AND excluded.revision>character_checkpoints.revision)`, charID, state.ObservedAt, state.Revision, string(body)); err != nil {
+			return fail(err)
+		}
 	}
 	inserted := 0
 	for _, e := range data.Events {

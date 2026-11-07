@@ -201,7 +201,7 @@ func (j *JournalSync) Scan(ctx context.Context) {
 			file.Close()
 			return nil
 		}
-		b, err := io.ReadAll(io.LimitReader(file, (4<<20)+1))
+		b, err := io.ReadAll(io.LimitReader(file, (8<<20)+1))
 		file.Close()
 		if err != nil {
 			return err

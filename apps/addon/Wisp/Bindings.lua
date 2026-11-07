@@ -46,4 +46,4 @@ updates:SetScript('OnEvent',function()
  if C_Timer and C_Timer.After then C_Timer.After(0,function()if UI.IsShown() then refresh() end end)
  else refresh() end
 end)
-print('|cffffc466Wisp:|r /wisp opens your journey; /wisp compact opens a small resizable chat. AI is not connected to this window yet.')
+print('|cffffc466Wisp:|r /wisp opens your journey; /wisp compact opens a small resizable chat. Keep Wisp desktop running for connected chat.')

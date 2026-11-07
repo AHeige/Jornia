@@ -12,21 +12,44 @@ import (
 	"wisp/internal/storage"
 )
 
+type GameObjective struct {
+	Index     int    `json:"index,omitempty"`
+	Text      string `json:"text,omitempty"`
+	Kind      string `json:"kind,omitempty"`
+	Fulfilled *int   `json:"fulfilled,omitempty"`
+	Required  *int   `json:"required,omitempty"`
+	Finished  bool   `json:"finished"`
+}
 type GameQuest struct {
-	ID       int    `json:"id"`
-	Title    string `json:"title,omitempty"`
-	Complete bool   `json:"complete"`
-	Waypoint bool   `json:"waypoint"`
+	Objectives []GameObjective `json:"objectives,omitempty"`
+	ID         int             `json:"id"`
+	Title      string          `json:"title,omitempty"`
+	Complete   bool            `json:"complete"`
+	Waypoint   bool            `json:"waypoint"`
 }
 
 // A per-question, explicitly approved observation. Absence is unknown, not an empty quest log.
+type GameItem struct {
+	Slot   int `json:"slot"`
+	ItemID int `json:"item_id"`
+}
+type GameProfession struct {
+	SkillID int `json:"skill_id"`
+	Rank    int `json:"rank"`
+	MaxRank int `json:"max_rank"`
+}
 type GameSnapshot struct {
-	CapturedAt  int64       `json:"captured_at"`
-	Level       int         `json:"level"`
-	Zone        string      `json:"zone"`
-	ClientBuild string      `json:"client_build"`
-	Quests      []GameQuest `json:"quests"`
-	Truncated   bool        `json:"truncated"`
+	ClassID     int              `json:"class_id,omitempty"`
+	RaceID      int              `json:"race_id,omitempty"`
+	Equipment   []GameItem       `json:"equipment,omitempty"`
+	Professions []GameProfession `json:"professions,omitempty"`
+	Missing     []string         `json:"missing,omitempty"`
+	CapturedAt  int64            `json:"captured_at"`
+	Level       int              `json:"level"`
+	Zone        string           `json:"zone"`
+	ClientBuild string           `json:"client_build"`
+	Quests      []GameQuest      `json:"quests"`
+	Truncated   bool             `json:"truncated"`
 }
 type Action struct {
 	ID        string `json:"id"`
@@ -55,10 +78,40 @@ func ValidateSnapshot(s *GameSnapshot) error {
 	if s.CapturedAt > now+5 || s.CapturedAt < now-90 || s.Level < 1 || s.Level > 100 || len(s.Zone) > 160 || !utf8.ValidString(s.Zone) || len(s.ClientBuild) > 30 || len(s.Quests) > 32 {
 		return errors.New("invalid or stale game snapshot")
 	}
+	if len(s.Equipment) > 19 || len(s.Professions) > 12 || len(s.Missing) > 8 || s.ClassID < 0 || s.ClassID > 100 || s.RaceID < 0 || s.RaceID > 100 {
+		return errors.New("invalid character snapshot")
+	}
+	slots := map[int]bool{}
+	for _, i := range s.Equipment {
+		if i.Slot < 1 || i.Slot > 19 || slots[i.Slot] || i.ItemID < 1 || i.ItemID > 2147483647 {
+			return errors.New("invalid current equipment")
+		}
+		slots[i.Slot] = true
+	}
+	for _, p := range s.Professions {
+		if p.SkillID < 1 || p.SkillID > 2147483647 || p.Rank < 0 || p.MaxRank < 0 || p.Rank > p.MaxRank || p.MaxRank > 10000 {
+			return errors.New("invalid current profession")
+		}
+	}
+	for _, field := range s.Missing {
+		switch field {
+		case "quests", "equipment", "professions", "class", "race":
+		default:
+			return errors.New("unknown missing state field")
+		}
+	}
 	seen := map[int]bool{}
 	for _, q := range s.Quests {
 		if q.ID < 1 || q.ID > 2147483647 || seen[q.ID] || len(q.Title) > 200 || !utf8.ValidString(q.Title) {
 			return errors.New("invalid quest observation")
+		}
+		if len(q.Objectives) > 8 {
+			return errors.New("too many quest objectives")
+		}
+		for _, o := range q.Objectives {
+			if o.Index < 0 || o.Index > 32 || len(o.Text) > 160 || len(o.Kind) > 30 || !utf8.ValidString(o.Text+o.Kind) || o.Fulfilled != nil && (*o.Fulfilled < 0 || *o.Fulfilled > 2147483647) || o.Required != nil && (*o.Required < 0 || *o.Required > 2147483647) {
+				return errors.New("invalid quest objective")
+			}
 		}
 		seen[q.ID] = true
 	}

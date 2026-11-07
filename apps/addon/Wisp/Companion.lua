@@ -2,7 +2,7 @@
 WispJournalUI = {}
 local UI = WispJournalUI
 UI.Config = {}
-local window,rail,banner,chat,journey,chatText,journeyText,status,input,tabs,sendButton,modeButton,closeButton,resize,footer
+local window,rail,banner,chat,journey,chatText,journeyText,status,input,tabs,sendButton,modeButton,closeButton,resize,footer,connectButton
 local character,entries,messages,drafts={},{},{},{}
 local mode,tab='full','journey'
 local sizes={full={860,540},compact={420,340}}
@@ -60,12 +60,13 @@ local function updatePending()
  if not input then return end
  local waiting=pending and pending.character==key()
  -- One shared transport operation, independent of window size or selected character.
+ if UI.ShareContext then UI.ShareContext:SetEnabled(not pending) end
  if pending then
   if input.Disable then input:Disable() end;input:EnableMouse(false);input:ClearFocus();sendButton:Disable()
  else
   if input.Enable then input:Enable() end;input:EnableMouse(true);sendButton:Enable()
  end
- if waiting then status:SetText('Wisp is thinking…')
+ if waiting then status:SetText(pending.connection and 'Checking invite code…' or 'Wisp is thinking…')
  elseif pending then status:SetText('A reply is pending for another character.')
  elseif not UI.OnSend then status:SetText(UI.Config.disconnectedText or 'Preview · AI disconnected. Nothing is sent.')
  else status:SetText('Enter to send · your current character only') end
@@ -90,8 +91,10 @@ local function layout()
   UI.title:SetWidth(w-290);UI.bannerCopy:SetWidth(w-290);UI.previewLabel:SetWidth(w-420)
   footer:ClearAllPoints();footer:SetPoint('BOTTOMLEFT',214,12);footer:SetWidth(w-250)
  end
+ if connectButton then place(connectButton,compact and w-120 or 20,compact and -42 or -308,100,28);UI.compactIdentity:SetWidth(compact and w-160 or 280) end
  local cw,ch=chat:GetWidth(),chat:GetHeight()
- place(chatText,0,0,cw,math.max(80,ch-80))
+ place(chatText,0,0,cw,math.max(40,ch-104))
+ if UI.ShareContext then place(UI.ShareContext,0,-ch+88,22,22);UI.shareLabel:ClearAllPoints();UI.shareLabel:SetPoint('TOPLEFT',28,-ch+84);UI.shareLabel:SetWidth(cw-28) end
  place(input,6,-ch+63,cw-116,30);place(sendButton,cw-98,-ch+63,98,30)
  status:ClearAllPoints();status:SetPoint('TOPLEFT',0,-ch+22);status:SetWidth(cw)
  local jw,jh=journey:GetWidth(),journey:GetHeight()
@@ -100,6 +103,38 @@ local function layout()
  if window.SetResizeBounds then window:SetResizeBounds(minW,minH,compact and 700 or 1100,760) end
  resize:ClearAllPoints();resize:SetPoint('BOTTOMRIGHT',-3,3)
  selectTab(tab);layoutBusy=false
+end
+function UI.ShowConnection()
+ if not window then return end
+ if not UI.connectionWindow then
+  local box=surface(UIParent,0,0,480,240,.035,.055,.09);box:ClearAllPoints();box:SetPoint('CENTER');box:SetFrameStrata('FULLSCREEN_DIALOG');box:EnableMouse(true)
+  label(box,'Connect Wisp AI',20,-18,430,21,true)
+  label(box,'Paste your private invite code. Wisp desktop must be running.\nThe code stays out of your chat, journey and SavedVariables.',20,-56,430,12)
+  local edit=CreateFrame('EditBox',nil,box,'InputBoxTemplate');place(edit,26,-108,424,30);edit:SetFontObject(ChatFontNormal);edit:SetAutoFocus(false);edit:SetMaxLetters(64);edit:SetPassword(true)
+  local result=label(box,'',20,-151,430,11,true)
+  local submit
+  local function activate()
+   if pending then result:SetText('Wait for the current operation to finish.');return end
+   local code=edit:GetText()or '';edit:SetText('');edit:ClearFocus()
+   if not UI.OnConnect then result:SetText('Start the local Wisp reader first.');return end
+   local ok,id,reason=pcall(UI.OnConnect,code,key());code=nil
+   if not ok or type(id)~='string' then result:SetText(type(reason)=='string'and safe(reason)or'Connection was not accepted. Nothing was saved.');return end
+   pending={id=id,character=key(),connection=true};submit:Disable();result:SetText('Checking invite code…');updatePending()
+  end
+  submit=button(box,'Connect AI',238,-191,108,activate)
+  button(box,'Close',358,-191,98,function()edit:SetText('');edit:ClearFocus();box:Hide()end)
+  edit:SetScript('OnEnterPressed',activate);edit:SetScript('OnEscapePressed',function()edit:SetText('');edit:ClearFocus();box:Hide()end)
+  box:SetScript('OnHide',function()edit:SetText('');edit:ClearFocus()end)
+  UI.connectionWindow=box;UI.connectionInput=edit;UI.connectionStatus=result;UI.connectionSubmit=submit
+ end
+ UI.connectionWindow:Show();UI.connectionInput:SetFocus()
+end
+function UI.ResolveConnection(id,owner,text,isError)
+ if not pending or not pending.connection or pending.id~=id or pending.character~=owner then return false end
+ pending=nil;updatePending()
+ if UI.connectionStatus then UI.connectionStatus:SetText(safe(text));UI.connectionSubmit:Enable() end
+ if connectButton and not isError then connectButton.caption:SetText('AI connected') end
+ return true
 end
 function UI.SetMode(value)
  if value~='full' and value~='compact' then return false end
@@ -113,15 +148,22 @@ function UI.AddMessage(role,text,owner)
  table.insert(messages[owner],(role=='user' and '|cffefbb70YOU|r\n' or '|cffefbb70WISP|r\n')..safe(text))
  if owner==key() then renderMessages() end
 end
-function UI.Resolve(requestID,owner,text,isError)
+function UI.SetProgress(requestID,owner,text)
+ if pending and pending.id==requestID and pending.character==owner and owner==key() then status:SetText(safe(text)) end
+end
+function UI.Resolve(requestID,owner,text,isError,metadata)
  if not pending or pending.id~=requestID or pending.character~=owner then return false end
  pending=nil
  if not isError then
   UI.AddMessage('assistant',text,owner);drafts[owner]=''
+  if metadata and metadata.foreverdb then
+   table.insert(messages[owner],'|cffdcb675|Hwispsource:foreverdb|hData from ForeverDB.net — https://foreverdb.net|h|r');if owner==key() then renderMessages() end
+  end
   if owner==key() then input:SetText('') end
  end
  updatePending()
- if isError and owner==key() then status:SetText('No confirmed reply. Draft kept; no automatic resend.') end
+ if isError and owner==key() then status:SetText(text and text~='' and safe(text) or 'No confirmed reply. Draft kept; no automatic resend.')
+ elseif owner==key() and metadata then status:SetText('Reply received · '..tostring(metadata.sources or 0)..' sources · details in desktop') end
  return true
 end
 function UI.Show(person,events)
@@ -146,12 +188,23 @@ function UI.Show(person,events)
   UI.compactTitle=label(window,'WISP',18,-16,100,19);UI.compactIdentity=label(window,'',18,-43,280,11,true)
   modeButton=button(window,'Compact chat',700,-10,108,function()UI.SetMode(mode=='full' and 'compact' or 'full')end)
   closeButton=button(window,'×',810,-10,28,function()window:Hide()end)
+  connectButton=button(window,'Connect AI',20,-308,100,function()UI.ShowConnection()end)
   closeButton.caption:ClearAllPoints();closeButton.caption:SetPoint('CENTER');closeButton.caption:SetWidth(26);closeButton.caption:SetJustifyH('CENTER')
   banner=surface(window,212,-51,626,110,.06,.1,.18)
   local art=banner:CreateTexture(nil,'ARTWORK');art:SetAllPoints();art:SetTexture('Interface\\AddOns\\Wisp\\Media\\expedition');art:SetTexCoord(0,1,.25,.52);art:SetVertexColor(.45,.55,.8,1)
   UI.title=label(banner,'Your story so far.',18,-22,540,26);UI.bannerCopy=label(banner,'Recorded places, moments and milestones.',18,-67,540,12)
   chat=CreateFrame('Frame',nil,window);journey=CreateFrame('Frame',nil,window)
   chatText=CreateFrame('ScrollingMessageFrame',nil,chat);chatText:SetFont('Fonts\\FRIZQT__.TTF',13,'');chatText:SetJustifyH('LEFT');chatText:SetFading(false);chatText:SetMaxLines(200);chatText:EnableMouseWheel(true)
+  if chatText.SetHyperlinksEnabled then chatText:SetHyperlinksEnabled(true) end;chatText:EnableMouse(true)
+  chatText:SetScript('OnHyperlinkClick',function(_,link)if link=='wispsource:foreverdb' then
+   if not UI.sourceWindow then
+    local box=surface(UIParent,0,0,420,150,.035,.055,.09);box:ClearAllPoints();box:SetPoint('CENTER');box:SetFrameStrata('FULLSCREEN_DIALOG')
+    label(box,'Data from ForeverDB.net',18,-16,370,18,true);label(box,'Copy this link to open the source in your browser.',18,-48,380,12)
+    local edit=CreateFrame('EditBox',nil,box,'InputBoxTemplate');place(edit,24,-76,370,28);edit:SetFontObject(ChatFontNormal);edit:SetAutoFocus(false);edit:SetText('https://foreverdb.net')
+    button(box,'Close',298,-112,96,function()box:Hide()end);UI.sourceWindow=box;UI.sourceEdit=edit
+   end
+   UI.sourceWindow:Show();UI.sourceEdit:SetFocus();UI.sourceEdit:HighlightText()
+  end end)
   chatText:SetScript('OnMouseWheel',function(self,delta)if delta>0 then if self.ScrollUp then self:ScrollUp() end elseif self.ScrollDown then self:ScrollDown() end end)
   input=CreateFrame('EditBox',nil,chat,'InputBoxTemplate');input:SetFontObject(ChatFontNormal);input:SetAutoFocus(false);input:SetMaxLetters(1000)
   input:SetScript('OnEscapePressed',function(self)self:ClearFocus()end)
@@ -161,12 +214,18 @@ function UI.Show(person,events)
    local question=input:GetText() or '';if not question:find('%S') then return end
    if not UI.OnSend then status:SetText('AI is disconnected. Nothing was sent.');return end
    -- Sender must acknowledge acceptance with an operation ID. Nil/error preserves the draft.
-   local ok,id=pcall(UI.OnSend,question,key())
-   if not ok or type(id)~='string' or id=='' then status:SetText('No acceptance confirmed. Draft kept; check Wisp.');return end
+   local ok,id,reason=pcall(UI.OnSend,question,key(),UI.ShareContext and UI.ShareContext:GetChecked() or false)
+   if not ok or type(id)~='string' or id=='' then status:SetText(type(reason)=='string' and safe(reason) or 'No acceptance confirmed. Draft kept; check Wisp.');return end
+   if UI.ShareContext then UI.ShareContext:SetChecked(false) end
    pending={id=id,character=key()};UI.AddMessage('user',question);input:ClearFocus();updatePending()
   end
   input:SetScript('OnEnterPressed',send);sendButton=button(chat,'Ask Wisp',490,-207,98,send)
   status=label(chat,'',0,-253,612,10,true)
+  UI.ShareContext=CreateFrame('CheckButton',nil,chat,'UICheckButtonTemplate');UI.ShareContext:SetChecked(false)
+  UI.shareLabel=label(chat,'Include current character state (this question)',28,-232,580,11)
+  UI.ShareContext:SetScript('OnEnter',function(self)if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetText('Current character context');GameTooltip:AddLine('Reads level, area, class/race IDs, gear IDs, profession ranks and a limited quest/progress snapshot when you send.',1,1,1,true);GameTooltip:AddLine('Selected text goes through Wisp to Berget. Images stay local. Missing fields remain unknown.',1,1,1,true);GameTooltip:Show()end end)
+  UI.ShareContext:SetScript('OnLeave',function()if GameTooltip then GameTooltip:Hide()end end)
+
   journeyText=label(journey,'',0,-2,612,13);journeyText:SetJustifyV('TOP')
   UI.note=CreateFrame('EditBox',nil,journey,'InputBoxTemplate');UI.note:SetFontObject(ChatFontNormal);UI.note:SetAutoFocus(false)
   UI.noteButton=button(journey,'Save note',378,-210,110,function()local value=UI.note:GetText() or '';if value~='' and UI.OnNote then UI.OnNote(value);UI.note:SetText('');updateJourney()end end)
@@ -176,7 +235,7 @@ function UI.Show(person,events)
   label(resize,'//',4,-4,18,14,true)
   resize:SetScript('OnMouseDown',function(_,which)if which=='LeftButton' then window:StartSizing('BOTTOMRIGHT') end end)
   resize:SetScript('OnMouseUp',function()window:StopMovingOrSizing();layout()end)
-  UI.Controls={Window=window,Input=input,Resize=resize,Mode=modeButton,Status=status,Chat=chat,Journey=journey,Messages=chatText}
+  UI.Controls={Window=window,Input=input,Resize=resize,Mode=modeButton,Connect=connectButton,Status=status,Chat=chat,Journey=journey,Messages=chatText}
   -- A dedicated title hit region also works where native drag events do not bubble.
   local drag=CreateFrame('Frame',nil,window);drag:SetPoint('TOPLEFT');drag:SetSize(684,44)
   drag:SetFrameLevel(window:GetFrameLevel()+10);drag:EnableMouse(true)

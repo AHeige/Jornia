@@ -177,9 +177,9 @@ func TestAshenvaleStack(t *testing.T) {
 	if calls != 2 {
 		t.Fatalf("expected 2 inference calls, got %d", calls)
 	}
-	code, _ = ask(`{"question":"Tell me about unknownplace","game_version":"fixture-ashenvale-v1","mode":"generate"}`)
-	if code != 200 || calls != 2 {
-		t.Fatal("unknown retrieval called provider")
+	code, a = ask(`{"question":"Tell me about unknownplace","game_version":"fixture-ashenvale-v1","mode":"generate"}`)
+	if code != 200 || calls != 3 || a.Status != "unknown" || len(a.EvidenceIDs) != 0 {
+		t.Fatal("explicit generation without knowledge must remain unknown")
 	}
 	service.Generator = nil
 	code, _ = ask(`{"question":"Astranaar","game_version":"fixture-ashenvale-v1","mode":"generate"}`)

@@ -54,10 +54,10 @@ func TestPersonalContextSurvivesBroadWorldMatches(t *testing.T) {
 	model := &journalModel{evidence: "character:profile"}
 	s := Service{Store: wideWorld{}, Generator: model}
 	a, err := s.Ask(context.Background(), Request{Question: "Which weapon is in my profile?", Mode: "generate", Character: c})
-	if err != nil || a.Status != "answered" || len(model.knowledge) > 40000 || strings.Contains(model.knowledge, "wide world data") {
+	if err != nil || a.Status != "answered" || len(model.knowledge) > 40000 {
 		t.Fatal(a, err, len(model.knowledge))
 	}
-	model.evidence = "entity:wide-0"
+	model.evidence = "entity:wide-99"
 	a, err = s.Ask(context.Background(), Request{Question: "Which weapon is in my profile?", Mode: "generate", Character: c})
 	if err != nil || a.Status != "unknown" {
 		t.Fatal("omitted world fact citation accepted", a, err)

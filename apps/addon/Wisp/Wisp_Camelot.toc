@@ -2,9 +2,12 @@
 ## Title: Wisp
 ## Notes: Private adventure journal and consented automatic local recording. Experimental Forever prototype.
 ## Author: Wisp contributors
-## Version: 0.7.1-local
+## Version: 0.7.2-local
 ## SavedVariables: WispDB
 ## SavedVariablesPerCharacter: WispCharacterDB
 Wisp.lua
+State.lua
 Companion.lua
 Bindings.lua
+Navigation.lua
+Transport.lua

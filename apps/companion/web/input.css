@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @source "./index.html";
 @source "./app.js";
+@source "../../../internal/admin/web/index.html";
+@source "../../../internal/admin/web/app.js";
 @plugin "daisyui" { themes: false; }
 @plugin "daisyui/theme" {
  name: "wisp"; default: true; prefersdark: true; color-scheme: dark;

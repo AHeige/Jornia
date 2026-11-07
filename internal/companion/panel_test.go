@@ -13,6 +13,7 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
  UIParent={};ChatFontNormal={};local methods={};local meta={__index=function(t,k)return methods[k] or function()end end}
  function CreateFrame(kind,name,parent) return setmetatable({scripts={},w=0,h=0,shown=true,lines={}},meta) end
  function methods:CreateFontString()return CreateFrame()end;function methods:CreateTexture()return CreateFrame()end
+ function methods:SetPassword(v)self.password=v end
  function methods:SetFont(path,size,flags) assert(type(flags)=='string','Native font flags required') end
  function methods:SetScript(k,v)self.scripts[k]=v end
  function methods:SetSize(w,h)self.w=w;self.h=h;if self.scripts.OnSizeChanged then self.scripts.OnSizeChanged(self,w,h)end end
@@ -23,6 +24,7 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
  function methods:SetText(s)self.text=s;if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self)end end
  function methods:GetText()return self.text end
  function methods:Clear()self.lines={} end;function methods:AddMessage(s)table.insert(self.lines,s)end
+ function methods:SetEnabled(v)self.disabled=not v end;function methods:SetChecked(v)self.checked=v end;function methods:GetChecked()return self.checked end
  function methods:Disable()self.disabled=true end;function methods:Enable()self.disabled=false end
  function methods:StartSizing()self.sizing=true end;function methods:StopMovingOrSizing()self.sizing=false;self.moving=false end
  `); err != nil {
@@ -58,6 +60,12 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
  c.Input:SetText('Keep on failure');c.Input.scripts.OnEnterPressed();UI.Resolve('op1','one','error',true)
  assert(c.Input:GetText()=='Keep on failure' and not c.Input.disabled)
  UI.ShowJourney();assert(UI.GetMode()=='full' and c.Journey.shown)
+ local before=#c.Messages.lines;UI.ShowConnection();assert(UI.connectionInput.password)
+ local attempts=0;UI.OnConnect=function(code,owner)attempts=attempts+1;assert(code==string.rep('ab',32) and owner=='one');return 'connect1' end
+ UI.connectionInput:SetText(string.rep('ab',32));UI.connectionInput.scripts.OnEnterPressed();assert(UI.connectionInput:GetText()=='' and attempts==1)
+ UI.connectionInput.scripts.OnEnterPressed();assert(attempts==1 and #c.Messages.lines==before)
+ assert(not UI.ResolveConnection('wrong','one','Wrong',false));assert(UI.ResolveConnection('connect1','one','Connected',false));assert(#c.Messages.lines==before and not c.Input.disabled)
+
  `); err != nil {
 		t.Fatal(err)
 	}

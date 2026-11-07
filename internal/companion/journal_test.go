@@ -57,6 +57,9 @@ func savedFixture(packs ...Export) string {
 		_ = json.Unmarshal(b, &object)
 		c := object["character"].(map[string]any)
 		c["events"] = object["events"]
+		if object["current_state"] != nil {
+			c["current_state"] = object["current_state"]
+		}
 		c["recording"] = true
 		chars[p.Character.ID] = c
 	}

@@ -365,6 +365,9 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	}
 	// Retrieve only named entities and their one-hop neighborhood. No fuzzy guesses.
 	selected := map[string]bool{}
+	for _, id := range g.Anchors {
+		selected[id] = true
+	}
 	question := " " + normalizeWords(snapshotQuestion(r)) + " "
 	for _, e := range g.Entities {
 		if strings.Contains(question, " "+normalizeWords(e.Name)+" ") {
@@ -405,6 +408,34 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 			contextGraph.Entities = append(contextGraph.Entities, e)
 			allowed["entity:"+e.ID] = true
 		}
+	}
+	// Broad class graphs can contain hundreds of skills. Keep a deterministic
+	// bounded subset, prioritizing SQL/name anchors, before spending model tokens.
+	encodedWorld, _ := json.Marshal(contextGraph.Entities)
+	if len(encodedWorld) > 24000 {
+		candidates := append([]storage.Entity(nil), contextGraph.Entities...)
+		sort.SliceStable(candidates, func(i, j int) bool { return matched[candidates[i].ID] && !matched[candidates[j].ID] })
+		kept := map[string]bool{}
+		contextGraph.Entities = []storage.Entity{}
+		budget := 0
+		for _, e := range candidates {
+			raw, _ := json.Marshal(e)
+			if budget+len(raw) > 24000 {
+				delete(allowed, "entity:"+e.ID)
+				continue
+			}
+			budget += len(raw)
+			kept[e.ID] = true
+			contextGraph.Entities = append(contextGraph.Entities, e)
+		}
+		edges := []storage.Edge{}
+		for _, e := range contextGraph.Edges {
+			if kept[e.SubjectID] && kept[e.ObjectID] {
+				edges = append(edges, e)
+			}
+		}
+		contextGraph.Edges = edges
+		a.Warnings = append(a.Warnings, "A bounded selection of world facts was retrieved; this is not the complete class, item or quest catalog.")
 	}
 	for _, e := range contextGraph.Edges {
 		allowed["edge:"+e.ID] = true

@@ -62,6 +62,7 @@ type Edge struct {
 	SourceID  string `json:"source_id"`
 }
 type Graph struct {
+	Anchors     []string `json:"anchors,omitempty"`
 	GameVersion string   `json:"game_version"`
 	Entities    []Entity `json:"entities"`
 	Edges       []Edge   `json:"edges"`
@@ -246,7 +247,7 @@ func (s *Store) seedFile(ctx context.Context, path string) error {
 // Graph loads a bounded public knowledge scope. Private player data is not stored here.
 func (s *Store) Graph(ctx context.Context, version string, spoilers bool) (Graph, error) {
 	g := Graph{GameVersion: version, Entities: []Entity{}, Edges: []Edge{}, Sources: []Source{}}
-	rows, err := s.Pool.Query(ctx, `SELECT e.id,e.game_version,e.kind,e.name,e.description,e.spoiler,e.source_id FROM entities e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND ($2 OR NOT e.spoiler) AND s.validation_status IN ('fixture','source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) ORDER BY e.id LIMIT 100`, version, spoilers)
+	rows, err := s.Pool.Query(ctx, `SELECT e.id,e.game_version,e.kind,e.name,e.description,e.spoiler,e.source_id FROM entities e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND ($2 OR NOT e.spoiler) AND s.validation_status IN ('fixture','source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) AND (s.id NOT LIKE 'foreverdb:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key='foreverdb:build')) ORDER BY e.id LIMIT 100`, version, spoilers)
 	if err != nil {
 		return g, err
 	}
@@ -268,7 +269,7 @@ func (s *Store) Graph(ctx context.Context, version string, spoilers bool) (Graph
 		ids = append(ids, e.ID)
 		srcs[e.SourceID] = true
 	}
-	rows, err = s.Pool.Query(ctx, `SELECT e.id,e.subject_id,e.predicate,e.object_id,e.source_id FROM edges e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND e.subject_id=ANY($2) AND e.object_id=ANY($2) AND s.validation_status IN ('fixture','source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) ORDER BY e.id LIMIT 200`, version, ids)
+	rows, err = s.Pool.Query(ctx, `SELECT e.id,e.subject_id,e.predicate,e.object_id,e.source_id FROM edges e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND e.subject_id=ANY($2) AND e.object_id=ANY($2) AND s.validation_status IN ('fixture','source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) AND (s.id NOT LIKE 'foreverdb:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key='foreverdb:build')) ORDER BY e.id LIMIT 200`, version, ids)
 	if err != nil {
 		return g, err
 	}
@@ -309,7 +310,7 @@ func (s *Store) Graph(ctx context.Context, version string, spoilers bool) (Graph
 // Coverage reports installed scope, never a percentage of the complete game universe.
 func (s *Store) Coverage(ctx context.Context, version string) (map[string]any, error) {
 	counts := map[string]int{}
-	rows, err := s.Pool.Query(ctx, `SELECT e.kind,count(*) FROM entities e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND s.validation_status IN ('source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) GROUP BY e.kind`, version)
+	rows, err := s.Pool.Query(ctx, `SELECT e.kind,count(*) FROM entities e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND s.validation_status IN ('source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) AND (s.id NOT LIKE 'foreverdb:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key='foreverdb:build')) GROUP BY e.kind`, version)
 	if err != nil {
 		return nil, err
 	}
@@ -413,5 +414,9 @@ func (s *Store) Coverage(ctx context.Context, version string) (map[string]any, e
 	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
-	return map[string]any{"game_version": version, "entities": total, "by_kind": counts, "categories": CategoryCatalog(counts, details), "category_counts_overlap": true, "complete": false, "scope": "Curated Ashenvale plus build-scoped official Forever API metadata; not complete game knowledge or proof of live availability.", "unknown_total_game_entities": true, "ingestion": map[string]any{"provider": "blizzard", "namespaces": namespaces, "locales": locales, "detailed_documents_by_resource": details, "record_counts_are_not_field_completeness": true, "documents": documents, "jobs": jobs, "latest_run_status": runStatus, "latest_run_finished_at": checkedAt, "refresh_hours": 24, "retention_days": 28, "search_id_bounds": []int{0, 2147483647}}, "unverified_domains": []string{"complete quests and objectives", "complete NPC positions", "drop chances", "quest eligibility", "live-client availability", "all game data outside supported API endpoints"}}, nil
+	providerCoverage, err := s.foreverDBCoverage(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"foreverdb": providerCoverage, "game_version": version, "entities": total, "by_kind": counts, "categories": CategoryCatalog(counts, details), "category_counts_overlap": true, "complete": false, "scope": "Curated Ashenvale, build-scoped Blizzard API and authorized ForeverDB catalog/detail facts; not complete game knowledge or proof of live availability.", "unknown_total_game_entities": true, "ingestion": map[string]any{"providers": []string{"blizzard", "foreverdb"}, "namespaces": namespaces, "locales": locales, "detailed_documents_by_resource": details, "record_counts_are_not_field_completeness": true, "documents": documents, "jobs": jobs, "latest_run_status": runStatus, "latest_run_finished_at": checkedAt, "refresh_hours": 24, "retention_days": 28, "search_id_bounds": []int{0, 2147483647}}, "unverified_domains": []string{"complete quests and objectives", "complete NPC positions", "drop chances", "quest eligibility", "live-client availability", "all game data outside supported API endpoints"}}, nil
 }

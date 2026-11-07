@@ -3,11 +3,23 @@
 #import <Vision/Vision.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <ScreenCaptureKit/ScreenCaptureKit.h>
+#import <CoreImage/CoreImage.h>
+#import <CoreMedia/CoreMedia.h>
 #include <unistd.h>
 
 static void emit(NSDictionary *value) {
  NSData *d=[NSJSONSerialization dataWithJSONObject:value options:0 error:nil];
  fwrite(d.bytes,1,d.length,stdout); puts(""); fflush(stdout);
+}
+// ScreenCaptureKit may complete on the main run loop. Blocking that thread
+// indefinitely can strand a screenshot request, so pump it with a deadline.
+static BOOL awaitCapture(dispatch_semaphore_t ready,double seconds) {
+ CFAbsoluteTime until=CFAbsoluteTimeGetCurrent()+seconds;
+ while(dispatch_semaphore_wait(ready,DISPATCH_TIME_NOW)!=0){
+  if(CFAbsoluteTimeGetCurrent()>until)return NO;
+  [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.01]];
+ }
+ return YES;
 }
 static VNRecognizeTextRequest *request(void) {
  VNRecognizeTextRequest *r=[VNRecognizeTextRequest new]; r.recognitionLevel=VNRequestTextRecognitionLevelAccurate;
@@ -15,6 +27,9 @@ static VNRecognizeTextRequest *request(void) {
 }
 // A four-corner pure-magenta frame marks the explicitly opened Wisp panel.
 // Only this rectangle reaches Vision. Full-window pixels stay in memory.
+static BOOL cardMode=NO;
+static BOOL diagnostic=NO;
+static NSString *saveCard=nil;
 static CGRect panel(CGImageRef image) {
  size_t w=CGImageGetWidth(image),h=CGImageGetHeight(image),stride=w*4;
  if(w>10000||h>10000)return CGRectNull;
@@ -35,16 +50,33 @@ static CGRect panel(CGImageRef image) {
   }if(!found)corners=NO;
  }
  CGContextRelease(ctx);free(data);
- if(!corners||count<12||maxx<=minx||maxy<=miny||maxx-minx<300||maxy-miny<200)return CGRectNull;
+ if(diagnostic) emit(@{@"diagnostic":@YES,@"width":@(w),@"height":@(h),@"magenta":@(count),@"minx":@(minx),@"miny":@(miny),@"maxx":@(maxx),@"maxy":@(maxy),@"corners":@(corners)});
+ if(!corners||count<(cardMode?4:12)||maxx<=minx||maxy<=miny||maxx-minx<300||maxy-miny<200)return CGRectNull;
  // All four corners must be present: reject unrelated isolated magenta pixels.
  // Read only the outbox band, excluding the answer, input and other game chat.
  CGFloat height=maxy-miny;
- return CGRectIntersection(CGRectMake(minx+8,miny+height*.22,maxx-minx-16,height*.33),CGRectMake(0,0,w,h));
+ return CGRectIntersection(cardMode?CGRectMake(minx+8,miny+28,maxx-minx-16,height-60):CGRectMake(minx+8,miny+height*.22,maxx-minx-16,height*.33),CGRectMake(0,0,w,h));
 }
+// Keep one current frame; no screenshot files or frame queue are retained.
+@interface WispFrames:NSObject<SCStreamOutput,SCStreamDelegate>
+@property(nonatomic) CVPixelBufferRef latest;
+@property(nonatomic) BOOL failed;
+@end
+@implementation WispFrames
+-(void)stream:(SCStream*)stream didOutputSampleBuffer:(CMSampleBufferRef)sample ofType:(SCStreamOutputType)type {
+ if(type!=SCStreamOutputTypeScreen||!CMSampleBufferIsValid(sample))return;
+ CVPixelBufferRef buffer=CMSampleBufferGetImageBuffer(sample);if(!buffer)return;
+ @synchronized(self){if(_latest)CVPixelBufferRelease(_latest);_latest=CVPixelBufferRetain(buffer);}
+}
+-(void)stream:(SCStream*)stream didStopWithError:(NSError*)error {self.failed=YES;}
+-(CVPixelBufferRef)take { @synchronized(self){CVPixelBufferRef value=_latest;_latest=NULL;return value;} }
+-(void)dealloc{if(_latest)CVPixelBufferRelease(_latest);}
+@end
 int main(int argc,const char *argv[]) {
  @autoreleasepool {
-  if(argc==3 && !strcmp(argv[1],"--file")){
-   NSBitmapImageRep *rep=[[NSBitmapImageRep alloc]initWithData:[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:argv[2]]]];
+  const char *file=NULL;for(int i=1;i<argc;i++){if(!strcmp(argv[i],"--card"))cardMode=YES;else if(!strcmp(argv[i],"--diagnostic"))diagnostic=YES;else if(!strcmp(argv[i],"--save-card")&&i+1<argc)saveCard=[NSString stringWithUTF8String:argv[++i]];else if(!strcmp(argv[i],"--file")&&i+1<argc)file=argv[++i];}
+  if(file){
+   NSBitmapImageRep *rep=[[NSBitmapImageRep alloc]initWithData:[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:file]]];
    if(!rep)return 2;CGRect box=panel(rep.CGImage);if(CGRectIsNull(box)){emit(@{@"error":@"panel_not_found"});return 4;}
    CGImageRef crop=CGImageCreateWithImageInRect(rep.CGImage,box);VNRecognizeTextRequest *r=request();
    CFAbsoluteTime start=CFAbsoluteTimeGetCurrent();
@@ -60,33 +92,40 @@ int main(int argc,const char *argv[]) {
   CGImageRef blank=CGBitmapContextCreateImage(ctx); VNRecognizeTextRequest *r=request();
   [[[VNImageRequestHandler alloc]initWithCGImage:blank options:@{}] performRequests:@[r] error:nil];
   CGImageRelease(blank);CGContextRelease(ctx);CGColorSpaceRelease(cs);emit(@{@"ready":@YES});
+  CIContext *images=[CIContext contextWithOptions:@{kCIContextUseSoftwareRenderer:@NO}];
   while(1){@autoreleasepool{
-   __block SCShareableContent *content=nil;
-   dispatch_semaphore_t available=dispatch_semaphore_create(0);
+   __block SCShareableContent *content=nil;dispatch_semaphore_t available=dispatch_semaphore_create(0);
    [SCShareableContent getShareableContentExcludingDesktopWindows:YES onScreenWindowsOnly:YES completionHandler:^(SCShareableContent *c,NSError *e){content=c;dispatch_semaphore_signal(available);}];
-   if(dispatch_semaphore_wait(available,dispatch_time(DISPATCH_TIME_NOW,3*NSEC_PER_SEC))!=0){usleep(300000);continue;}
+   if(!awaitCapture(available,3)){usleep(300000);continue;}
    SCWindow *window=nil;
-   for(SCWindow *w in content.windows)if([w.owningApplication.bundleIdentifier isEqualToString:@"com.blizzard.worldofwarcraft"] && w.windowLayer==0){window=w;break;}
-   if(window){
-    CFAbsoluteTime start=CFAbsoluteTimeGetCurrent();
-    SCContentFilter *filter=[[SCContentFilter alloc]initWithDesktopIndependentWindow:window];
-    SCStreamConfiguration *config=[SCStreamConfiguration new];
-    config.width=window.frame.size.width*2;config.height=window.frame.size.height*2;config.showsCursor=NO;
-    __block CGImageRef image=NULL;
-    dispatch_semaphore_t captured=dispatch_semaphore_create(0);
-    [SCScreenshotManager captureImageWithFilter:filter configuration:config completionHandler:^(CGImageRef img,NSError *e){if(img)image=CGImageRetain(img);dispatch_semaphore_signal(captured);}];
-    // Wait for completion before returning ownership of the captured image.
-    dispatch_semaphore_wait(captured,DISPATCH_TIME_FOREVER);
-    if(image){CGRect box=panel(image);if(!CGRectIsNull(box)){
+   for(SCWindow *w in content.windows)if([w.owningApplication.bundleIdentifier isEqualToString:@"com.blizzard.worldofwarcraft"]&&w.windowLayer==0){window=w;break;}
+   if(!window){usleep(300000);continue;}
+   WispFrames *frames=[WispFrames new];
+   SCContentFilter *filter=[[SCContentFilter alloc]initWithDesktopIndependentWindow:window];
+   SCStreamConfiguration *config=[SCStreamConfiguration new];config.width=window.frame.size.width*2;config.height=window.frame.size.height*2;config.showsCursor=NO;config.queueDepth=3;config.minimumFrameInterval=CMTimeMake(1,5);config.pixelFormat=kCVPixelFormatType_32BGRA;
+   SCStream *stream=[[SCStream alloc]initWithFilter:filter configuration:config delegate:frames];
+   NSError *setup=nil;dispatch_queue_t output=dispatch_queue_create("wisp.local.frames",DISPATCH_QUEUE_SERIAL);
+   if(![stream addStreamOutput:frames type:SCStreamOutputTypeScreen sampleHandlerQueue:output error:&setup]){emit(@{@"error":@"capture_setup_failed"});return 5;}
+   __block BOOL running=NO;dispatch_semaphore_t begun=dispatch_semaphore_create(0);
+   [stream startCaptureWithCompletionHandler:^(NSError *error){running=error==nil;dispatch_semaphore_signal(begun);}];
+   if(!awaitCapture(begun,5)||!running){emit(@{@"error":@"capture_start_failed"});return 5;}
+   CFAbsoluteTime lastFrame=CFAbsoluteTimeGetCurrent(),tick=0;
+   while(!frames.failed&&CFAbsoluteTimeGetCurrent()-lastFrame<10){@autoreleasepool{
+    [[NSRunLoop currentRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.05]];
+    CVPixelBufferRef pixel=[frames take];if(!pixel)continue;lastFrame=CFAbsoluteTimeGetCurrent();if(lastFrame-tick>1){tick=lastFrame;emit(@{@"capture_tick":@YES});}
+    CIImage *ci=[CIImage imageWithCVPixelBuffer:pixel];CGImageRef image=[images createCGImage:ci fromRect:ci.extent];CVPixelBufferRelease(pixel);if(!image)continue;
+    CGRect box=panel(image);
+    if(!CGRectIsNull(box)){
      CGImageRef crop=CGImageCreateWithImageInRect(image,box);
-     CFAbsoluteTime ocr=CFAbsoluteTimeGetCurrent();NSError *err=nil;
-     BOOL ok=[[[VNImageRequestHandler alloc]initWithCGImage:crop options:@{}] performRequests:@[r] error:&err];
+     if(saveCard){if([[NSFileManager defaultManager]fileExistsAtPath:saveCard])return 6;NSBitmapImageRep *rep=[[NSBitmapImageRep alloc]initWithCGImage:crop];NSData *png=[rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}];[png writeToFile:saveCard atomically:YES];emit(@{@"saved_card":@YES});CGImageRelease(crop);CGImageRelease(image);return 0;}
+     CFAbsoluteTime start=CFAbsoluteTimeGetCurrent();
+     BOOL ok=[[[VNImageRequestHandler alloc]initWithCGImage:crop options:@{}]performRequests:@[r]error:nil];
      NSMutableArray *lines=[NSMutableArray array];if(ok)for(VNRecognizedTextObservation *o in r.results){VNRecognizedText *c=[o topCandidates:1].firstObject;if(c)[lines addObject:c.string];}
-     emit(@{@"lines":lines,@"ocr_ms":@((CFAbsoluteTimeGetCurrent()-ocr)*1000),@"capture_ocr_ms":@((CFAbsoluteTimeGetCurrent()-start)*1000)});
-     CGImageRelease(crop);
-    }CGImageRelease(image);}
-   }
-   usleep(300000);
+     emit(@{@"lines":lines,@"ocr_ms":@((CFAbsoluteTimeGetCurrent()-start)*1000)});CGImageRelease(crop);
+    }
+    CGImageRelease(image);
+   }}
+   dispatch_semaphore_t ended=dispatch_semaphore_create(0);[stream stopCaptureWithCompletionHandler:^(NSError *error){dispatch_semaphore_signal(ended);}];awaitCapture(ended,3);
   }}
  }
 }

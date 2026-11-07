@@ -23,7 +23,7 @@ Grafen har karaktär → registreringspass/observationsgrupp → händelse → p
 
 Ingen LLM behövs för projektion eller resesammanfattning. Händelser registreras vid förändringar, inte per bildruta. Oförändrade filers storlek/tidsstämpel används för att undvika innehållsläsning; förändrat innehåll får checksumma. Stabila händelse-ID:n gör att upprepade sparningar inte skapar dubbletter. Motstridigt innehåll under samma ID bevarar tidigare fakta och ger ett fel i stället för att tyst skriva över dem.
 
-Addonen håller högst 2 000 händelser per karaktär; äldre poster faller ur addonbufferten om de inte hunnit importeras. Manuellt kopierat exportpaket innehåller de senaste 100. Automatinläsning delar större journaler i paket om högst 100. Begränsningar: 4 MiB per fil, högst 100 karaktärer per fil, högst 100 journalfiler och 20 000 traverserade katalogposter per kontroll, begränsat katalogdjup. Gränsöverskridande ger synligt fel, inte ett påstående om komplett historik. Lokalt importerade observationer sparas tills användaren raderar dem. Tidslinjen visar de senaste 50; exporten innehåller hela den lokala händelse- och samtalshistoriken.
+Addonen håller högst 2 000 händelser per karaktär; äldre poster faller ur addonbufferten om de inte hunnit importeras. Manuellt kopierat exportpaket innehåller de senaste 100. Automatinläsning delar större journaler i paket om högst 100, med mindre adaptiva paket för detaljerat state/framsteg. Begränsningar: 8 MiB per fil, högst 100 karaktärer per fil, högst 100 journalfiler och 20 000 traverserade katalogposter per kontroll, begränsat katalogdjup. Gränsöverskridande ger synligt fel, inte ett påstående om komplett historik. Lokalt importerade observationer sparas tills användaren raderar dem. Tidslinjen visar de senaste 50; exporten innehåller hela den lokala händelse- och samtalshistoriken.
 
 ## Filåtkomst, paus och radering
 
@@ -33,4 +33,13 @@ Inläsaren söker enbart `Wisp.lua` i `SavedVariables` under den valda klientens
 
 **Glöm vald karaktär** raderar även den lokala grafen och spärrar automatisk återimport av samma karaktär. Spärren använder ett lokalt hashvärde av identiteten; detta är ingen anonymitetsgaranti. Addonens originalfil ligger kvar. En senare uttrycklig manuell import häver spärren. Befintliga exporter/säkerhetskopior påverkas inte av raderingen.
 
-Journal, graf och samtal stannar lokalt. Världsfrågor skickar fortfarande bara frågan och spelversionen till servern. Ett separat flöde för att skicka personlig kontext till Berget är inte implementerat eller aktiverat. Lokal lagring innebär inte kryptering.
+Journal, graf och samtal stannar lokalt. Världsfrågor skickar fortfarande bara frågan och spelversionen till servern. Valda historiska journalutdrag kan skickas per AI-fråga efter granskning. Den experimentella ingame-bryggan kan bifoga en färsk snapshot, med eget val per fråga; detta är inte en kontinuerlig livefeed. Lokal lagring innebär inte kryptering.
+
+
+## Rikt state, lokal prototyp 0.7.2
+
+Addonen läser aktuellt state i Lua-minnet och sparar ett daterat checkpoint per karaktär: level/XP, zon/subzon, klass/ras-ID, upp till 50 aktiva quests med begränsade mål/räknare, utrustade item-ID:n och professioner när klientens API stöder dem. Journey får förändringar för quests, utrustning och död/återuppståndelse. Pausad inspelning stoppar bestående nya händelser/checkpoints. Inga chattar eller andra spelares uppgifter samlas.
+
+SQLite skiljer checkpoint från historiska händelser. En äldre fil kan inte skriva över ett nyare checkpoint. Återimport ger samma händelse en gång. Tomma Lua-tabeller normaliseras bara för schemaangivna listor; SavedVariables körs aldrig som kod. Otillgängliga API:er och begränsade listor märks explicit. Komplett historik garanteras inte om addonbufferten eller filgränsen överskrids.
+
+För en godkänd fråga läser addonen om state vid skicket. Den begränsade frågesnapshoten kan bära upp till fyra quests, målräknare, gear-ID:n och professioner. Saknade fält och trunkering följer med. Inläsning från SavedVariables får aldrig ensam skapa ett live-markerat AI-underlag.

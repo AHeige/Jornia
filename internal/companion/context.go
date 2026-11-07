@@ -70,7 +70,7 @@ func (s *Store) ContextPreview(ctx context.Context, character string, ids []stri
 			return out, errors.New("notes are not shared")
 		}
 		out.EventIDs = append(out.EventIDs, id)
-		out.Events = append(out.Events, wisp.Observation{ID: fmt.Sprintf("memory:%d", len(out.Events)+1), Kind: e.Kind, ObservedAt: e.ObservedAt, Zone: e.Zone, Subzone: e.Subzone, Level: e.Level, QuestID: e.QuestID})
+		out.Events = append(out.Events, wisp.Observation{ID: fmt.Sprintf("memory:%d", len(out.Events)+1), Kind: e.Kind, QuestTitle: e.QuestTitle, Objectives: e.Objectives, ItemID: e.ItemID, Slot: e.Slot, ObservedAt: e.ObservedAt, Zone: e.Zone, Subzone: e.Subzone, Level: e.Level, QuestID: e.QuestID})
 	}
 	out.Digest = Fingerprint(struct {
 		Character string

@@ -92,23 +92,38 @@ func projectEvent(ctx context.Context, tx *sql.Tx, char string, e Event) error {
 			return err
 		}
 	}
-	if e.Kind == "quest_completed" && e.QuestID > 0 {
+	if e.QuestID > 0 {
 		quest := fmt.Sprintf("quest:%d", e.QuestID)
-		if err := node(quest, "quest", fmt.Sprintf("Uppdrag #%d", e.QuestID)); err != nil {
+		label := e.QuestTitle
+		if label == "" {
+			label = fmt.Sprintf("Uppdrag #%d", e.QuestID)
+		}
+		if err := node(quest, "quest", label); err != nil {
 			return err
 		}
-		return edge(ev, "completed_quest", quest)
+		predicate := map[string]string{"quest_completed": "completed_quest", "quest_accepted": "accepted_quest", "quest_removed": "quest_left_log", "quest_progress": "quest_progress"}[e.Kind]
+		if predicate != "" {
+			return edge(ev, predicate, quest)
+		}
+	}
+	if e.Kind == "equipment_changed" && e.ItemID > 0 {
+		item := fmt.Sprintf("item:%d", e.ItemID)
+		if err := node(item, "item", fmt.Sprintf("Item #%d", e.ItemID)); err != nil {
+			return err
+		}
+		return edge(ev, "equipped_observed", item)
 	}
 	return nil
 }
 
 type Journey struct {
-	Events          []Event `json:"events"`
-	Total           int     `json:"total"`
-	Places          int     `json:"places"`
-	Sessions        int     `json:"sessions"`
-	CompletedQuests int     `json:"completed_quests"`
-	LastObserved    int64   `json:"last_observed"`
+	Events          []Event     `json:"events"`
+	Total           int         `json:"total"`
+	Places          int         `json:"places"`
+	Sessions        int         `json:"sessions"`
+	CompletedQuests int         `json:"completed_quests"`
+	SavedState      *LocalState `json:"saved_state,omitempty"`
+	LastObserved    int64       `json:"last_observed"`
 }
 
 func (s *Store) Journey(ctx context.Context, char string) (Journey, error) {
@@ -124,6 +139,14 @@ func (s *Store) Journey(ctx context.Context, char string) (Journey, error) {
 			return j, err
 		}
 	}
+	if err := s.DB.QueryRowContext(ctx, `SELECT count(DISTINCT target) FROM journey_edges WHERE character_id=? AND kind='completed_quest'`, char).Scan(&j.CompletedQuests); err != nil {
+		return j, err
+	}
+	state, stateErr := s.SavedState(ctx, char)
+	if stateErr != nil && stateErr != sql.ErrNoRows {
+		return j, stateErr
+	}
+	j.SavedState = state
 	events, err := s.Events(ctx, char)
 	if len(events) > 50 {
 		events = events[:50]
@@ -259,6 +282,29 @@ func (s *Store) ExportHistory(ctx context.Context) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	checkpoints := map[string]LocalState{}
+	rows, err = tx.QueryContext(ctx, `SELECT character_id,body FROM character_checkpoints`)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var char, raw string
+		var state LocalState
+		if err = rows.Scan(&char, &raw); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		if err = json.Unmarshal([]byte(raw), &state); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		checkpoints[char] = state
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return nil, err
+	}
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
@@ -266,5 +312,5 @@ func (s *Store) ExportHistory(ctx context.Context) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return map[string]any{"schema": 1, "characters": characters, "events": events, "messages": messages, "profiles": profiles}, nil
+	return map[string]any{"schema": 1, "characters": characters, "events": events, "messages": messages, "profiles": profiles, "saved_checkpoints": checkpoints}, nil
 }

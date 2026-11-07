@@ -282,7 +282,7 @@ func parseCharacterIdentity(raw string) (string, error) {
 }
 
 func ParseSavedVariables(raw string) ([]Export, error) {
-	object, err := savedObject(raw, "WispDB", 4<<20)
+	object, err := savedObject(raw, "WispDB", 8<<20)
 	if err != nil {
 		return nil, err
 	}
@@ -307,22 +307,62 @@ func ParseSavedVariables(raw string) ([]Export, error) {
 		if !ok || len(events) > 2000 {
 			return nil, errors.New("invalid events")
 		}
+		// Lua serializes both empty arrays and objects as {}. Normalize only
+		// schema-declared array fields; never execute or guess arbitrary data.
+		asArray := func(m map[string]any, key string) {
+			if empty, ok := m[key].(map[string]any); ok && len(empty) == 0 {
+				m[key] = []any{}
+			}
+		}
+		if state, ok := c["current_state"].(map[string]any); ok {
+			for _, key := range []string{"quests", "equipment", "professions"} {
+				asArray(state, key)
+			}
+			if quests, ok := state["quests"].([]any); ok {
+				for _, value := range quests {
+					if q, ok := value.(map[string]any); ok {
+						asArray(q, "objectives")
+					}
+				}
+			}
+		}
+		for _, value := range events {
+			if e, ok := value.(map[string]any); ok {
+				asArray(e, "objectives")
+			}
+		}
 		name, _ := c["name"].(string)
 		realm, _ := c["realm"].(string)
-		for start := 0; start < len(events); start += 100 {
-			end := start + 100
+		chunk := 100
+		if c["current_state"] != nil {
+			chunk = 25
+		}
+		for start := 0; start < len(events); {
+			end := start + chunk
 			if end > len(events) {
 				end = len(events)
 			}
-			b, err := json.Marshal(map[string]any{"schema": 1, "installation_id": installation, "character": Character{ID: key, Name: name, Realm: realm}, "events": events[start:end]})
-			if err != nil {
-				return nil, err
+			var b []byte
+			for {
+				state := any(nil)
+				if start == 0 {
+					state = c["current_state"]
+				}
+				b, err = json.Marshal(map[string]any{"schema": 1, "installation_id": installation, "character": Character{ID: key, Name: name, Realm: realm}, "events": events[start:end], "current_state": state})
+				if err != nil {
+					return nil, err
+				}
+				if len(b) <= 150000 || end-start <= 1 {
+					break
+				}
+				end = start + (end-start)/2
 			}
 			pack, err := ParseExport(string(b))
 			if err != nil {
 				return nil, err
 			}
 			packets = append(packets, pack)
+			start = end
 		}
 	}
 	return packets, nil
