@@ -146,3 +146,7 @@ Measure quests, items/gear, NPCs, zones, classes/abilities/talents, professions/
 - [ ] Pilot quest/NPC interactions; test false submissions, disconnects, reimport and disabled consent.
 
 Report search performance separately from OCR, network and model time. Initial optimized measurements during active import gave 94–98 ms median for two quest questions, not a general SLA. Aim for low p95 as the corpus grows. Establish correct facts and controlled cost before adding services or vector indexes.
+
+## Operational update — 8 November 2026
+
+The user resumed ForeverDB and general world retrieval after testing the limitations of quest-log-only guidance. See [the resumed-provider record and incremental enrichment priorities](foreverdb-resumed-2026-11-08.md). Restoring the provider does not by itself make level-range recommendations answerable; required-field projection and intent-aware retrieval are the next measured slice.
