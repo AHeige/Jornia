@@ -154,3 +154,40 @@ The user resumed ForeverDB and general world retrieval after testing the limitat
 ### Current context default and completion evidence
 
 On 8 November 2026 the user selected current character context **on by default**, with a retained, per-character opt-out. A send still requires an explicit action and captures state at that moment. The old per-send checkbox reset no longer applies. Recent recorded quest turn-ins now travel as separate bounded completion evidence; see [the real post-turn-in regression and delivery record](completed-quests-context-2026-11-08.md). This does not enable automatic whole-journal upload or community contributions.
+
+### Starter regions first — 8 November 2026
+
+The first useful experience is guidance at the beginning of a character's journey.
+Prioritize the six core starter regions: Tirisfal, Elwynn Forest, Dun Morogh,
+Teldrassil, Durotar and Mulgore. This is an explicit initial scope, not evidence
+that every Forever-specific introduction or race is covered. Check additional
+starting experiences against the current build before adding them.
+
+The ForeverDB worker now seeds zone-filtered quest catalogs at priority -10 and
+carries that priority through every page. Their quest details use priority -9,
+ahead of broad catalogs and the item/spell backlog. Cached catalogs are replanned
+with the same policy; when several catalogs link a quest, the strongest priority
+wins. Existing retry times, refresh intervals, daily budget and resource limits
+remain in force. Previously fetched details retain their next scheduled refresh;
+changing priority does not cause a forced redownload. Hourly jobs resume the
+queue and use remaining capacity for the rest of the world.
+
+Delivery order within each region:
+
+1. Quest descriptions, objectives, locations and turn-in NPCs, with source/build.
+2. Hubs and travel guidance, including Brill; named references alone do not count
+   as a usable hub guide.
+3. Verified requirements and follow-up quests. Do not infer a chain from observed
+   ordering or make up a route where prerequisite evidence is absent.
+4. Trainers, vendors, early professions and relevant rewards, where supported by
+   approved source data.
+5. Expand into adjacent leveling regions, then the wider world, while refreshing
+   the starter material on its existing schedule.
+
+Acceptance is based on answers, not row totals: test “What should I do now?”,
+“Where do I go?”, “Where do I turn this in?” and “What comes next?” for each
+region, plus already-completed objectives and missing-source cases. Use fresh
+character context for immediate state. Track listed quests, fetched details,
+usable directions/NPCs, verified chains, age and unanswered questions separately.
+The current coverage endpoint does not yet measure these regional fields;
+regional completeness and route readiness remain unverified.

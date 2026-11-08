@@ -31,6 +31,22 @@ type Report struct {
 
 var Seeds = []string{"/api/v1/quests/376", "/api/v1/quests/3901", "/api/v1/classes/mage", "/api/v1/quests?zone=Tirisfal&limit=100", "/api/v1/quests?zone=Ashenvale&limit=100", "/api/v1/classes", "/api/v1/professions", "/api/v1/zones?limit=100", "/api/v1/dungeons?limit=100", "/api/v1/battlegrounds", "/api/v1/vendors?limit=100", "/api/v1/itemsets?limit=100", "/api/v1/quests?limit=100", "/api/v1/items?limit=100", "/api/v1/spells?limit=100", "/api/v1/changes-seen?limit=100", "/api/v1/builds?limit=100", "/api/v1/buffs-nerfs?limit=100", "/api/v1/merchants-favor", "/api/v1/poisons", "/api/v1/disenchant", "/api/v1/gathering/herbalism", "/api/v1/gathering/mining", "/api/v1/gathering/skinning", "/api/v1/gathering/fishing", "/api/v1/articles?limit=100", "/api/v1/posts?limit=100"}
 
+// Starter-zone filters are an import priority, not a claim of complete coverage.
+var StarterZones = []string{"Tirisfal", "Elwynn Forest", "Dun Morogh", "Teldrassil", "Durotar", "Mulgore"}
+
+func starterCatalog(path string) bool {
+	u, err := url.Parse(path)
+	if err != nil || u.Path != "/api/v1/quests" {
+		return false
+	}
+	for _, zone := range StarterZones {
+		if u.Query().Get("zone") == zone {
+			return true
+		}
+	}
+	return false
+}
+
 func (w *Worker) enqueue(ctx context.Context, path, namespace string, priority int) error {
 	if !AllowedPath(path) {
 		return errors.New("unapproved ForeverDB path")
@@ -133,7 +149,9 @@ func (w *Worker) Run(ctx context.Context) (report Report, runErr error) {
 		var d Document
 		if json.Unmarshal(payload, &d) == nil {
 			for path, p := range Links(path, d) {
-				planned[path] = p
+				if previous, exists := planned[path]; !exists || p < previous {
+					planned[path] = p
+				}
 			}
 		}
 	}
@@ -144,6 +162,12 @@ func (w *Worker) Run(ctx context.Context) (report Report, runErr error) {
 	}
 	for path, p := range planned {
 		if err = w.enqueue(ctx, path, namespace, p); err != nil {
+			return report, err
+		}
+	}
+	for _, zone := range StarterZones {
+		path := "/api/v1/quests?" + url.Values{"zone": {zone}, "limit": {"100"}}.Encode()
+		if err = w.enqueue(ctx, path, namespace, -10); err != nil {
 			return report, err
 		}
 	}
@@ -235,6 +259,19 @@ func (w *Worker) cooldown(ctx context.Context, e error) {
 }
 func Links(path string, d Document) map[string]int {
 	out := map[string]int{}
+	// Carry regional priority through pagination and quest details, including
+	// replanning cached lists. Never move next_attempt or bypass provider backoff.
+	defer func() {
+		if starterCatalog(path) {
+			for next := range out {
+				if starterCatalog(next) {
+					out[next] = -10
+				} else if strings.HasPrefix(next, "/api/v1/quests/") {
+					out[next] = -9
+				}
+			}
+		}
+	}()
 	if d.Meta.Next != "" {
 		out[d.Meta.Next] = 8
 	}

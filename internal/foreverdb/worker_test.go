@@ -2,6 +2,7 @@ package foreverdb
 
 import (
 	"encoding/json"
+	"net/url"
 	"testing"
 )
 
@@ -26,5 +27,33 @@ func TestRefreshBudgetDoesNotStarveLongTail(t *testing.T) {
 		if got := int(refreshDelay(path).Hours()); got != hours {
 			t.Fatal(path, got)
 		}
+	}
+}
+
+func TestStarterZonePriorityFlowsThroughPagesAndDetails(t *testing.T) {
+	for _, zone := range StarterZones {
+		path := "/api/v1/quests?" + url.Values{"zone": {zone}, "limit": {"100"}}.Encode()
+		if !AllowedPath(path) {
+			t.Fatal(path)
+		}
+		d := Document{Data: []any{map[string]any{"id": float64(376)}}}
+		d.Meta.Total = 205
+		links := Links(path, d)
+		if len(links) != 3 {
+			t.Fatal(zone, links)
+		}
+		for next, priority := range links {
+			want := -9
+			if starterCatalog(next) {
+				want = -10
+			}
+			if priority != want {
+				t.Fatal(next, priority, want)
+			}
+		}
+	}
+	ordinary := Links("/api/v1/quests?zone=Ashenvale&limit=100", Document{Data: []any{map[string]any{"id": float64(376)}}})
+	if ordinary["/api/v1/quests/376"] != 12 {
+		t.Fatal(ordinary)
 	}
 }
