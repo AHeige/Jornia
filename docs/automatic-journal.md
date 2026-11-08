@@ -1,15 +1,15 @@
 # Automatic local adventure journal
 
-The initial 0.3.0 journal gives Wisp a memory for each character. This feature does not change the central world graph or Berget calls. SQLite stores original observations and a rebuildable local graph; the player needs no separate graph server. The later 0.7.2 state extension is described below.
+The initial 0.3.0 journal gives Jornia a memory for each character. This feature does not change the central world graph or Berget calls. SQLite stores original observations and a rebuildable local graph; the player needs no separate graph server. The later 0.7.2 state extension is described below.
 
 ## First use
 
 1. On first login the addon asks before enabling automatic recording. Consent is saved for the installation; subsequent characters start recording on login. Pause a character with `/wisp stop` and resume with `/wisp start`.
 2. In the companion's **Automatic adventure journal** section, select the absolute path to the client folder containing `WTF`. Approve local file access and choose **Enable and import journals**.
-3. The companion imports existing Wisp journals for all characters in those files, then checks for new saves every three seconds while running. The setting resumes automatically after restarting the companion.
+3. The companion imports existing Jornia journals for all characters in those files, then checks for new saves every three seconds while running. The setting resumes automatically after restarting the companion.
 4. Select a character and open **Your journey**, or ask **Show my journey**. The timestamp indicates when the game observation occurred. The latest file import is a different timestamp and is displayed separately.
 
-This does not install Windows-login autostart. The companion must run to read new files. A character without Wisp data must first log in with the addon. Ordinary WoW settings cannot reconstruct an earlier journey. Other addons require separate, explicitly scoped adapters and are not imported here.
+This does not install Windows-login autostart. The companion must run to read new files. A character without Jornia data must first log in with the addon. Ordinary WoW settings cannot reconstruct an earlier journey. Other addons require separate, explicitly scoped adapters and are not imported here.
 
 ## Recorded observations
 

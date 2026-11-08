@@ -1,4 +1,4 @@
-# Wisp return-channel research and live verification
+# Jornia return-channel research and live verification
 
 6 November 2026.
 
@@ -101,7 +101,7 @@ Theoretical capacity before overhead: N files/8 bytes per stable sample. 64 file
 | Existing LoD inbox | Actual AI reply, finite pool | Preserve working reference |
 | Reusable presence | Ten cycles/20 transitions on current Mac | Candidate checked byte/text transport |
 | Presence readiness only | Primitive verified, integration absent | Reduce empty slot reads, not exhaustion |
-| Font bank | External code/reports reviewed | Fallback, not installed/live-verified by Wisp |
+| Font bank | External code/reports reviewed | Fallback, not installed/live-verified by Jornia |
 | Reloading the same inbox | No reuse mechanism found | Do not promise |
 
 The new possibility is **reusable observable presence**, not resetting the addon loader. Sustained fast reliable replies still require protocol experiments.

@@ -1,4 +1,4 @@
-# Wisp architecture and policy review
+# Jornia architecture and policy review
 
 Reviewed 5 November 2026 from a Sweden/EU perspective. This review predates the companion implementation; see the [test guide](wow-first-test.md) and [verification report](verification.md) for subsequent versions and outstanding game tests. This is technical decision support based on published rules, not legal advice or Blizzard approval. Actual behavior, contracting entity, client version, distribution and funding must be assessed together before a public launch.
 
@@ -6,7 +6,7 @@ Reviewed 5 November 2026 from a Sweden/EU perspective. This review predates the 
 
 - Central knowledge graph for public world knowledge and sources.
 - Local SQLite in the companion for player events, history and preferences.
-- No mandatory Wisp account or automatic central synchronization of player history.
+- No mandatory Jornia account or automatic central synchronization of player history.
 - A central model proxy holds the Berget key and receives only context needed for a requested answer.
 - The first companion is separate chat with manual entry/import. Automatic game integration was a separate, unapproved and unimplemented question at the time of this review.
 
@@ -16,7 +16,7 @@ SQLite supports local application storage without a separate database server or 
 
 Blizzard's [addon policy](https://us.forums.blizzard.com/en/wow/t/ui-add-on-development-policy/24534/1) requires free distribution and publicly readable code. It prohibits advertising and donation requests in the in-game addon UI, harmful effects on the game/other players, and refers to the EULA and terms of use. It also addresses charges for addon-related services. A separate companion is not automatically exempt.
 
-**Implication for Wisp:** keep the addon and connected prototype features free. Do not introduce paid AI features, mandatory proprietary payment keys or addon-linked subscriptions without a concrete contractual assessment. The policy expressly allows external website donations, but does not generally authorize every funding model.
+**Implication for Jornia:** keep the addon and connected prototype features free. Do not introduce paid AI features, mandatory proprietary payment keys or addon-linked subscriptions without a concrete contractual assessment. The policy expressly allows external website donations, but does not generally authorize every funding model.
 
 Blizzard's [EULA](https://www.blizzard.com/en-gb/legal/08b946df-660a-40e4-a072-1fbde65173b1/blizzard-end-user-license-agreement) restricts unauthorized game-data collection, connections and third-party software. Its [anti-cheating agreement](https://www.blizzard.com/en-us/legal/simple/cd5930c0-2784-420c-a23d-1e0d6ff8599b/anti-cheating-agreement) addresses unauthorized gameplay changes and information collection. Contract breaches and lawbreaking are distinct, but contractual violations can still affect accounts or functionality.
 
@@ -24,7 +24,7 @@ Blizzard's [EULA](https://www.blizzard.com/en-gb/legal/08b946df-660a-40e4-a072-1
 
 **Unresolved:** these documents do not give general approval for our combination of Lua addon, external companion, SavedVariables import and AI context. A documented API or readable file does not authorize every secondary use. Assess the exact method, especially a bidirectional/live bridge, before distributing it. Separate manual chat avoids many integration questions but is not a blanket exemption for third-party software.
 
-The addon policy is old but still published. No Forever-specific Wisp approval was found. Direct EULA/API requests returned HTTP 403; relevant passages were reviewed through indexed excerpts from Blizzard's own pages. A launch review must check the contracts applying to the actual EU user and client.
+The addon policy is old but still published. No Forever-specific Jornia approval was found. Direct EULA/API requests returned HTTP 403; relevant passages were reviewed through indexed excerpts from Blizzard's own pages. A launch review must check the contracts applying to the actual EU user and client.
 
 ## World knowledge and reuse rights
 
@@ -38,13 +38,13 @@ The small existing Ashenvale selection includes attribution, license links, chan
 
 Using [Blizzard's Developer API](https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use) adds terms covering charges, data handling/redistribution, keys, attribution and privacy. A public API record is not automatically freely redistributable. Separate API material from openly licensed knowledge packages. No Blizzard API integration existed in the prototype at the time of this review.
 
-Use an independent visual identity and clearly state that Wisp is independent. Check the Wisp name before public distribution; this review is not a trademark search or registration.
+Use an independent visual identity and clearly state that Jornia is independent. Check the Jornia name before public distribution; this review is not a trademark search or registration.
 
 ## Local history and GDPR
 
 Local storage reduces centrally held data. Account-free does not automatically mean anonymous. IP addresses and identifiable user information can be personal data under [IMY guidance](https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/introduktion-till-gdpr/personuppgifter/). Character names, messages and event combinations may also identify people. Processing can occur without persistent server storage.
 
-Where Wisp determines purposes and means of server processing, its operator normally needs assessment as controller for that processing. [IMY's role guidance](https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/personuppgiftsansvariga-och-personuppgiftsbitraden/) distinguishes this from a provider's processor role. Roles for purely local processing depend on the implementation.
+Where Jornia determines purposes and means of server processing, its operator normally needs assessment as controller for that processing. [IMY's role guidance](https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/personuppgiftsansvariga-och-personuppgiftsbitraden/) distinguishes this from a provider's processor role. Roles for purely local processing depend on the implementation.
 
 **Before tests with personal data:** define operator and legal basis per purpose; provide understandable privacy information; minimize data and recipients; use TLS and bounded logging; define retention and handle rights/incidents. An AI-context toggle is a product setting, not a complete GDPR assessment. If relying on consent, it must satisfy valid-consent requirements.
 
@@ -62,7 +62,7 @@ At review time the API processed questions and public graph context; personal me
 
 ## AI disclosure and installation
 
-The European Commission's [Article 50 guidance](https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act) states that transparency requirements apply from 2 August 2026. Clearly tell players that Wisp is AI. Also assess other obligations applying to us as system provider versus the model provider; an AI label is not a complete AI Act assessment.
+The European Commission's [Article 50 guidance](https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act) states that transparency requirements apply from 2 August 2026. Clearly tell players that Jornia is AI. Also assess other obligations applying to us as system provider versus the model provider; an AI label is not a complete AI Act assessment.
 
 A normal user-installed companion can create SQLite in the user profile without local PostgreSQL, Docker or database administration. Recommended Windows location: `%LOCALAPPDATA%/Wisp/`. This is an implementation recommendation, not a legal requirement. Addon installation may need a separately chosen folder and file permission.
 

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AHeige/Jornia/internal/storage"
 	"github.com/jackc/pgx/v5"
-	"wisp/internal/storage"
 )
 
 type Worker struct {

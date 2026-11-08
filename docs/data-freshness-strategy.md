@@ -1,4 +1,4 @@
-# Wisp current world knowledge and private character memory
+# Jornia current world knowledge and private character memory
 
 Decision and implementation plan, 6 November 2026. First-party Lua and Go product logic, PostgreSQL on the VM and SQLite on the player's machine. No large collection or agent frameworks.
 
@@ -7,7 +7,7 @@ Decision and implementation plan, 6 November 2026. First-party Lua and Go produc
 Three datasets have separate lifecycles:
 
 1. **Now:** the addon maintains current character state in Lua memory. For an approved AI question, it refreshes state and attaches a small dated snapshot. Those fields take precedence over older observations.
-2. **My journey:** the addon creates stable event IDs and a dated checkpoint in SavedVariables. Once WoW actually saves, the desktop client can import them into local SQLite and rebuild its journey graph. No Wisp login is required.
+2. **My journey:** the addon creates stable event IDs and a dated checkpoint in SavedVariables. Once WoW actually saves, the desktop client can import them into local SQLite and rebuild its journey graph. No Jornia login is required.
 3. **The world:** shared, sourced facts from permitted APIs and potentially voluntary observations. Never turn the player's entire uploaded journal into central world data.
 
 ```mermaid
@@ -33,7 +33,7 @@ SavedVariables is not a live file. Reload, logout and normal exit can make WoW s
 
 ## Character state and journey
 
-`apps/addon/Wisp/State.lua` reads level, XP, area, class/race IDs, active quests/objectives/counters, equipped item IDs, professions and death/alive status where supported by public client APIs. Availability flags distinguish unsupported APIs from confirmed empty lists. Add fields only when they improve the player experience.
+`apps/addon/Jornia/State.lua` reads level, XP, area, class/race IDs, active quests/objectives/counters, equipped item IDs, professions and death/alive status where supported by public client APIs. Availability flags distinguish unsupported APIs from confirmed empty lists. Add fields only when they improve the player experience.
 
 Persist meaningful changes: quest acceptance, progress, departure from the log, turn-in, equipment changes and death/resurrection. The existing journal handles sessions, area changes and level-ups. A disappearing quest does not prove abandonment. Existing quests at startup form a baseline; do not invent acceptance dates.
 
@@ -94,7 +94,7 @@ Do not publish raw contributions. Requiring at least five distinct contributing 
 | Approved ForeverDB API | Broad Forever baseline and sourced player observations; details where available | Preserve Classic/client/observation labels. Visible link when used. Not independent confirmation of every fact. |
 | Official Blizzard API | Versioned IDs, metadata and fields available in the correct namespace | No complete-Forever claim. A dated profile is not live state. |
 | Official change notes | Identify areas needing rechecking | Not automatically complete machine-readable diffs. Link/summarize while respecting rights. |
-| Voluntary Wisp observations | Confirm actual interactions and find conflicts/gaps | Low trust before validation. One user does not establish a general conclusion. |
+| Voluntary Jornia observations | Confirm actual interactions and find conflicts/gaps | Low trust before validation. One user does not establish a general conclusion. |
 | Our editorial data | Beginner routes, lore context, beautiful zones and explanations | Label subjective experiences as opinions. Write original material and source factual claims. |
 | Other community databases | Supplement after version/rights verification | No blanket bulk import from Wowhead, QuestieDB, 60.tools or others merely because access is free or code has a license. |
 

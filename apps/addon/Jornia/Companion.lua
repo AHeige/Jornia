@@ -66,7 +66,7 @@ local function updatePending()
  else
   if input.Enable then input:Enable() end;input:EnableMouse(true);sendButton:Enable()
  end
- if waiting then status:SetText(pending.connection and 'Checking invite code…' or 'Wisp is thinking…')
+ if waiting then status:SetText(pending.connection and 'Checking invite code…' or 'Jornia is thinking…')
  elseif pending then status:SetText('A reply is pending for another character.')
  elseif not UI.OnSend then status:SetText(UI.Config.disconnectedText or 'Preview · AI disconnected. Nothing is sent.')
  else status:SetText('Enter to send · your current character only') end
@@ -108,15 +108,15 @@ function UI.ShowConnection()
  if not window then return end
  if not UI.connectionWindow then
   local box=surface(UIParent,0,0,480,240,.035,.055,.09);box:ClearAllPoints();box:SetPoint('CENTER');box:SetFrameStrata('FULLSCREEN_DIALOG');box:EnableMouse(true)
-  label(box,'Connect Wisp AI',20,-18,430,21,true)
-  label(box,'Paste your private invite code. Wisp desktop must be running.\nThe code stays out of your chat, journey and SavedVariables.',20,-56,430,12)
+  label(box,'Connect Jornia AI',20,-18,430,21,true)
+  label(box,'Paste your private invite code. Jornia desktop must be running.\nThe code stays out of your chat, journey and SavedVariables.',20,-56,430,12)
   local edit=CreateFrame('EditBox',nil,box,'InputBoxTemplate');place(edit,26,-108,424,30);edit:SetFontObject(ChatFontNormal);edit:SetAutoFocus(false);edit:SetMaxLetters(64);edit:SetPassword(true)
   local result=label(box,'',20,-151,430,11,true)
   local submit
   local function activate()
    if pending then result:SetText('Wait for the current operation to finish.');return end
    local code=edit:GetText()or '';edit:SetText('');edit:ClearFocus()
-   if not UI.OnConnect then result:SetText('Start the local Wisp reader first.');return end
+   if not UI.OnConnect then result:SetText('Start the local Jornia reader first.');return end
    local ok,id,reason=pcall(UI.OnConnect,code,key());code=nil
    if not ok or type(id)~='string' then result:SetText(type(reason)=='string'and safe(reason)or'Connection was not accepted. Nothing was saved.');return end
    pending={id=id,character=key(),connection=true};submit:Disable();result:SetText('Checking invite code…');updatePending()
@@ -145,7 +145,7 @@ end
 function UI.GetMode() return mode end
 function UI.AddMessage(role,text,owner)
  owner=owner or key();messages[owner]=messages[owner] or {}
- table.insert(messages[owner],(role=='user' and '|cffefbb70YOU|r\n' or '|cffefbb70WISP|r\n')..safe(text))
+ table.insert(messages[owner],(role=='user' and '|cffefbb70YOU|r\n' or '|cffefbb70JORNIA|r\n')..safe(text))
  if owner==key() then renderMessages() end
 end
 function UI.SetProgress(requestID,owner,text)
@@ -178,14 +178,14 @@ function UI.Show(person,events)
   -- Also handles renderers/clients that do not emit OnSizeChanged during a drag.
   window:SetScript('OnUpdate',function()if window:GetWidth()~=lastW or window:GetHeight()~=lastH then layout() end end)
   rail=surface(window,0,0,190,540,.045,.07,.12)
-  label(rail,'WISP.',22,-23,150,30);label(rail,'YOUR CHARACTER',22,-88,150,10,true)
+  label(rail,'JORNIA.',22,-23,150,30);label(rail,'YOUR CHARACTER',22,-88,150,10,true)
   UI.nameLabel=label(rail,'',22,-113,152,21);UI.identity=label(rail,'',22,-148,152,11)
   label(rail,'YOUR FIELD JOURNAL',22,-210,155,9,true)
-  tabs={journey=button(rail,'Your journey',16,-238,158,function()UI.ShowJourney()end),chat=button(rail,'Talk to Wisp',16,-278,158,function()UI.ShowChat()end)}
+  tabs={journey=button(rail,'Your journey',16,-238,158,function()UI.ShowJourney()end),chat=button(rail,'Talk to Jornia',16,-278,158,function()UI.ShowChat()end)}
   local avatar=rail:CreateTexture(nil,'ARTWORK');avatar:SetPoint('TOPLEFT',20,-350);avatar:SetSize(64,64);avatar:SetTexture('Interface\\AddOns\\Wisp\\Media\\avatar')
   label(rail,'A little company.',22,-420,150,12);label(rail,UI.Config.railLabel or 'Local journal\nPreview · not released',22,-452,150,9,true)
   UI.previewLabel=label(window,UI.Config.runtimeLabel or 'LUA PREVIEW · NOT A LIVE GAME CONNECTION',214,-20,420,9,true)
-  UI.compactTitle=label(window,'WISP',18,-16,100,19);UI.compactIdentity=label(window,'',18,-43,280,11,true)
+  UI.compactTitle=label(window,'JORNIA',18,-16,100,19);UI.compactIdentity=label(window,'',18,-43,280,11,true)
   modeButton=button(window,'Compact chat',700,-10,108,function()UI.SetMode(mode=='full' and 'compact' or 'full')end)
   closeButton=button(window,'×',810,-10,28,function()window:Hide()end)
   connectButton=button(window,'Connect AI',20,-308,100,function()UI.ShowConnection()end)
@@ -219,11 +219,11 @@ function UI.Show(person,events)
    if UI.ShareContext then UI.ShareContext:SetChecked(false) end
    pending={id=id,character=key()};UI.AddMessage('user',question);input:ClearFocus();updatePending()
   end
-  input:SetScript('OnEnterPressed',send);sendButton=button(chat,'Ask Wisp',490,-207,98,send)
+  input:SetScript('OnEnterPressed',send);sendButton=button(chat,'Ask Jornia',490,-207,98,send)
   status=label(chat,'',0,-253,612,10,true)
   UI.ShareContext=CreateFrame('CheckButton',nil,chat,'UICheckButtonTemplate');UI.ShareContext:SetChecked(false)
   UI.shareLabel=label(chat,'Include current character state (this question)',28,-232,580,11)
-  UI.ShareContext:SetScript('OnEnter',function(self)if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetText('Current character context');GameTooltip:AddLine('Reads level, area, class/race IDs, gear IDs, profession ranks and a limited quest/progress snapshot when you send.',1,1,1,true);GameTooltip:AddLine('Selected text goes through Wisp to Berget. Images stay local. Missing fields remain unknown.',1,1,1,true);GameTooltip:Show()end end)
+  UI.ShareContext:SetScript('OnEnter',function(self)if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetText('Current character context');GameTooltip:AddLine('Reads level, area, class/race IDs, gear IDs, profession ranks and a limited quest/progress snapshot when you send.',1,1,1,true);GameTooltip:AddLine('Selected text goes through Jornia to Berget. Images stay local. Missing fields remain unknown.',1,1,1,true);GameTooltip:Show()end end)
   UI.ShareContext:SetScript('OnLeave',function()if GameTooltip then GameTooltip:Hide()end end)
 
   journeyText=label(journey,'',0,-2,612,13);journeyText:SetJustifyV('TOP')

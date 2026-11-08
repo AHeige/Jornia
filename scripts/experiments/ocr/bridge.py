@@ -155,7 +155,7 @@ def complete(session, addons, packet, evidence):
         evidence.update(status='reply_files_written', route=result.get('route'), model=result.get('model'), backend_ms=result.get('latency_ms'))
     except Exception as error:
         # Generic transport message; do not leak tokens/URLs or pretend a failed request was unsent.
-        publish(addons, packet, 'error', 'No confirmed reply. Check the Wisp desktop chat for this question. It will not be sent again automatically.')
+        publish(addons, packet, 'error', 'No confirmed reply. Check the Jornia desktop chat for this question. It will not be sent again automatically.')
         evidence.update(status='error', error_type=type(error).__name__)
     evidence['api_and_reply_ms'] = round((time.monotonic() - started) * 1000, 1)
     print(json.dumps(evidence), flush=True)
@@ -177,9 +177,9 @@ def install(root):
         name = f'WispOCRInbox{n:03d}'
         folder = addons / name
         folder.mkdir()
-        (folder / f'{name}_Camelot.toc').write_text(f'## Interface: 16001\n## Title: Wisp OCR inbox {n}\n## LoadOnDemand: 1\n## Dependencies: WispOCR\nInbox.lua\n')
+        (folder / f'{name}_Camelot.toc').write_text(f'## Interface: 16001\n## Title: Jornia OCR inbox {n}\n## LoadOnDemand: 1\n## Dependencies: WispOCR\nInbox.lua\n')
         (folder / 'Inbox.lua').write_text('-- Waiting. This one-shot slot contains no reply.\n')
-    print('Installed Wisp OCR Lab and 96 finite inbox slots. No other addons changed.')
+    print('Installed Jornia OCR Lab and 96 finite inbox slots. No other addons changed.')
 
 
 def run(args):

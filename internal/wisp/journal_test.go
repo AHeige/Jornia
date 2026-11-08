@@ -2,10 +2,10 @@ package wisp
 
 import (
 	"context"
+	"github.com/AHeige/Jornia/internal/ai"
+	"github.com/AHeige/Jornia/internal/storage"
 	"strings"
 	"testing"
-	"wisp/internal/ai"
-	"wisp/internal/storage"
 )
 
 type noWorld struct{}

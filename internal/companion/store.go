@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"os"
 	"path/filepath"
 	"sort"
@@ -14,7 +15,6 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
-	"wisp/internal/wisp"
 
 	_ "modernc.org/sqlite"
 )
@@ -89,7 +89,7 @@ func Open(path string) (*Store, error) {
  CREATE TABLE IF NOT EXISTS operations(id TEXT PRIMARY KEY,kind TEXT NOT NULL,character_id TEXT NOT NULL,payload_hash TEXT NOT NULL,status TEXT NOT NULL,result TEXT,error TEXT NOT NULL DEFAULT '',created_at TEXT NOT NULL,request_json TEXT NOT NULL DEFAULT '{}');
  CREATE TABLE IF NOT EXISTS messages(id TEXT PRIMARY KEY,character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,question TEXT NOT NULL,answer TEXT NOT NULL,created_at TEXT NOT NULL);
  CREATE UNIQUE INDEX IF NOT EXISTS operations_single_ask ON operations(character_id) WHERE status='pending' AND kind='ask';
- UPDATE operations SET status='needs_attention',error='Wisp closed before the result was confirmed. The question will not be sent again automatically.' WHERE status='pending';`)
+ UPDATE operations SET status='needs_attention',error='Jornia closed before the result was confirmed. The question will not be sent again automatically.' WHERE status='pending';`)
 	if err != nil {
 		db.Close()
 		return nil, err
@@ -149,11 +149,11 @@ func ParseExport(raw string) (Export, error) {
 	d := json.NewDecoder(strings.NewReader(raw))
 	d.DisallowUnknownFields()
 	if err := d.Decode(&out); err != nil {
-		return out, errors.New("invalid Wisp export packet")
+		return out, errors.New("invalid Jornia export packet")
 	}
 	// Unmarshal additionally rejects trailing objects/content.
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
-		return out, errors.New("invalid Wisp export packet")
+		return out, errors.New("invalid Jornia export packet")
 	}
 	if out.Schema != 1 || out.InstallationID == "" || len(out.InstallationID) > 100 || out.Character.ID == "" || len(out.Character.ID) > 100 || len(out.Character.Name) > 256 || len(out.Character.Realm) > 256 || len(out.Events) == 0 || len(out.Events) > 100 {
 		return out, errors.New("unsupported export version or contents")

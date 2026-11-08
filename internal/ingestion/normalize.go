@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"wisp/internal/storage"
+	"github.com/AHeige/Jornia/internal/storage"
 )
 
 var internalName = regexp.MustCompile(`(?i)(\[(DNT|DND|UNUSED|PH)\]|^zz|^unused |^deprecated |^internal )`)

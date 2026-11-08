@@ -1,6 +1,6 @@
 # Sending text into WoW through a sound API
 
-*Wisp transport experiments, 6 November 2026. Article prepared 7 November 2026.*
+*Jornia transport experiments, 6 November 2026. Article prepared 7 November 2026.*
 
 We were building a personal companion for World of Warcraft: Forever. Players would ask a question in an addon window, a desktop process would call an AI model, and the answer would appear back in the same window while they kept playing.
 
@@ -118,7 +118,7 @@ The screen channel is established territory. So are live game context, external 
 
 Our implementation applies that established communication pattern to repeatedly observable file presence through WoW Forever's sound API, with checked blocks and local OCR acknowledgements. The same 64 data filenames carry successive blocks and subsequent messages. A new filename is not consumed per block or answer.
 
-In the reviewed revisions, NeverQuestAlone uses presence signals as notifications while reply contents arrive through slots; wow-ai also uses slots, and Forever Bridge uses font metrics. We did not find the same complete presence-based payload implementation in those comparisons. This is an implementation distinction, not a claim that the general technique is new or that Wisp is the first to apply it in WoW. See the [dated prior-work audit](transport-prior-work-audit-2026-11-07.md) for scope and remaining gaps. In particular, credit for the reusable file-presence signal belongs in the explanation: reviewing NeverQuestAlone led us to the probe that made this work possible.
+In the reviewed revisions, NeverQuestAlone uses presence signals as notifications while reply contents arrive through slots; wow-ai also uses slots, and Forever Bridge uses font metrics. We did not find the same complete presence-based payload implementation in those comparisons. This is an implementation distinction, not a claim that the general technique is new or that Jornia is the first to apply it in WoW. See the [dated prior-work audit](transport-prior-work-audit-2026-11-07.md) for scope and remaining gaps. In particular, credit for the reusable file-presence signal belongs in the explanation: reviewing NeverQuestAlone led us to the probe that made this work possible.
 
 ## What an open-source release needs
 

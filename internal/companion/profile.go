@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"wisp/internal/armory"
+	"github.com/AHeige/Jornia/internal/armory"
 )
 
 func (s *Store) initProfiles() error {
@@ -58,7 +58,7 @@ func (s *Server) configureProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.backendToken() == "" {
-		reply(w, 400, map[string]string{"error": "Connect your Wisp invite code in Settings before loading Armory."})
+		reply(w, 400, map[string]string{"error": "Connect your Jornia invite code in Settings before loading Armory."})
 		return
 	}
 	characterID := req.CharacterID

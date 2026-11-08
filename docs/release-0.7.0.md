@@ -1,4 +1,4 @@
-# Wisp 0.7.0 — bounded Go companion tools
+# Jornia 0.7.0 — bounded Go companion tools
 
 The server now owns its small tool workflow in Go: validate approved game context, retrieve versioned world evidence, propose observed quest choices, validate a navigation proposal, then make one bounded model request. There is no large agent framework or model-generated script execution. AI questions accept UTF-8 and request replies in the question's language; language quality depends on the model and available evidence.
 

@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AHeige/Jornia/internal/ingestion"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"wisp/internal/ingestion"
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
 )
 
 func TestOfficialImportRetrievalAndExpiry(t *testing.T) {

@@ -65,7 +65,7 @@ func directoryEntries(path string) ([]os.DirEntry, error) {
 	return out, nil
 }
 
-// DiscoverCharacters reads directory names and Wisp's own per-character identity
+// DiscoverCharacters reads directory names and Jornia's own per-character identity
 // marker. It never parses other addons, config caches or account credentials.
 func (s *Store) DiscoverCharacters(ctx context.Context, root string) (int, error) {
 	accounts, err := directoryEntries(filepath.Join(root, "WTF", "Account"))
@@ -178,7 +178,7 @@ func readCharacterIdentity(path string) (string, error) {
 		return "", err
 	}
 	if !info.Mode().IsRegular() || info.Size() > 16<<10 {
-		return "", errors.New("invalid Wisp identity file")
+		return "", errors.New("invalid Jornia identity file")
 	}
 	f, err := os.Open(path)
 	if err != nil {

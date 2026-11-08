@@ -40,7 +40,7 @@ This single-call observation verifies connectivity, response shape, and basic gr
 
 ## Local environment findings
 
-The default Docker endpoint was unavailable. The `colima` daemon responded with filesystem input/output errors, so it was left alone. Wisp runs as its own Compose project on the healthy `colima-logos-graph` daemon. A pre-existing host PostgreSQL process occupied port 55439; Wisp uses 55471 instead, without modifying that process.
+The default Docker endpoint was unavailable. The `colima` daemon responded with filesystem input/output errors, so it was left alone. Jornia runs as its own Compose project on the healthy `colima-logos-graph` daemon. A pre-existing host PostgreSQL process occupied port 55439; Jornia uses 55471 instead, without modifying that process.
 
 The external filesystem produced macOS AppleDouble sidecars. The migration loader skips dotfiles, and Docker/Git ignore these files.
 
@@ -83,9 +83,9 @@ The installed public graph is now 40 entities/47 relationships with five source 
 
 With the user's explicit transfer/execution approval, the exact Windows release ZIP was uploaded through Chrome Remote Desktop to DESKTOP-0NR0QR4, extracted on its Desktop, and its packaged `wisp.exe` started without administrator access or security-warning bypasses. Windows Chrome opened `http://127.0.0.1:8787/` successfully. No runtimes or dependencies were installed separately.
 
-The browser UI accepted a synthetic schema-1 journal for Testspelare/Testrealm (two events, level 24, Ashenvale/Astranaar, explicit note about Raene). Import reported two new events and zero duplicates. Asking the Swedish equivalent of “What was I doing last time?” produced the observed zone, level, timestamp and explicit note locally. The Wisp console reported `%LOCALAPPDATA%/Wisp/player.db`.
+The browser UI accepted a synthetic schema-1 journal for Testspelare/Testrealm (two events, level 24, Ashenvale/Astranaar, explicit note about Raene). Import reported two new events and zero duplicates. Asking the Swedish equivalent of “What was I doing last time?” produced the observed zone, level, timestamp and explicit note locally. The Jornia console reported `%LOCALAPPDATA%/Wisp/player.db`.
 
-The Wisp console was closed and the same executable relaunched. A fresh browser tab loaded the existing character and conversation. Sending the memory question again produced a second correct answer, demonstrating successful reads and writes after actual Windows process restart. No connection to the Mac backend was configured; this verified local memory, not remote world knowledge. Screenshot: [Windows test](companion-windows-test.jpg). Synthetic test data and the running companion were left available for user inspection.
+The Jornia console was closed and the same executable relaunched. A fresh browser tab loaded the existing character and conversation. Sending the memory question again produced a second correct answer, demonstrating successful reads and writes after actual Windows process restart. No connection to the Mac backend was configured; this verified local memory, not remote world knowledge. Screenshot: [Windows test](companion-windows-test.jpg). Synthetic test data and the running companion were left available for user inspection.
 
 **Still unverified:** actual addon frame rendering/events in the user's Forever client, Windows addon-copy script behavior in that installation, and cross-machine connectivity to the Mac server. The user confirmed WoW has not yet been installed on this Windows machine. No addon was installed and no game files were modified. No Blizzard approval of the export design or public deployment is claimed.
 
@@ -98,7 +98,7 @@ All 46 API acceptance cases passed locally and against the VM (12 fixture, 34 re
 
 The browser E2E passed repeated demo activation (five clicks, one transport request), recovery after a lost response, no duplicate events, conversation preservation, character isolation, reload, actual companion process restart, offline local memory, reduced-motion coverage and mobile overflow checks. Demo records use a reserved synthetic identity and source classification, with an explicit banner and answer prefix; they cannot silently become normal imported observations. The connection check calls only healthz and incurs no inference.
 
-Windows 0.2.0 was transferred and run on DESKTOP-0NR0QR4 with the user’s explicit approval. A dedicated Ed25519 identity was generated on Windows; only its public key was registered on the VM. The private identity remains in the protected local Wisp connection directory. The VM host key is pinned. Existing Testspelare history survived the update, and the separate three-event demo journal answered the memory question with an explicit synthetic-data label.
+Windows 0.2.0 was transferred and run on DESKTOP-0NR0QR4 with the user’s explicit approval. A dedicated Ed25519 identity was generated on Windows; only its public key was registered on the VM. The private identity remains in the protected local Jornia connection directory. The VM host key is pinned. Existing Testspelare history survived the update, and the separate three-event demo journal answered the memory question with an explicit synthetic-data label.
 
 The actual Windows browser then completed companion → dedicated SSH tunnel → VM API → PostgreSQL retrieval → LangChain → Berget, answering “Raene Wolfrunner is in Astranaar” (translated from the Swedish response) Its UI displayed source links, Mistral Small 3.2 and approximately EUR 0.000251. The health-only connection check reported connected. Screenshot: [Windows 0.2.0 connected](companion-windows-connected.jpg). No actual WoW installation or gameplay was available for addon verification.
 
@@ -106,18 +106,18 @@ A Windows graph-only follow-up asked “Vad kommer efter Orendil's Cure?” and 
 
 ## Automatic local journey slice — 0.3.0 (2026-11-05)
 
-Added opt-in addon recording, persisted companion folder permission, initial reads of all characters present in Wisp's own SavedVariables, automatic polling of later saves, and a per-character SQLite graph projection. Original observations remain local source evidence; the central server and Berget receive no journal context. Memory routing now supports “Visa min resa” and related fixed journey questions without any network request. This is an initial personal-memory slice, not general conversational reasoning over every character statistic.
+Added opt-in addon recording, persisted companion folder permission, initial reads of all characters present in Jornia's own SavedVariables, automatic polling of later saves, and a per-character SQLite graph projection. Original observations remain local source evidence; the central server and Berget receive no journal context. Memory routing now supports “Visa min resa” and related fixed journey questions without any network request. This is an initial personal-memory slice, not general conversational reasoning over every character statistic.
 
 Go tests/vet passed. Tests exercise real addon Lua in a Lua 5.1 simulation for first-use consent, no recording before acceptance, automatic new-character start after acceptance, login/logout events and pause. Data-only parsing rejects executable/truncated Lua and handles quoted byte escapes without executing the file. Store tests cover initial multi-character reads, stable deduplication, expected config revisions, pause/resume, saved-permission restart, deleted-character suppression, graph cascade/isolation, 205 observations split across three packets, rebuilding a missing graph from original events, and full history export beyond the UI's display window.
 
 The actual companion browser E2E passed existing world/demo/memory scenarios plus the new automatic-journal flow: unchecked first-use consent, no pre-consent import, initial reads of two synthetic characters from a realistic WTF directory, five rapid activations with one POST, lost-response receipt recovery, later file-change import, pause/resume and offline process restart. Desktop/mobile and reduced-motion flows passed without horizontal overflow. Screenshots `companion-journey.png` and `companion-journey-mobile.png` show synthetic test fixtures, not data observed from WoW.
 
-Limits: actual Forever addon UI/events/SavedVariables layout have not been exercised on the user's game client. The user has not installed WoW yet. Initial import reads only existing Wisp files; it does not recover historical adventures from generic settings or other addons. Collection covers sessions/areas/levels/completed quest IDs/notes, not inventory, equipment or active quests. SavedVariables delivery is delayed until WoW saves, normally reload/logout. The Windows 0.3.0 bundle was subsequently installed and verified; see the Windows update entry below.
+Limits: actual Forever addon UI/events/SavedVariables layout have not been exercised on the user's game client. The user has not installed WoW yet. Initial import reads only existing Jornia files; it does not recover historical adventures from generic settings or other addons. Collection covers sessions/areas/levels/completed quest IDs/notes, not inventory, equipment or active quests. SavedVariables delivery is delayed until WoW saves, normally reload/logout. The Windows 0.3.0 bundle was subsequently installed and verified; see the Windows update entry below.
 
 
 ## Windows updated to 0.3.0 (2026-11-05)
 
-The user explicitly requested the Windows update. The release ZIP was uploaded through Chrome Remote Desktop, checked against SHA-256 `dd0cf7aa26b96f528bac6218932ac424c79277dee6e52ced2dd53c35f418109b`, and extracted to Desktop/Wisp-0.3.0. The old 0.2.0 Wisp process and its own SSH child were stopped; other programs were not stopped. Before launching the new executable, player.db and any sidecars were copied into `%LOCALAPPDATA%/Wisp/backups/before-0.3.0-<timestamp>`. The existing connection key was reused and never transferred.
+The user explicitly requested the Windows update. The release ZIP was uploaded through Chrome Remote Desktop, checked against SHA-256 `dd0cf7aa26b96f528bac6218932ac424c79277dee6e52ced2dd53c35f418109b`, and extracted to Desktop/Wisp-0.3.0. The old 0.2.0 Jornia process and its own SSH child were stopped; other programs were not stopped. Before launching the new executable, player.db and any sidecars were copied into `%LOCALAPPDATA%/Wisp/backups/before-0.3.0-<timestamp>`. The existing connection key was reused and never transferred.
 
 The new executable ran with `-vm`, opened the browser, displayed the new automatic-journal first-use control, and preserved the existing three-event demo character and prior conversations. “Visa min resa” returned an explicitly synthetic local journey summary with three observations and two places, proving the new graph projection can be built from the existing Windows journal. Automatic WoW-folder reading was left paused because WoW is not installed. Screenshot: [Windows 0.3.0](companion-windows-0.3.0.jpg). No administrator rights or security-warning bypass was used; an inadvertently opened elevation prompt for PowerShell was declined and a normal console used instead.
 
@@ -125,7 +125,7 @@ The installed launcher is `Desktop/Wisp-0.3.0/wisp-0.3.0-windows-amd64/Start-Wis
 
 ## Private friend alpha 0.4.1 — 2026-11-06
 
-Published https://wisp.logosab.com with public ZIP downloads and a separate authenticated tester gateway. The DNS A record was created in one.com without changing existing records. Caddy 2.11.7 validated and reloaded the appended Wisp virtual host using SIGUSR1; no proxy restart. Existing document-index HTTPS health was 200 before and after. All 14 non-Wisp containers retained their IDs and remained running; Wisp db/model IDs were also retained. Only the Wisp API was replaced and the isolated gateway added.
+Published https://wisp.logosab.com with public ZIP downloads and a separate authenticated tester gateway. The DNS A record was created in one.com without changing existing records. Caddy 2.11.7 validated and reloaded the appended Jornia virtual host using SIGUSR1; no proxy restart. Existing document-index HTTPS health was 200 before and after. All 14 non-Wisp containers retained their IDs and remained running; Jornia db/model IDs were also retained. Only the Jornia API was replaced and the isolated gateway added.
 
 Validation passed:
 
@@ -153,7 +153,7 @@ Final SHA-256:
 - Windows 0.4.2: `ce9e2bb4865ae689dc253306aec336ab2da81a26afc93495b721bb0fa9af6caa`
 - Mac arm64 0.4.2: `c14f47ad235b8450f9777435968be4e91a19200a8f0c04f978a223b80cd0bacf`
 
-The first scheduled-worker backfill completed normally after 200 bounded requests (23:18:17–23:21:37 UTC), increasing cached documents from 122 to 321. The 30-minute cron continues the queue; this is not a claim of a complete corpus. VM disk remained 16 GiB free. Wisp db/model restart counts remained zero.
+The first scheduled-worker backfill completed normally after 200 bounded requests (23:18:17–23:21:37 UTC), increasing cached documents from 122 to 321. The 30-minute cron continues the queue; this is not a claim of a complete corpus. VM disk remained 16 GiB free. Jornia db/model restart counts remained zero.
 
 ## Visual download page and in-game direction — 2026-11-06
 
@@ -173,11 +173,11 @@ Checked desktop and 390×844 layout (no horizontal overflow), download anchor/ZI
 
 ## Character-first experience and real Armory — 2026-11-06
 
-Final delivery is **0.5.1**. The earlier 0.5.0 archives remain unchanged. The personal source repository is `AHeige/Wisp` (private); Wisp's existing VM endpoint remains infrastructure and the landing page credits AHeige.
+Final delivery is **0.5.1**. The earlier 0.5.0 archives remain unchanged. The personal source repository is `AHeige/Wisp` (private); Jornia's existing VM endpoint remains infrastructure and the landing page credits AHeige.
 
 Implemented and directly rendered: night expedition palette/art, original lantern-spirit avatar, character-first navigation, character roster, scoped drafts/history, dated journey chapters, event filters and observed place trail. Fourteen surfaces are scored before/after in `ux-review.md`; asset prompts/provenance are in `design/visual-assets.md`.
 
-Actual browser checks included fresh startup with zero characters and unchecked consent; approved discovery of two character directories and one Wisp file; six events attached without a duplicate character; per-character draft/history isolation; clearing sharing on switch; quest/level filters; and an unavailable-server question retaining its draft with no automatic replay. The packaged 0.5.1 Mac process restarted the same local database, retained the two-folder roster and six events, and distinguished a directory-only character from a recorded journey. A measured 390×844 viewport had no overflow, and portrait positioning was corrected after visual inspection. The published FAQ opened with Enter. Reduced-motion CSS removes animations/transitions while textual pending status remains.
+Actual browser checks included fresh startup with zero characters and unchecked consent; approved discovery of two character directories and one Jornia file; six events attached without a duplicate character; per-character draft/history isolation; clearing sharing on switch; quest/level filters; and an unavailable-server question retaining its draft with no automatic replay. The packaged 0.5.1 Mac process restarted the same local database, retained the two-folder roster and six events, and distinguished a directory-only character from a recorded journey. A measured 390×844 viewport had no overflow, and portrait positioning was corrected after visual inspection. The published FAQ opened with Enter. Reduced-motion CSS removes animations/transitions while textual pending status remains.
 
 The user-provided **Kungen Forever / EU** was fetched from actual Blizzard Forever profile/equipment/media endpoints: level 28, Night Elf Warrior, 15 equipped items and official portrait. The local UI displayed source dates and zero invented journal events for this character. A separate real production HTTPS gateway lookup confirmed the same fields and render host. Profile data is local and expiring; it is not world graph data or implicit AI context. Server credentials were not copied to the client.
 
@@ -187,7 +187,7 @@ New Go cases cover Forever source/identity/media-host validation, invalid names/
 
 The Lua simulator executed the redesigned panel without Lua errors; tab switching, notes through the actual journal handler and disconnected send with draft preservation passed. It remains an unreleased simulator prototype, excluded from the ZIP. There is no verified in-game AI transport or actual Forever gameplay acceptance.
 
-VM changes replaced only the isolated Wisp gateway (final image `wisp-private-gateway:20261106-6`), retaining all 17 other running container IDs. No Caddy reload, exposed database port or other service restart was needed. Profile concurrency is capped at two and tester quotas/replay protection apply. Public HTML/CSS/images match local bytes; both downloaded 0.5.1 ZIPs match their checksums. Anonymous health remains 401, private knowledge and original artwork paths remain 404. Actual provider credentials and the tester code were scanned absent from source candidates and both ZIPs.
+VM changes replaced only the isolated Jornia gateway (final image `wisp-private-gateway:20261106-6`), retaining all 17 other running container IDs. No Caddy reload, exposed database port or other service restart was needed. Profile concurrency is capped at two and tester quotas/replay protection apply. Public HTML/CSS/images match local bytes; both downloaded 0.5.1 ZIPs match their checksums. Anonymous health remains 401, private knowledge and original artwork paths remain 404. Actual provider credentials and the tester code were scanned absent from source candidates and both ZIPs.
 
 Final SHA-256:
 

@@ -1,6 +1,6 @@
-# Wisp 0.5.2 — character identity correction
+# Jornia 0.5.2 — character identity correction
 
-A character directory such as `93/Sch-Nice` and its account journal (`Sch`, internal realm label) previously appeared as separate characters. Wisp now links them using its own per-character installation/GUID marker, not name/realm guesses. The first directory identity remains stable when unclaimed; an already imported GUID takes precedence over an empty preliminary duplicate. Independent private content is preserved and forgotten identities stay excluded. Directory names remain available for full display names.
+A character directory such as `93/Sch-Nice` and its account journal (`Sch`, internal realm label) previously appeared as separate characters. Jornia now links them using its own per-character installation/GUID marker, not name/realm guesses. The first directory identity remains stable when unclaimed; an already imported GUID takes precedence over an empty preliminary duplicate. Independent private content is preserved and forgotten identities stay excluded. Directory names remain available for full display names.
 
 The Mac client and main addon were updated in place, with a private offline database/binary/addon backup. Existing account journals import without modification. Restart WoW after the addon TOC update, then log in and save once. A fresh character's end-to-end first-discovery test is still pending. The real Sch-Nice marker was saved successfully; its previously forgotten empty folder is correctly still excluded.
 

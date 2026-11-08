@@ -5,11 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"sort"
 	"time"
-	"wisp/internal/storage"
 )
 
 func main() {

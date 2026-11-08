@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/admin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 	"os"
 	"time"
-	"wisp/internal/admin"
 )
 
 func main() {
@@ -43,6 +43,6 @@ func run() error {
 		listen = "127.0.0.1:18091"
 	}
 	server := http.Server{Addr: listen, Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
-	fmt.Println("Wisp invite admin ready on its private listener.")
+	fmt.Println("Jornia invite admin ready on its private listener.")
 	return server.ListenAndServe()
 }

@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AHeige/Jornia/internal/ai"
+	"github.com/AHeige/Jornia/internal/httpapi"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"wisp/internal/ai"
-	"wisp/internal/httpapi"
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
 )
 
 func TestAshenvaleStack(t *testing.T) {

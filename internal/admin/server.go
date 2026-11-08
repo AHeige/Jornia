@@ -1,4 +1,4 @@
-// Package admin owns Wisp's small, SSH-only invite management surface.
+// Package admin owns Jornia's small, SSH-only invite management surface.
 package admin
 
 import (
@@ -78,7 +78,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Try again later", 429)
 			return
 		}
-		w.Header().Set("WWW-Authenticate", `Basic realm="Wisp private admin", charset="UTF-8"`)
+		w.Header().Set("WWW-Authenticate", `Basic realm="Jornia private admin", charset="UTF-8"`)
 		http.Error(w, "Admin sign-in required", 401)
 		return
 	}

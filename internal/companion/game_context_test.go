@@ -3,6 +3,7 @@ package companion
 import (
 	"context"
 	"encoding/json"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 	"testing"
 	"testing/fstest"
 	"time"
-	"wisp/internal/wisp"
 )
 
 func TestGameContextExplicitApprovalAndActionFiltering(t *testing.T) {

@@ -3,13 +3,13 @@ package companion
 import (
 	"context"
 	"encoding/json"
+	"github.com/AHeige/Jornia/internal/wisp"
 	lua "github.com/yuin/gopher-lua"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
-	"wisp/internal/wisp"
 )
 
 func TestLiveStateQuestProgressConsentAndFreshQuestionCapture(t *testing.T) {
@@ -31,7 +31,7 @@ func TestLiveStateQuestProgressConsentAndFreshQuestionCapture(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, file := range []string{"Wisp.lua", "State.lua"} {
-		b, err := os.ReadFile("../../apps/addon/Wisp/" + file)
+		b, err := os.ReadFile("../../apps/addon/Jornia/" + file)
 		if err != nil {
 			t.Fatal(err)
 		}

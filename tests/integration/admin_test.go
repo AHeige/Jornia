@@ -6,6 +6,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/admin"
+	"github.com/AHeige/Jornia/internal/httpapi"
+	"github.com/AHeige/Jornia/internal/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 	"net/http/httptest"
@@ -13,9 +16,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"wisp/internal/admin"
-	"wisp/internal/httpapi"
-	"wisp/internal/storage"
 )
 
 func TestInviteAdminAuthCSRFHashOnlyAndRevocation(t *testing.T) {

@@ -30,7 +30,7 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
  `); err != nil {
 		t.Fatal(err)
 	}
-	source, err := os.ReadFile("../../apps/addon/Wisp/Companion.lua")
+	source, err := os.ReadFile("../../apps/addon/Jornia/Companion.lua")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func TestNativePanelBindingsReadJournalWithoutRecordingOnInstall(t *testing.T) {
  `); err != nil {
 		t.Fatal(err)
 	}
-	source, err := os.ReadFile("../../apps/addon/Wisp/Bindings.lua")
+	source, err := os.ReadFile("../../apps/addon/Jornia/Bindings.lua")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-// First-party format conversion for Wisp's own artwork. No image or UI framework.
+// First-party format conversion for Jornia's own artwork. No image or UI framework.
 package main
 
 import (

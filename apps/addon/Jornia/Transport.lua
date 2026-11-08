@@ -10,7 +10,7 @@ card:SetBackdrop({bgFile='Interface\\Buttons\\WHITE8X8',edgeFile='Interface\\But
 card:SetBackdropColor(.025,.035,.055,1);card:SetBackdropBorderColor(.25,.35,.5,1)
 for _,point in ipairs({'TOPLEFT','TOPRIGHT','BOTTOMLEFT','BOTTOMRIGHT'})do local t=card:CreateTexture(nil,'OVERLAY');t:SetSize(3,3);t:SetPoint(point);t:SetColorTexture(1,0,1,1)end
 local function label(y,size,text)local f=card:CreateFontString(nil,'OVERLAY');f:SetFont('Fonts\\ARIALN.TTF',size,'');f:SetPoint('TOPLEFT',12,y);f:SetWidth(836);f:SetJustifyH('LEFT');f:SetJustifyV('TOP');f:SetText(text or '');return f end
-label(-10,14,'Wisp · local message transfer')
+label(-10,14,'Jornia · local message transfer')
 local wireText=label(-40,16,'');wireText:SetHeight(316);wireText:SetWordWrap(true)
 local transferNote=label(-401,10,'Local OCR · images stay on this Mac · keep this card visible while waiting')
 card:Hide();T.Frame=card;T.Packet=wireText
@@ -38,10 +38,22 @@ local function quote(s)return '"'..s:gsub('\\','\\\\'):gsub('"','\\"'):gsub('[%z
 local function snapshot(q,include)
  local state=include and WispClientState and WispClientState.Snapshot() or nil
  local rows={};local truncated=false;local gear={};local skills={};local missing={}
- if include and not state then return nil,'Current character state is unavailable. Reopen Wisp after the journal is ready.' end
+ if include and not state then return nil,'Current character state is unavailable. Reopen Jornia after the journal is ready.' end
  if state then
   truncated=state.truncated or not state.quests_available
-  for i,quest in ipairs(state.quests or {})do
+  local ordered={};for _,quest in ipairs(state.quests or {})do ordered[#ordered+1]=quest end
+  local selected;if C_QuestLog and C_QuestLog.GetSelectedQuest then local ok,id=pcall(C_QuestLog.GetSelectedQuest);if ok then selected=id end end
+  local lower=q:lower()
+  table.sort(ordered,function(a,b)
+   local function score(quest)
+    if quest.title and quest.title~='' and lower:find(quest.title:lower(),1,true)then return 4 end
+    if quest.id==selected then return 3 end
+    if quest.complete then return 2 end
+    return 1
+   end
+   local x,y=score(a),score(b);if x~=y then return x>y end;return a.id<b.id
+  end)
+  for i,quest in ipairs(ordered)do
    if i>4 then truncated=true;break end
    local goals={};for j,o in ipairs(quest.objectives or {})do local title=o.text or '';if #title>80 then title='';truncated=true end;goals[#goals+1]='['..j..','..(o.fulfilled or -1)..','..(o.required or -1)..','..(o.finished and '1' or '0')..','..quote(title)..']' end
    rows[#rows+1]='['..quest.id..','..quote(quest.title or '')..','..(quest.complete and '1' or '0')..','..(quest.waypoint and '1' or '0')..',['..table.concat(goals,',')..']]'
@@ -56,9 +68,18 @@ local function snapshot(q,include)
  local function body()
   local snap='null'
   if state then snap='['..state.observed_at..','..state.level..','..quote(state.zone)..','..quote(state.client_build)..','..(truncated and '1' or '0')..',['..table.concat(rows,',')..'],{"c":'..(state.class_id or 0)..',"r":'..(state.race_id or 0)..',"e":['..table.concat(gear,',')..'],"p":['..table.concat(skills,',')..'],"m":['..table.concat(missing,',')..']}]'end
-  return '{"q":'..quote(q)..',"s":'..snap..'}'
+  local identity=''
+  local current=WispJournalRuntime and WispJournalRuntime.Current()
+  if current and WispDB and type(WispDB.installation_id)=='string' then
+   identity=',"c":['..quote(WispDB.installation_id)..','..quote(UnitGUID('player'))..','..quote(current.name or 'Character')..','..quote(current.realm or '')..']'
+  end
+  return '{"q":'..quote(q)..',"s":'..snap..identity..'}'
  end
- while #body()>640 and #rows>0 do table.remove(rows);truncated=true end
+ -- Protect useful quest objectives before optional gear/profession context.
+ while #body()>640 and #gear>0 do table.remove(gear);truncated=true end
+ while #body()>640 and #skills>0 do table.remove(skills);truncated=true end
+ while #body()>640 and #rows>1 do table.remove(rows);truncated=true end
+ if #body()>640 and #rows==1 then return nil,'Open a shorter quest or shorten the question; this context does not fit the current bridge.' end
  return body()
 end
 local function receipt(kind,value,digest)
@@ -78,7 +99,7 @@ local function accept(data,phase)
  if #b<11 then receipt('WBACK',#b,adler(b));return end
  local length=u16(b,10)
  if u16(b,8)~=tonumber(p.binding) or length>4096 then fail('Reply identity or size rejected.',7);return end
- UI.SetProgress(p.id,p.guid,'Receiving Wisp’s reply…')
+ UI.SetProgress(p.id,p.guid,'Receiving Jornia’s reply…')
  local expected=11+length+4
  if #b<expected then receipt('WBACK',#b,adler(b));return end
  local digest=u32(b,expected-3)
@@ -98,9 +119,9 @@ local function accept(data,phase)
 end
 local function ready(owner)
  if pending then return 'A reply is already pending.' end
- if not aliveAt or GetTime()-aliveAt>5 or heartEdges<2 then return 'Start the local Wisp reader and wait a moment.' end
+ if not aliveAt or GetTime()-aliveAt>5 or heartEdges<2 then return 'Start the local Jornia reader and wait a moment.' end
  if owner~=UnitGUID('player') then return 'The selected character changed.' end
- if probe(control)~=true or probe(absent)~=false or probe(clock)~=true or probe(thinking)~=true then return 'The local return channel is not ready. Start the Wisp reader.' end
+ if probe(control)~=true or probe(absent)~=false or probe(clock)~=true or probe(thinking)~=true then return 'The local return channel is not ready. Start the Jornia reader.' end
  for _,path in ipairs(paths)do if probe(path)~=true then return 'Return files need recovery before another question.' end end
 end
 local function begin(body,owner,kind)
@@ -122,21 +143,21 @@ local function xor(a,b)local n,place=0,1;for i=1,8 do if a%2~=b%2 then n=n+place
 function T.Connect(code,owner)
  local reason=ready(owner);if reason then return nil,reason end
  if type(code)~='string' or #code~=64 or code:find('[^0-9a-f]')then return nil,'Use the 64-character invite code from Wisp.' end
- local addons=C_AddOns;if not addons or not addons.LoadAddOn or not addons.IsAddOnLoaded then return nil,'Invite setup is unavailable. Connect through Wisp desktop.' end
+ local addons=C_AddOns;if not addons or not addons.LoadAddOn or not addons.IsAddOnLoaded then return nil,'Invite setup is unavailable. Connect through Jornia desktop.' end
  for n=67,80 do local name=string.format('WispOCRInbox%03d',n)
   if not addons.IsAddOnLoaded(name)then
    local ok,loaded=pcall(addons.LoadAddOn,name)
    local pad=WispConnectPads and WispConnectPads[n]
    if WispConnectPads then WispConnectPads[n]=nil end
    if ok and loaded and type(pad)=='table' and type(pad.id)=='string' and #pad.id==16 and type(pad.hex)=='string' and #pad.hex==64 then
-    local cipher={};for i=1,64,2 do local a,b=tonumber(code:sub(i,i+1),16),tonumber(pad.hex:sub(i,i+1),16);if not a or not b then return nil,'Invite setup expired. Use Wisp desktop.' end;cipher[#cipher+1]=string.format('%02x',xor(a,b))end
+    local cipher={};for i=1,64,2 do local a,b=tonumber(code:sub(i,i+1),16),tonumber(pad.hex:sub(i,i+1),16);if not a or not b then return nil,'Invite setup expired. Use Jornia desktop.' end;cipher[#cipher+1]=string.format('%02x',xor(a,b))end
     local body='{"a":{"pad":'..quote(pad.id)..',"cipher":'..quote(table.concat(cipher))..'}}';pad.hex=nil;code=nil
     return begin(body,owner,'connect')
    end
-   return nil,'Start or restart the local Wisp reader, then try again. No invite was sent.'
+   return nil,'Start or restart the local Jornia reader, then try again. No invite was sent.'
   end
  end
- return nil,'In-game setup slots were used. Connect through Wisp desktop instead.'
+ return nil,'In-game setup slots were used. Connect through Jornia desktop instead.'
 end
 card:SetScript('OnUpdate',function(_,dt)
  local p=pending;if not p then return end
@@ -147,7 +168,7 @@ card:SetScript('OnUpdate',function(_,dt)
  if probe(control)~=true or probe(absent)~=false then p.candidate=nil;return end
  local phase=probe(clock)
  if phase==nil or phase==p.previous then
-  if p.seq==0 and probe(thinking)==false then UI.SetProgress(p.id,p.guid,'Wisp is thinking…') end
+  if p.seq==0 and probe(thinking)==false then UI.SetProgress(p.id,p.guid,'Jornia is thinking…') end
   p.candidate=nil;return
  end
  local bytes={};for j=0,7 do local n=0;for i=1,8 do local bit=probe(paths[j*8+i]);if bit==nil then p.candidate=nil;return end;if bit then n=n+2^(i-1)end end;bytes[j+1]=string.char(n)end
@@ -158,7 +179,7 @@ end)
 UI.OnSend=T.Send
 UI.OnConnect=T.Connect
 UI.Config.disconnectedText=nil
-UI.Config.footer='Questions use local OCR. Images stay here; selected text is sent to Wisp AI.'
+UI.Config.footer='Questions use local OCR. Images stay here; selected text is sent to Jornia AI.'
 T.IsPending=function()return pending~=nil end
 T.Stop=function()if pending then fail('The local adapter was replaced. Check desktop history before retrying.',9)end;pump:SetScript('OnUpdate',nil);card:SetScript('OnUpdate',nil);card:Hide()end
-print('|cffffc466Wisp:|r Native chat adapter ready. Start the local reader before sending. Images stay local.')
+print('|cffffc466Jornia:|r Native chat adapter ready. Start the local reader before sending. Images stay local.')

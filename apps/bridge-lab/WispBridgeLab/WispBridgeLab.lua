@@ -6,7 +6,7 @@ local function show(s)
     if not panel then
         panel = CreateFrame("Frame", "WispBridgeLabPanel", UIParent, "BasicFrameTemplateWithInset")
         panel:SetSize(540, 280); panel:SetPoint("CENTER")
-        panel.TitleText:SetText("Wisp Bridge Lab — not a live AI connection")
+        panel.TitleText:SetText("Jornia Bridge Lab — not a live AI connection")
         local label = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         label:SetPoint("TOPLEFT", 20, -50); label:SetWidth(490); label:SetJustifyH("LEFT")
         panel.label = label; table.insert(UISpecialFrames, "WispBridgeLabPanel")

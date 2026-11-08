@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only bounded tail. Persist only exact Wisp test markers, never unrelated log content."""
+"""Read-only bounded tail. Persist only exact Jornia test markers, never unrelated log content."""
 import argparse
 import datetime
 import json

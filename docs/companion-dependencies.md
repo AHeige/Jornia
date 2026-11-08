@@ -1,6 +1,6 @@
 # Companion dependency notices
 
-The original Lua addon is licensed under MIT; see `AddOns/Wisp/LICENSE.txt`. No Blizzard game assets are bundled. The companion is an experimental Wisp build, not an official Blizzard product.
+The original Lua addon is licensed under MIT; see `AddOns/Wisp/LICENSE.txt`. No Blizzard game assets are bundled. The companion is an experimental Jornia build, not an official Blizzard product.
 
 The companion binary embeds SQLite via modernc.org/sqlite (BSD-3-Clause wrapper; SQLite core public domain) and its Go dependencies. Their applicable licence files are included under `THIRD-PARTY/` in the test bundle. Go's runtime is supplied under the Go BSD licence. The bundled CSS is generated from Tailwind CSS and daisyUI, both MIT-licensed; their notices are also included.
 

@@ -1,4 +1,4 @@
-# Wisp is in-game first
+# Jornia is in-game first
 
 Confirmed by the user on 6 November 2026: **AI chat and journey management belong inside WoW, in Lua.** The desktop companion supplies background storage, connectivity and updates. External chat in 0.4.2 is a technical alpha, not the intended final experience.
 
@@ -19,7 +19,7 @@ Simulator verification covered tab switching, actual synthetic WispDB journal en
 
 Moving a chat field into Lua does not replace the bridge. An automatic, verified channel is needed out of the client and back. The user initially objected to pixel transport; it must not be adopted silently.
 
-Primary reference: [wow-ai](https://github.com/chelinho139/wow-ai) describes a Forever implementation using prepared load-on-demand addons for replies and a visual outbound channel. This is a candidate inbound pattern, not Wisp verification, Blizzard permission or evidence of a working outbound log channel. No third-party bridge was installed.
+Primary reference: [wow-ai](https://github.com/chelinho139/wow-ai) describes a Forever implementation using prepared load-on-demand addons for replies and a visual outbound channel. This is a candidate inbound pattern, not Jornia verification, Blizzard permission or evidence of a working outbound log channel. No third-party bridge was installed.
 
 The next verification at that stage required a real Forever client: measure log-write latency and controlled answer loading. Distinguish quest shown/accepted/abandoned/turned in; test rapid questions, interruption, restarts and character switching. Rendering and an external AI chat do not prove the in-game chain.
 

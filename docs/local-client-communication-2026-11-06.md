@@ -88,7 +88,7 @@ This supports a hypothesis that ordinary voice functionality can convey Lua text
 ### Limits
 
 - Live endpoint, port, authentication, encryption and exact wire format are unverified.
-- A second connection does not automatically receive the first connection's data. This finding grants Wisp no voice-transport access.
+- A second connection does not automatically receive the first connection's data. This finding grants Jornia no voice-transport access.
 - The diagnostic format does not prove current text logging, Voice.log as destination or fast writes.
 - Provider/TTS availability can select different paths. Local and remote TTS are distinct.
 - Replacing the proxy, changing the registry or capturing all voice/login traffic is inappropriate as a first test. None was done.
@@ -97,7 +97,7 @@ This supports a hypothesis that ordinary voice functionality can convey Lua text
 
 Start with read-only local TTS/voice inventory. If local TTS exists, use one synthetic phrase and independently time only its marker in voice diagnostics. No microphone, voice-channel join or collection of others' speech/chat is needed. Abort if local playback cannot be established; do not silently use remote TTS.
 
-This may establish another outbound path, but external Wisp readability and buffering still need proof. Inspecting helper endpoint metadata without payloads is a separate possibility, not proof of an observable text channel.
+This may establish another outbound path, but external Jornia readability and buffering still need proof. Inspecting helper endpoint metadata without payloads is a separate possibility, not proof of an observable text channel.
 
 ## 3. Routes without a complete solution
 

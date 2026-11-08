@@ -37,7 +37,7 @@ SlashCmdList.WISP=function(message)
  elseif command=='compact' or command=='chat' or command=='journey' then UI.OpenNative(command)
  else if previous then previous(message) end;if UI.IsShown() then refresh() end end
 end
-SLASH_WISPMINI1='/wispmini';SlashCmdList.WISPMINI=function()UI.OpenNative('compact')end
+SLASH_WISPMINI1='/jorniamini';SLASH_WISPMINI2='/wispmini';SlashCmdList.WISPMINI=function()UI.OpenNative('compact')end
 -- Update only an already open view. Events must never open a window unexpectedly.
 local updates=CreateFrame('Frame')
 for _,event in ipairs({'PLAYER_LEVEL_UP','ZONE_CHANGED','ZONE_CHANGED_NEW_AREA','QUEST_TURNED_IN'}) do updates:RegisterEvent(event) end
@@ -46,4 +46,4 @@ updates:SetScript('OnEvent',function()
  if C_Timer and C_Timer.After then C_Timer.After(0,function()if UI.IsShown() then refresh() end end)
  else refresh() end
 end)
-print('|cffffc466Wisp:|r /wisp opens your journey; /wisp compact opens a small resizable chat. Keep Wisp desktop running for connected chat.')
+print('|cffffc466Jornia:|r /jornia opens your journey; /jornia compact opens a small resizable chat. Keep Jornia desktop running for connected chat.')

@@ -30,7 +30,7 @@ func TestAddonExportRunsInLua51(t *testing.T) {
 	if err := vm.DoString(mock); err != nil {
 		t.Fatal(err)
 	}
-	file := filepath.Join("..", "..", "apps", "addon", "Wisp", "Wisp.lua")
+	file := filepath.Join("..", "..", "apps", "addon", "Jornia", "Wisp.lua")
 	b, err := os.ReadFile(file)
 	if err != nil {
 		t.Fatal(err)

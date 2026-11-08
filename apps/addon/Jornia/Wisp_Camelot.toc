@@ -1,7 +1,7 @@
 ## Interface: 16001
-## Title: Wisp
+## Title: Jornia
 ## Notes: Private adventure journal and consented automatic local recording. Experimental Forever prototype.
-## Author: Wisp contributors
+## Author: Jornia contributors
 ## Version: 0.7.2-local
 ## SavedVariables: WispDB
 ## SavedVariablesPerCharacter: WispCharacterDB

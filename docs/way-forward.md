@@ -4,7 +4,7 @@ Status: discussion draft, 2026-11-05. This document proposes scope; it does not 
 
 ## Product to prove first
 
-Make one short conversation with Wisp useful, grounded, and transparent about what it knows. Start with an API and a small Ashenvale dataset. Keep the Windows installer, addon bridge, cloud accounts, and deployment outside this milestone.
+Make one short conversation with Jornia useful, grounded, and transparent about what it knows. Start with an API and a small Ashenvale dataset. Keep the Windows installer, addon bridge, cloud accounts, and deployment outside this milestone.
 
 The first demonstration should answer a supported world question with source references, acknowledge an unsupported question, and report the model, token usage, and estimated inference cost when a model is called.
 

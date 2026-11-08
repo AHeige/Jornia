@@ -1,4 +1,4 @@
-# Wisp 0.6.0 — Character questions and broader Forever knowledge
+# Jornia 0.6.0 — Character questions and broader Forever knowledge
 
 Portable private alpha for Windows amd64 and Apple Silicon Mac. Local character journals, journeys and conversations remain separate per character.
 

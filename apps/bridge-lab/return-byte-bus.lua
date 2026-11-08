@@ -1,4 +1,4 @@
--- Wisp's own bounded presence bus. A single LoD slot installs this receiver;
+-- Jornia's own bounded presence bus. A single LoD slot installs this receiver;
 -- subsequent bytes and messages reuse the SAME file names, never LoadAddOn.
 if WispReturnResearchPanel then WispReturnResearchPanel:Hide() end
 if SlashCmdList.WISPRETURNRESEARCH then SlashCmdList.WISPRETURNRESEARCH('stop') end

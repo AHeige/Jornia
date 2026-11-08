@@ -1,10 +1,10 @@
-# Wisp transport investigation — 6 November 2026
+# Jornia transport investigation — 6 November 2026
 
 ## Result
 
 We proved a limited **desktop → local file → in-game Lua** return channel in the user's actual Apple Silicon Forever client, 1.60.1 / build 70790 / Interface 16001. This corrects the earlier blanket assumption that external text can only enter the UI after `/reload`.
 
-Four inert, preinstalled load-on-demand inbox addons were present when WoW started. After login, our own Python writer replaced slot 1's Lua file with a fixed callback carrying hex-encoded test data. The user ran `/wispbridge inbox 1` without reloading. The real game displayed request `file-probe-1793959889670938000` and the new message written **after startup**, rather than the startup control text. Native screenshot inspection confirmed the exact request and text. Slot 2 independently displayed `file-probe-1793960007090121000`, including Unicode `åäö`; the user then reloaded. The resulting Wisp lab SavedVariables file contains both receipts.
+Four inert, preinstalled load-on-demand inbox addons were present when WoW started. After login, our own Python writer replaced slot 1's Lua file with a fixed callback carrying hex-encoded test data. The user ran `/wispbridge inbox 1` without reloading. The real game displayed request `file-probe-1793959889670938000` and the new message written **after startup**, rather than the startup control text. Native screenshot inspection confirmed the exact request and text. Slot 2 independently displayed `file-probe-1793960007090121000`, including Unicode `åäö`; the user then reloaded. The resulting Jornia lab SavedVariables file contains both receipts.
 
 This was test text, not an AI answer, and user-triggered delivery, not automatic polling. Each addon slot is consumed once per UI lifetime. Four slots are installed for the experiment. `/reload` resets addon loading, but is not an invisible or desirable conversational requirement. A finite pool might serve a session; it is not an unlimited socket. Repeated turns, combat, large answers, stale files, switching characters, loader failures and slot-pool cost still need measurement.
 
@@ -21,8 +21,8 @@ A successful outbound bridge does not prove answers can return to the addon. An 
 
 ## Local inspection and measurements
 
-- Wisp's actual account journal contained six events after the initial play test, including quest 4641 completed at level 1 in Durotar / The Den. The quest submission had been recorded correctly. The empty selected directory identity caused the apparent missing history.
-- The real character directory is `93/Sch-Nice`; `UnitName`/`GetRealmName` in the account journal report `Sch` and `CAMWOW EU5 Realm 1 PvE`. Name matching cannot establish identity. 0.5.2 now writes a per-character GUID/installation marker in Wisp's own file.
+- Jornia's actual account journal contained six events after the initial play test, including quest 4641 completed at level 1 in Durotar / The Den. The quest submission had been recorded correctly. The empty selected directory identity caused the apparent missing history.
+- The real character directory is `93/Sch-Nice`; `UnitName`/`GetRealmName` in the account journal report `Sch` and `CAMWOW EU5 Realm 1 PvE`. Name matching cannot establish identity. 0.5.2 now writes a per-character GUID/installation marker in Jornia's own file.
 - After the user's new reload, that marker exists in the real character directory. The old empty folder row had already been explicitly forgotten before the update: the backup contains a forget receipt/exclusion and no directory link. The importer correctly continues to respect that exclusion. A fresh character remains the required end-to-end first-discovery test; this is not reported as a live duplicate-merge test.
 - `QuestCache.log` exists. Sampled lines record IDs and cache query/classification/denial activity. They do **not** establish acceptance, completion, objective progress or a reliable journal contract. Other cache files were inventoried, not mined for credentials or rewritten.
 - The user ran our inert capability probe in the actual game. Saved results: `io.open`, `os.execute`, `socket`, `require`, `loadfile`, `dofile`, `DebugLog` are nil; addon loader, chat logging, combat logging and `ConsoleExec` are functions. Presence is not permission to perform arbitrary IO. The probe calls none of these functions.
@@ -65,7 +65,7 @@ Install our lab while WoW is closed:
 python3 scripts/experiments/bridge_lab.py install --root "$HOME/World of Warcraft/_forever_"
 ```
 
-Start WoW and enable Wisp Bridge Lab plus its four inbox addons. `/wispbridge probe` records capability types without invoking IO/network/logging APIs. After WoW is already running, write a reply from Terminal:
+Start WoW and enable Jornia Bridge Lab plus its four inbox addons. `/wispbridge probe` records capability types without invoking IO/network/logging APIs. After WoW is already running, write a reply from Terminal:
 
 ```sh
 python3 scripts/experiments/bridge_lab.py reply --root "$HOME/World of Warcraft/_forever_" --slot 1 --text 'Written after login'
@@ -73,7 +73,7 @@ python3 scripts/experiments/bridge_lab.py reply --root "$HOME/World of Warcraft/
 
 Then run `/wispbridge inbox 1` **without reload first**. Compare the displayed request ID against the writer's output. `Startup control text` would be a negative result. Slot reuse is explicitly refused. Use slot 2 for an independent second result. A later `/reload` saves the lab receipts. Do not reset files while a slot is being loaded.
 
-The lab is separate from the 0.5.2 downloadable addon and normal Wisp import reads only its own `Wisp.lua`, not the lab report. Remove the five `WispBridgeLab`/`WispBridgeInbox01..04` addon directories with WoW closed to uninstall the lab; the main Wisp addon is independent.
+The lab is separate from the 0.5.2 downloadable addon and normal Jornia import reads only its own `Wisp.lua`, not the lab report. Remove the five `WispBridgeLab`/`WispBridgeInbox01..04` addon directories with WoW closed to uninstall the lab; the main Jornia addon is independent.
 
 ## Source evidence
 

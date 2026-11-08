@@ -3,6 +3,11 @@
 set -eu
 cd /home/leon/wisp-private
 umask 077
+# Explicit opt-in; the friend test must not depend on this provider.
+if [ ! -f .foreverdb-enabled ]; then
+ printf '{"status":"paused","reason":"operator_disabled"}\n' > foreverdb-last.log
+ exit 0
+fi
 exec 9>.foreverdb.lock
 /usr/bin/flock -n 9 || exit 0
 available_kb=$(df -Pk . | awk 'NR==2 {print $4}')

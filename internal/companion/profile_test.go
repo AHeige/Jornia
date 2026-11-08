@@ -3,6 +3,7 @@ package companion
 import (
 	"context"
 	"encoding/json"
+	"github.com/AHeige/Jornia/internal/armory"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"testing"
 	"testing/fstest"
 	"time"
-	"wisp/internal/armory"
 )
 
 func TestProfileReceiptScopeExpiryAndExport(t *testing.T) {

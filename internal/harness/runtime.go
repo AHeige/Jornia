@@ -1,4 +1,4 @@
-// Package harness owns Wisp's bounded tool workflows. No agent framework or arbitrary code execution.
+// Package harness owns Jornia's bounded tool workflows. No agent framework or arbitrary code execution.
 package harness
 
 import (

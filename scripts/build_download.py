@@ -24,7 +24,7 @@ if args.pages_output:
     def release(match):
         name, version = match.group(1), match.group(2)
         return f'https://github.com/{args.release_repo}/releases/download/v{version}/{name}'
-    html = re.sub(r'/releases/(wisp-([0-9]+\.[0-9]+\.[0-9]+)-(?:windows-amd64|darwin-arm64)\.zip(?:\.sha256)?)', release, html)
+    html = re.sub(r'/releases/((?:wisp|jornia)-([0-9]+\.[0-9]+\.[0-9]+)-(?:windows-amd64|darwin-arm64)\.zip(?:\.sha256)?)', release, html)
     html = html.replace('/download.css', './download.css').replace('/media/', './media/')
     output = args.pages_output.resolve()
     if output == root or output == source:

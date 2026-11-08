@@ -1,4 +1,4 @@
-# Wisp world knowledge, character questions and test packages
+# Jornia world knowledge, character questions and test packages
 
 Requested 6 November 2026. Work in order and check off only verified results.
 
@@ -20,7 +20,7 @@ Measurements, runs and artifacts were recorded after verification.
 
 ### 1. Inventory
 
-The VM had 11 GiB free disk and about 5.3 GiB available RAM; Wisp's database was 72 MB. Existing half-hourly ingestion worked: 30,329 entities, 6,888 raw/detail documents, 24,215 queued jobs; the last eight batches succeeded. These are not complete quest/NPC facts. Active API namespace `static-1.60.1_70399-forever-eu` predates test client 70790. Unrelated containers were inventoried first. ForeverDB required approved developer access; QuestieDB historical rights remained unclear. Neither database was copied without clarified access.
+The VM had 11 GiB free disk and about 5.3 GiB available RAM; Jornia's database was 72 MB. Existing half-hourly ingestion worked: 30,329 entities, 6,888 raw/detail documents, 24,215 queued jobs; the last eight batches succeeded. These are not complete quest/NPC facts. Active API namespace `static-1.60.1_70399-forever-eu` predates test client 70790. Unrelated containers were inventoried first. ForeverDB required approved developer access; QuestieDB historical rights remained unclear. Neither database was copied without clarified access.
 
 ### 2–3. Collection and operations
 

@@ -1,4 +1,4 @@
-# Wisp acknowledged block return on 6 November 2026
+# Jornia acknowledged block return on 6 November 2026
 
 ## Result
 

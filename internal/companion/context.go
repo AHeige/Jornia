@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"wisp/internal/wisp"
+	"github.com/AHeige/Jornia/internal/wisp"
 )
 
 type ContextPreview struct {

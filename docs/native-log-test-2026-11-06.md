@@ -14,7 +14,7 @@ An explicit `/wispnative test <run-id>`:
 2. Saves exact `developerLogFilterNormal`, `developerLogWriteToFile` and `developerLog` values. Missing/unexpected values abort before changes.
 3. Enables only values not already 1 and verifies readback. Failure triggers restoration.
 4. Calls `C_Log.LogMessage` once with `WISPNATIVE1:<run-id>:<uptime>:<epoch>`. The same ID cannot be replayed.
-5. Restores changed values after 60 seconds, `/wispnative stop` or logout/reload events. Verifies restoration, reports failure and allows manual recovery. Original values/receipts remain in local Wisp Bridge Lab SavedVariables.
+5. Restores changed values after 60 seconds, `/wispnative stop` or logout/reload events. Verifies restoration, reports failure and allows manual recovery. Original values/receipts remain in local Jornia Bridge Lab SavedVariables.
 
 The measurement interval ends before saving receipts through reload. Markers first appearing after restoration/reload/exit must be distinguished from fast active-period delivery. These historical exit checks are not accepted live-transport steps for later experiments.
 

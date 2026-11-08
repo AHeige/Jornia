@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"net/url"
 	"time"
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
 )
 
 // The graph is a rebuildable local projection. Original observations remain authoritative.
@@ -202,9 +202,9 @@ func (s *Server) journeyAnswer(ctx context.Context, char string) (wisp.Answer, e
 	if char == DemoCharacterID {
 		a.Text = "Demodata — påhittad spelhistorik. " + a.Text
 		for i := range a.Sources {
-			a.Sources[i].Title = "Wisp demojournal · syntetisk"
+			a.Sources[i].Title = "Jornia demojournal · syntetisk"
 			a.Sources[i].ValidationStatus = "synthetic_demo"
-			a.Sources[i].License = "Wisp testdata"
+			a.Sources[i].License = "Jornia testdata"
 		}
 	}
 	return a, nil

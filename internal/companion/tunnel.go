@@ -31,7 +31,7 @@ func PrepareVMConnection(directory string) (string, error) {
 		}
 		cmd := exec.Command("icacls.exe", directory, "/inheritance:r", "/grant:r", "*"+account.Uid+":(OI)(CI)F", "*S-1-5-18:(OI)(CI)F")
 		if err = cmd.Run(); err != nil {
-			return "", errors.New("could not protect the Wisp connection directory")
+			return "", errors.New("could not protect the Jornia connection directory")
 		}
 	}
 	key := filepath.Join(directory, "id_ed25519")
@@ -49,12 +49,12 @@ func PrepareVMConnection(directory string) (string, error) {
 	return key + ".pub", nil
 }
 
-// StartVMTunnel forwards a random local loopback port to only the Wisp API.
+// StartVMTunnel forwards a random local loopback port to only the Jornia API.
 // It uses the Windows host's existing VirtualBox SSH mapping, not a new public port.
 func StartVMTunnel(directory string, stderr io.Writer) (string, func(), error) {
 	key := filepath.Join(directory, "id_ed25519")
 	if _, err := os.Stat(key); err != nil {
-		return "", nil, errors.New("prepare the Wisp connection with wisp.exe -prepare-vm and register its public key first")
+		return "", nil, errors.New("prepare the Jornia connection with wisp.exe -prepare-vm and register its public key first")
 	}
 	known := filepath.Join(directory, "known_hosts")
 	if err := os.WriteFile(known, []byte("[127.0.0.1]:2222 "+vmHostKey+"\n"), 0600); err != nil {
@@ -83,7 +83,7 @@ func StartVMTunnel(directory string, stderr io.Writer) (string, func(), error) {
 		select {
 		case <-done:
 			cancel()
-			return "", nil, errors.New("Wisp SSH connection failed; check public key registration and VM status")
+			return "", nil, errors.New("Jornia SSH connection failed; check public key registration and VM status")
 		default:
 		}
 		response, err := client.Get(backend + "/healthz")
@@ -96,5 +96,5 @@ func StartVMTunnel(directory string, stderr io.Writer) (string, func(), error) {
 		time.Sleep(300 * time.Millisecond)
 	}
 	cancel()
-	return "", nil, fmt.Errorf("Wisp API did not become reachable; no model request was sent")
+	return "", nil, fmt.Errorf("Jornia API did not become reachable; no model request was sent")
 }

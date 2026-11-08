@@ -36,3 +36,13 @@ class InviteTest(unittest.TestCase):
    with self.assertRaises(ValueError):pads.decrypt(packet)
    pads.restore()
    self.assertEqual((root/'Interface/AddOns/WispOCRInbox067/Inbox.lua').read_text(),'-- original\n');self.assertFalse(list(root.rglob('*.wispconnect-hold')))
+
+class FirstQuestionIdentityTest(unittest.TestCase):
+ def test_unsaved_character_can_register_but_forged_binding_is_rejected(self):
+  guid='Player-new';ident='123456781794000000000001';binding=f'{checksum(guid):05d}';nonce='12345678'
+  raw=json.dumps(dict(q='What now?',s=None,c=['installation-1',guid,'New Hero','Realm']),separators=(',',':'))
+  wire=f'WISPBEGIN3 {ident} {binding} {nonce} {checksum(ident+binding+nonce+raw):05d}\n{raw.encode().hex()}\nWISPEND'
+  packet=parse(wire.splitlines(),{})
+  self.assertEqual(packet['registration']['character']['id'],guid)
+  self.assertIsNone(packet['character_id'])
+  self.assertIsNone(parse(wire.replace(binding,'00000',1).splitlines(),{}))

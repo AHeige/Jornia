@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"wisp/internal/ai"
-	"wisp/internal/harness"
-	"wisp/internal/storage"
+	"github.com/AHeige/Jornia/internal/ai"
+	"github.com/AHeige/Jornia/internal/harness"
+	"github.com/AHeige/Jornia/internal/storage"
 )
 
 var ErrUnavailable = errors.New("live inference is not configured")
@@ -48,6 +48,7 @@ type Knowledge interface {
 	Graph(context.Context, string, bool) (storage.Graph, error)
 }
 type Service struct {
+	QuestLogOnly            bool
 	Store                   Knowledge
 	Generator               ai.Generator
 	InputPrice, OutputPrice *float64
@@ -101,8 +102,10 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if r.Snapshot != nil && r.GameVersion != "forever" && r.GameVersion != "" {
 		return Answer{}, errors.New("game snapshot belongs to Forever")
 	}
-	if answer, handled, err := s.catalogAnswer(ctx, r); handled {
-		return answer, err
+	if !s.QuestLogOnly {
+		if answer, handled, err := s.catalogAnswer(ctx, r); handled {
+			return answer, err
+		}
 	}
 	start := time.Now()
 	zero := 0.0
@@ -111,6 +114,9 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		a.Text = "Jag saknar källbelagda uppgifter för den frågan och spelversionen."
 	}
 	plan, g, err := BuildGamePlan(ctx, r.Snapshot, func(ctx context.Context) (storage.Graph, error) {
+		if s.QuestLogOnly {
+			return storage.Graph{GameVersion: r.GameVersion}, nil
+		}
 		if retriever, ok := s.Store.(interface {
 			Retrieve(context.Context, string, bool, string) (storage.Graph, error)
 		}); ok {
@@ -461,7 +467,7 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 			sourceRefs = append(sourceRefs, map[string]string{"id": src.ID, "validation_status": src.ValidationStatus})
 		}
 	}
-	b, _ := json.Marshal(map[string]any{"game_version": contextGraph.GameVersion, "entities": contextGraph.Entities, "edges": contextGraph.Edges, "sources": sourceRefs, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false, "game_snapshot": r.Snapshot, "next_step_options": plan.Candidates})
+	b, _ := json.Marshal(map[string]any{"game_version": contextGraph.GameVersion, "entities": contextGraph.Entities, "edges": contextGraph.Edges, "sources": sourceRefs, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false, "game_snapshot": r.Snapshot, "next_step_options": plan.Candidates, "questlog_only": s.QuestLogOnly, "allowed_evidence_ids": allowed})
 	if len(b) > 40000 && (r.Character != nil || len(r.Journal) > 0 || r.Snapshot != nil) {
 		// Broad world matches must not prevent a supported personal-only answer.
 		// Strip both world facts and their allowed citations before inference.
@@ -478,7 +484,7 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		if r.Character != nil {
 			allowed[r.Character.EvidenceID] = true
 		}
-		b, _ = json.Marshal(map[string]any{"game_version": r.GameVersion, "entities": []storage.Entity{}, "edges": []storage.Edge{}, "sources": []any{}, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false, "game_snapshot": r.Snapshot, "next_step_options": plan.Candidates})
+		b, _ = json.Marshal(map[string]any{"game_version": r.GameVersion, "entities": []storage.Entity{}, "edges": []storage.Edge{}, "sources": []any{}, "journal": r.Journal, "character": r.Character, "synthetic_journal": r.SyntheticJournal, "journal_is_live": false, "character_is_live": false, "game_snapshot": r.Snapshot, "next_step_options": plan.Candidates, "questlog_only": s.QuestLogOnly, "allowed_evidence_ids": allowed})
 		a.Warnings = append(a.Warnings, "World matches exceeded the context budget. This answer can use only your selected dated character context; name a specific world resource for a combined answer.")
 	}
 	if len(b) > 40000 {

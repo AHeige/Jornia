@@ -3,11 +3,11 @@ package companion
 import (
 	"context"
 	"encoding/json"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"path/filepath"
 	"testing"
 	"time"
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
 )
 
 func TestExpiredWorldCacheDoesNotDeletePersonalJourney(t *testing.T) {

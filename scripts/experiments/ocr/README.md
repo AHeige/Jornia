@@ -1,4 +1,4 @@
-# Wisp OCR E2E lab (macOS 14+)
+# Jornia OCR E2E lab (macOS 14+)
 
 This is a first-party, finite-session experiment, not a general transport. No large OCR framework, copied companion, global keyboard hooks, game memory access, or chat logging. Vision/ScreenCaptureKit are platform primitives.
 
@@ -21,9 +21,9 @@ Use a built companion with `-ocr-lab -listen 127.0.0.1:8788`. This opt-in flag c
 python3 scripts/experiments/ocr/bridge.py run --root '/path/to/_forever_'
 ```
 
-If the reader reports `screen_permission_required`, screen recording permission is required for this specific local capture process. The `--permission` helper option requests it; no permission is silently changed. Wait for `Ready` before sending. The helper warms Vision first. It captures only the WoW window in memory, locates the visible magenta Wisp corners, and sends only the outbox band to Vision. Images are never saved or uploaded by the live reader. Closing the panel removes its outbox from view.
+If the reader reports `screen_permission_required`, screen recording permission is required for this specific local capture process. The `--permission` helper option requests it; no permission is silently changed. Wait for `Ready` before sending. The helper warms Vision first. It captures only the WoW window in memory, locates the visible magenta Jornia corners, and sends only the outbox band to Vision. Images are never saved or uploaded by the live reader. Closing the panel removes its outbox from view.
 
-In WoW: `/wispocr`, type a question in your language, Enter. First test: `What can you tell me about Ashenvale?`. Limit 160 UTF-8 bytes; spaces are normalized before rendering. Protocol v2 renders UTF-8 JSON as checksummed ASCII hex, so OCR need not recognize the user’s writing system. By default only the question goes to the existing Wisp API/Berget, with AI enabled. Opting into the per-question checkbox additionally sends level, area, capture time/build and up to four quests (potentially fewer within the 400-byte transport budget). It resets after a reply. Snapshot data expires after 90 seconds. GUID/local character IDs, screenshots and journal excerpts are not part of the backend question payload. Normal local message history still stores question/answer for the linked character.
+In WoW: `/wispocr`, type a question in your language, Enter. First test: `What can you tell me about Ashenvale?`. Limit 160 UTF-8 bytes; spaces are normalized before rendering. Protocol v2 renders UTF-8 JSON as checksummed ASCII hex, so OCR need not recognize the user’s writing system. By default only the question goes to the existing Jornia API/Berget, with AI enabled. Opting into the per-question checkbox additionally sends level, area, capture time/build and up to four quests (potentially fewer within the 400-byte transport budget). It resets after a reply. Snapshot data expires after 90 seconds. GUID/local character IDs, screenshots and journal excerpts are not part of the backend question payload. Normal local message history still stores question/answer for the linked character.
 
 Loading states are plain text in a stable position: reading locally → locally validated/sending → API accepted/thinking → reply or failure. Static treatment is intentional: movement in the OCR card would impair recognition and distract from play; there is no flashing progress animation or artificial percentage. Text input stays intact and disabled during a pending question; errors re-enable it. Enter is handled solely by the addon's own edit box.
 

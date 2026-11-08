@@ -10,9 +10,9 @@ The addon already reacts to game events in memory. SavedVariables does not conti
 
 ## Technical candidate
 
-[WoW Context Bridge](https://github.com/nukeador/wow-context-bridge) is an MIT-licensed experiment using a visible pixel strip and external screen reading. The project reports Retail testing, unverified Forever compatibility and a pending Blizzard response. It is technical reference material, not Blizzard approval or a Wisp game test.
+[WoW Context Bridge](https://github.com/nukeador/wow-context-bridge) is an MIT-licensed experiment using a visible pixel strip and external screen reading. The project reports Retail testing, unverified Forever compatibility and a pending Blizzard response. It is technical reference material, not Blizzard approval or a Jornia game test.
 
-Windows provides [Graphics Capture](https://learn.microsoft.com/en-us/windows/apps/develop/media-authoring-processing/screen-capture), where the user chooses a window through a system dialog. A Wisp prototype could restrict local processing to an explicitly selected status region. No image stream needs to reach Berget. [Blizzard's EULA](https://www.blizzard.com/en-gb/legal/2c72a35c-bf1b-4ae6-99ec-80624e1b429c/blizzard-end-user-license-agreement) broadly restricts unauthorized collection; an ordinary OS capture API does not establish approval for a particular WoW bridge. No capture had been enabled in the user's client at this stage.
+Windows provides [Graphics Capture](https://learn.microsoft.com/en-us/windows/apps/develop/media-authoring-processing/screen-capture), where the user chooses a window through a system dialog. A Jornia prototype could restrict local processing to an explicitly selected status region. No image stream needs to reach Berget. [Blizzard's EULA](https://www.blizzard.com/en-gb/legal/2c72a35c-bf1b-4ae6-99ec-80624e1b429c/blizzard-end-user-license-agreement) broadly restricts unauthorized collection; an ordinary OS capture API does not establish approval for a particular WoW bridge. No capture had been enabled in the user's client at this stage.
 
 ## Initial prototype boundaries
 

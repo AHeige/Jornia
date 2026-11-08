@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 )
 
 // Common personal questions stay useful offline. No implicit profile upload.

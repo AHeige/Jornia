@@ -25,7 +25,7 @@ static VNRecognizeTextRequest *request(void) {
  VNRecognizeTextRequest *r=[VNRecognizeTextRequest new]; r.recognitionLevel=VNRequestTextRecognitionLevelAccurate;
  r.usesLanguageCorrection=NO; r.recognitionLanguages=@[@"en-US"]; return r;
 }
-// A four-corner pure-magenta frame marks the explicitly opened Wisp panel.
+// A four-corner pure-magenta frame marks the explicitly opened Jornia panel.
 // Only this rectangle reaches Vision. Full-window pixels stay in memory.
 static BOOL cardMode=NO;
 static BOOL diagnostic=NO;

@@ -1,6 +1,6 @@
 # Companion window modes — 6 November 2026
 
-The website's “In your game” pictures were produced from our own executable Lua prototype, not from a running Forever client. `apps/addon/Wisp/Companion.lua` now has two modes of that same window:
+The website's “In your game” pictures were produced from our own executable Lua prototype, not from a running Forever client. `apps/addon/Jornia/Companion.lua` now has two modes of that same window:
 
 - **Full:** default 860 × 540 UI units, character sidebar, artwork, journey and chat. Minimum 760 × 500.
 - **Compact:** default 420 × 340, just the character identity, conversation, composer, state and expand/close controls. Minimum 340 × 260. Drag the lower-right grip to resize; drag the background/header to move. Each mode retains its own dimensions for the lifetime of this UI.

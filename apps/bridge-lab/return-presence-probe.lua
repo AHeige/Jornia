@@ -1,7 +1,7 @@
--- Wisp's own read-only candidate probe. No external code, logging or AI calls.
+-- Jornia's own read-only candidate probe. No external code, logging or AI calls.
 local panel=CreateFrame('Frame','WispReturnResearchPanel',UIParent,'BasicFrameTemplateWithInset')
 panel:SetSize(620,310);panel:SetPoint('TOP',0,-60)
-panel.TitleText:SetText('Wisp return-channel research — read-only probe')
+panel.TitleText:SetText('Jornia return-channel research — read-only probe')
 local label=panel:CreateFontString(nil,'OVERLAY','GameFontHighlight')
 label:SetPoint('TOPLEFT',18,-38);label:SetWidth(580);label:SetJustifyH('LEFT')
 local paths={
@@ -40,4 +40,4 @@ SLASH_WISPRETURNRESEARCH1='/wispreturn'
 SlashCmdList.WISPRETURNRESEARCH=function(message) if message=='stop' then panel:SetScript('OnUpdate',nil) else start() end end
 start()
 table.insert(UISpecialFrames,'WispReturnResearchPanel')
-print('Wisp return research: read-only file-presence probe running for 30 seconds. No files or settings changed by this Lua module.')
+print('Jornia return research: read-only file-presence probe running for 30 seconds. No files or settings changed by this Lua module.')

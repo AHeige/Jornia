@@ -231,10 +231,10 @@ func (j *JournalSync) Scan(ctx context.Context) {
 	})
 	j.status.LastScan = time.Now().Unix()
 	if errors.Is(err, os.ErrNotExist) {
-		j.status.Error = "No Wisp journal found yet. Enable the addon, log in and save with /reload or logout."
+		j.status.Error = "No Jornia journal found yet. Enable the addon, log in and save with /reload or logout."
 	} else if err != nil && ctx.Err() == nil {
-		j.status.Error = "A Wisp journal could not be read. Existing history is kept; the file will be checked again."
+		j.status.Error = "A Jornia journal could not be read. Existing history is kept; the file will be checked again."
 	} else if j.status.Files == 0 {
-		j.status.Error = "No Wisp journal found yet. Other addon contents and account settings are not read."
+		j.status.Error = "No Jornia journal found yet. Other addon contents and account settings are not read."
 	}
 }

@@ -13,4 +13,4 @@
 
 The approved developer identity is dev-0144. The initial authorized responses report build 1.60.1.70790 and catalog counts of 22,403 items, 32,109 spells, 6,614 quests, 947 vendors, 47 instances and 545 sets. These are provider record counts, not complete verified gameplay facts. On quests 376 and 3901, hand-in/start positions are explicitly labelled player observations, while some chain links remain labelled Classic data.
 
-Current documentation: https://foreverdb.net/developers (read 6 November 2026). API use is limited to Wisp's application backend, with attribution. No bulk data download endpoint is exposed to users.
+Current documentation: https://foreverdb.net/developers (read 6 November 2026). API use is limited to Jornia's application backend, with attribution. No bulk data download endpoint is exposed to users.

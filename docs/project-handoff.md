@@ -1,8 +1,8 @@
-# Wisp — Project handoff for Codex
+# Jornia — Project handoff for Codex
 
 I've verified Berget.ai's current offering. They do have a very small, exceptionally cheap model worth testing. And your Mac + Ubuntu VM setup is a good fit.
 
-## Berget.ai: which model should Wisp use?
+## Berget.ai: which model should Jornia use?
 
 Qwen 3.5 2B
 
@@ -46,15 +46,15 @@ A 200-input/50-output response on Mistral would cost approximately €0.000075. 
 
 Now, here is the project brief I'd give Codex.
 
-# Wisp — AI Companion for World of Warcraft
+# Jornia — AI Companion for World of Warcraft
 
 **Project brief · Version 0.1 · November 5, 2026**
 
 ## 1. Vision
 
-Build **Wisp**, a lightweight, intelligent, text-based AI companion for World of Warcraft: Forever.
+Build **Jornia**, a lightweight, intelligent, text-based AI companion for World of Warcraft: Forever.
 
-Wisp understands Azeroth through an extensive, open-source knowledge graph, remembers a player's personal adventures, and offers natural, context-aware conversations.
+Jornia understands Azeroth through an extensive, open-source knowledge graph, remembers a player's personal adventures, and offers natural, context-aware conversations.
 
 The goal is to enhance the experience of playing WoW without disrupting immersion, introducing obligations, or encouraging fear of missing out.
 
@@ -62,7 +62,7 @@ The goal is to enhance the experience of playing WoW without disrupting immersio
 
 ### Guiding principles
 
-- Immersion first. Wisp only responds when invited unless the player explicitly enables proactive assistance.
+- Immersion first. Jornia only responds when invited unless the player explicitly enables proactive assistance.
 - No avatars, voice, or unnecessary graphical interfaces in the MVP.
 - Text-first interactions, ideally through an optional native WoW chat tab.
 - No grinding, daily quests, retention tricks, or artificial urgency.
@@ -79,25 +79,25 @@ A player downloads and installs Wisp.
 
 The installer detects their WoW installation and configures both the Lua addon and a lightweight local Windows companion.
 
-The player opens WoW and can optionally access Wisp through a dedicated chat interface.
+The player opens WoW and can optionally access Jornia through a dedicated chat interface.
 
 Example:
 
-**Player:** Wisp, I'm level 24. Where should I explore?
+**Player:** Jornia, I'm level 24. Where should I explore?
 
-**Wisp:** Ashenvale has some beautiful places you might enjoy. Want somewhere dangerous, peaceful, or mysterious?
+**Jornia:** Ashenvale has some beautiful places you might enjoy. Want somewhere dangerous, peaceful, or mysterious?
 
 **Player:** Dangerous. No spoilers.
 
-**Wisp:** I have a few ideas. I'd start by heading north. Let me know if you'd like a hint.
+**Jornia:** I have a few ideas. I'd start by heading north. Let me know if you'd like a hint.
 
 After several weeks:
 
-**Player:** Wisp, what were we doing last time?
+**Player:** Jornia, what were we doing last time?
 
-**Wisp:** Last time, you were exploring Ashenvale and looking for a way into an area above your level. Want to continue?
+**Jornia:** Last time, you were exploring Ashenvale and looking for a way into an area above your level. Want to continue?
 
-Wisp should use retrieved facts and verified player history. It must not invent memories, player locations or game events.
+Jornia should use retrieved facts and verified player history. It must not invent memories, player locations or game events.
 
 ## 3. System architecture
 
@@ -136,7 +136,7 @@ Responsibilities:
 - Install and configure the WoW addon.
 - Maintain a local SQLite database.
 - Persist conversations and personal adventure history.
-- Synchronise data with the Wisp backend.
+- Synchronise data with the Jornia backend.
 - Provide a small external chat interface as a fallback.
 - Handle secure authentication and anonymous sessions.
 - Manage the connection to WoW using supported, compliant mechanisms.
@@ -145,7 +145,7 @@ Important: WoW addons cannot directly make HTTP requests. SavedVariables normall
 
 Avoid process injection, memory modification, simulated gameplay input, and anti-cheat bypass techniques.
 
-**C. Wisp API**
+**C. Jornia API**
 
 Preferred language: Go.
 
@@ -322,7 +322,7 @@ Use stable event IDs and idempotent synchronisation.
 
 ## 7. Community model
 
-Wisp should initially be free and community-oriented.
+Jornia should initially be free and community-oriented.
 
 Open-source components should include:
 
@@ -474,7 +474,7 @@ First:
 3. Define the initial architecture and contracts.
 4. Create the repository structure.
 5. Implement a local PostgreSQL graph schema and seed data.
-6. Implement the first grounded Wisp API endpoint.
+6. Implement the first grounded Jornia API endpoint.
 7. Add tests and an initial evaluation harness.
 8. Document decisions, known limitations and the next implementation steps.
 
@@ -482,7 +482,7 @@ Do not deploy, provision paid infrastructure, ingest restricted content or creat
 
 **Prioritise a working vertical slice over architectural complexity.**
 
-The first meaningful success is a real conversation with Wisp, grounded in a small but trustworthy graph of Azeroth.
+The first meaningful success is a real conversation with Jornia, grounded in a small but trustworthy graph of Azeroth.
 
 ## What I'd do first on your Mac
 
@@ -498,7 +498,7 @@ Berget AI
 
 
 
-For the first session, success is simple: ask Wisp about Ashenvale through an API on your Mac, get an accurate graph-grounded answer, and see exactly how much the inference cost.
+For the first session, success is simple: ask Jornia about Ashenvale through an API on your Mac, get an accurate graph-grounded answer, and see exactly how much the inference cost.
 
 After that, move the services onto Ubuntu and tackle the WoW connection separately.
 

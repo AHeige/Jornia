@@ -93,6 +93,8 @@ services:
       BERGET_API_KEY: ${BERGET_API_KEY:?Set the provider key}
       BERGET_BASE_URL: https://api.berget.ai/v1
       BERGET_MODEL: mistralai/Mistral-Small-3.2-24B-Instruct-2506
+      FOREVERDB_ENABLED: ${FOREVERDB_ENABLED:-false}
+      WISP_QUESTLOG_ONLY: ${WISP_QUESTLOG_ONLY:-true}
       BERGET_INPUT_EUR_PER_MILLION: "0.30"
       BERGET_OUTPUT_EUR_PER_MILLION: "0.30"
     ports: ["127.0.0.1:18090:8090"]
@@ -107,7 +109,7 @@ services:
 
   foreverdb:
     <<: *service
-    image: ${WISP_FOREVERDB_IMAGE:?Set the versioned ForeverDB worker image}
+    image: ${WISP_FOREVERDB_IMAGE:-wisp-private-foreverdb:paused}
     profiles: [foreverdb]
     restart: "no"
     mem_limit: 192m
@@ -115,6 +117,7 @@ services:
     read_only: true
     environment:
       DATABASE_URL: postgres://wisp:${WISP_DB_PASSWORD}@db:5432/wisp?sslmode=disable
+      FOREVERDB_ENABLED: ${FOREVERDB_ENABLED:-false}
       FOREVERDB_API_KEY: ${FOREVERDB_API_KEY:-}
       FOREVERDB_DEVELOPER_ID: ${FOREVERDB_DEVELOPER_ID:-}
       GOMEMLIMIT: 128MiB

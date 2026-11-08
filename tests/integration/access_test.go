@@ -5,6 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/httpapi"
+	"github.com/AHeige/Jornia/internal/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 	"net/http/httptest"
@@ -12,8 +14,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"wisp/internal/httpapi"
-	"wisp/internal/storage"
 )
 
 func TestTesterAccessIsolationAndLimits(t *testing.T) {

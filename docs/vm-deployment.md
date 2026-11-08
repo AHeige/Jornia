@@ -1,6 +1,6 @@
 # Private VM installation on 5 November 2026
 
-Wisp runs on `ubuntu-dev` as `leon` under `/home/leon/wisp-private`. Development Mac connection:
+Jornia runs on `ubuntu-dev` as `leon` under `/home/leon/wisp-private`. Development Mac connection:
 
 ```sh
 ssh -i ~/.ssh/ubuntu_dev -p 2222 leon@178.174.244.160
@@ -31,7 +31,7 @@ curl -fsS http://127.0.0.1:18090/healthz
 docker compose logs --tail=30 api model
 ```
 
-Stop only Wisp using `docker compose stop` in this directory, preserving its volume. Do not use `down -v` in normal operations.
+Stop only Jornia using `docker compose stop` in this directory, preserving its volume. Do not use `down -v` in normal operations.
 
 ## Verification
 
@@ -47,7 +47,7 @@ Read-only PowerShell inventory reported ASUS Z170-P, Kingston A400 `SA400S37120G
 
 API image `wisp-private-api:20261105-2`; model unchanged. Bootstrap idempotent; 46/46 VM fact tests pass, graph 49 reviewed entities/67 relations. Backups: `.env.pre-0.2.0`, previous image and `backups/pre-0.2.0.dump`. All 14 unrelated inventoried containers retained IDs/RestartCount 0. No global cleanup.
 
-Windows launches `Start-Wisp-VM.cmd` in Desktop/Wisp-0.2.0/wisp-0.2.0-windows-amd64. `Start-Wisp.cmd` uses the same local journal without tunneling. Private Wisp key remains in `%LOCALAPPDATA%/Wisp/connection`, limited to user/SYSTEM. A separate authorized_keys entry uses `restrict`, permitted forwarding, `permitopen="127.0.0.1:18090"`, `permitlisten="127.0.0.1:18090"` and `command="/bin/false"`. No shell, PTY, agent or X11 forwarding. This is private-machine configuration, not public installation design.
+Windows launches `Start-Wisp-VM.cmd` in Desktop/Wisp-0.2.0/wisp-0.2.0-windows-amd64. `Start-Wisp.cmd` uses the same local journal without tunneling. Private Jornia key remains in `%LOCALAPPDATA%/Wisp/connection`, limited to user/SYSTEM. A separate authorized_keys entry uses `restrict`, permitted forwarding, `permitopen="127.0.0.1:18090"`, `permitlisten="127.0.0.1:18090"` and `command="/bin/false"`. No shell, PTY, agent or X11 forwarding. This is private-machine configuration, not public installation design.
 
 ## OCR E2E on 6 November 2026
 
@@ -70,6 +70,6 @@ User cron for leon:
 
 Runner has locking, a 3 GiB free-disk/512 MiB available-RAM guard, two bounded log files and atomic `ingestion-status.json` with exit/times. Purge-only requires no credentials/network. Ingester caps: 192 MiB/0.5 CPU, 500 requests, one-second spacing, twelve-minute deadline. Cron uses VM time; logs use UTC. Batch 16:00:01–16:08:49 UTC completed 500 requests/200 reprojections. A separate bounded run reprojected 2,000 documents with one namespace probe, preserving expiry/deadlines.
 
-Rollback files: `compose.yaml.pre-knowledge-20261106`, `.env.pre-knowledge-20261106`, `refresh-knowledge.sh.pre-knowledge-20261106`, `crontab.pre-knowledge-20261106`. Restore only Wisp entries if other projects changed later; never blindly replace a newer full crontab. Prior images remain. Projection v2 needs no destructive migration. Future cross-built uploads require `chmod 755` before Docker builds: scp/umask may produce mode 700.
+Rollback files: `compose.yaml.pre-knowledge-20261106`, `.env.pre-knowledge-20261106`, `refresh-knowledge.sh.pre-knowledge-20261106`, `crontab.pre-knowledge-20261106`. Restore only Jornia entries if other projects changed later; never blindly replace a newer full crontab. Prior images remain. Projection v2 needs no destructive migration. Future cross-built uploads require `chmod 755` before Docker builds: scp/umask may produce mode 700.
 
 Public ZIPs/site use personal `AHeige/wisp-site`, not Logos. The VM continues serving the configured protected API. Version 0.6.0 provides explicitly reviewed dated character context, without automatic journal uploads. See the [delivery checklist](delivery-knowledge-character-2026-11-06.md) for coverage/tests/packages/limits.

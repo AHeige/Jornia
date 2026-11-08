@@ -67,14 +67,23 @@ def parse(lines,identities):
             a=value['a']
             if not isinstance(a,dict) or set(a)!={'pad','cipher'} or not isinstance(a['pad'],str) or not re.fullmatch('[0-9a-f]{16}',a['pad']) or not isinstance(a['cipher'],str) or not re.fullmatch('[0-9a-f]{64}',a['cipher']):return None
             return dict(id=ident,binding=binding,nonce=nonce,activation=a)
-        if set(value)!={'q','s'}:return None
+        if set(value) not in ({'q','s'},{'q','s','c'}):return None
         q=value['q']
         if not isinstance(q,str) or not q.strip() or len(q.encode())>160:return None
         snapshot=expand_snapshot(value['s'])
-        matches=[g for g in identities if re.fullmatch(r'Player-[A-Za-z0-9-]+',g) and checksum(g)==int(binding)]
-        if len(matches)!=1:return None
-        guid=matches[0]
-        packet=dict(id=ident,binding=binding,nonce=nonce,guid=guid,character_id=identities[guid],question=q)
+        registration=None
+        if 'c' in value:
+            c=value['c']
+            if not isinstance(c,list) or len(c)!=4 or any(not isinstance(x,str) or len(x.encode())>100 for x in c):return None
+            installation,guid,name,realm=c
+            if not re.fullmatch('[A-Za-z0-9_-]{1,100}',installation) or not re.fullmatch('Player-[A-Za-z0-9-]{1,90}',guid) or checksum(guid)!=int(binding) or any(x in name+realm for x in ('\0','\r','\n')):return None
+            registration=dict(installation_id=installation,character=dict(id=guid,name=name,realm=realm))
+        else:
+            matches=[g for g in identities if re.fullmatch(r'Player-[A-Za-z0-9-]+',g) and checksum(g)==int(binding)]
+            if len(matches)!=1:return None
+            guid=matches[0]
+        packet=dict(id=ident,binding=binding,nonce=nonce,guid=guid,character_id=identities.get(guid),question=q)
+        if registration is not None:packet['registration']=registration
         if snapshot is not None:packet['snapshot']=snapshot
         return packet
     except (ValueError,TypeError,UnicodeError):return None
@@ -85,7 +94,7 @@ def reply(packet,result,error=None):
     if not isinstance(text,str) or not text:raise ValueError('No reply text')
     raw=text.encode('utf8')
     if len(raw)>1536:
-        error='This reply is too long for the in-game channel. Read it in Wisp desktop.'
+        error='This reply is too long for the in-game channel. Read it in Jornia desktop.'
         raw=error.encode()
     credit=not error and any(str(s.get('id','')).startswith('foreverdb:') for s in result.get('sources') or [])
     sources=min(len(result.get('sources') or []),65535)

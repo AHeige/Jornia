@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"wisp/internal/storage"
+	"github.com/AHeige/Jornia/internal/storage"
 )
 
 func (s *Service) catalogAnswer(ctx context.Context, r Request) (Answer, bool, error) {
@@ -81,5 +81,5 @@ func (s *Service) catalogAnswer(ctx context.Context, r Request) (Answer, bool, e
 		evidenceKey = "summary"
 	}
 	zero := 0.0
-	return Answer{Status: "answered", Text: text, GameVersion: "forever", Route: "knowledge_catalog", Sources: []storage.Source{{ID: "wisp:knowledge-catalog", Title: "Wisp knowledge catalog snapshot", URI: "wisp:knowledge-catalog", Revision: time.Now().UTC().Format(time.RFC3339), License: "Wisp operational metadata", ValidationStatus: "operational"}}, EvidenceIDs: []string{"catalog:" + evidenceKey}, Warnings: []string{"Category counts overlap. Missing categories are not filled from model memory. This catalog excludes private player journals."}, EstimatedCostEUR: &zero, LatencyMS: time.Since(start).Milliseconds()}, true, nil
+	return Answer{Status: "answered", Text: text, GameVersion: "forever", Route: "knowledge_catalog", Sources: []storage.Source{{ID: "wisp:knowledge-catalog", Title: "Jornia knowledge catalog snapshot", URI: "wisp:knowledge-catalog", Revision: time.Now().UTC().Format(time.RFC3339), License: "Jornia operational metadata", ValidationStatus: "operational"}}, EvidenceIDs: []string{"catalog:" + evidenceKey}, Warnings: []string{"Category counts overlap. Missing categories are not filled from model memory. This catalog excludes private player journals."}, EstimatedCostEUR: &zero, LatencyMS: time.Since(start).Milliseconds()}, true, nil
 }

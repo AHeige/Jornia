@@ -1,8 +1,8 @@
 # Reusable return bus, bounded macOS slice
 
-Own Lua receiver + Python stdlib sender. No network, AI, game memory, global input hooks or third-party product logic. Existing native Vision helper reads only the visible Wisp receipt band.
+Own Lua receiver + Python stdlib sender. No network, AI, game memory, global input hooks or third-party product logic. Existing native Vision helper reads only the visible Jornia receipt band.
 
-This is experimental transport code, **not an installer or a distributable friend build**. It reuses eight existing, owned Wisp OCR lab TOC filenames as Boolean data lines (`WispOCRInbox081..088`) and our zero-byte `WispBridgeLab/wispreturn_pulse.wav` as a toggling clock. The permanent `wispreturn_present.wav` and never-created negative control check channel health. Dedicated data files should replace borrowed TOCs in a real installation. Do not run another updater or the normal OCR chat reader during this experiment.
+This is experimental transport code, **not an installer or a distributable friend build**. It reuses eight existing, owned Jornia OCR lab TOC filenames as Boolean data lines (`WispOCRInbox081..088`) and our zero-byte `WispBridgeLab/wispreturn_pulse.wav` as a toggling clock. The permanent `wispreturn_present.wav` and never-created negative control check channel health. Dedicated data files should replace borrowed TOCs in a real installation. Do not run another updater or the normal OCR chat reader during this experiment.
 
 Lua is installed once through an already installed, not-yet-loaded research slot; never reload/restart WoW for a test. `apps/bridge-lab/return-byte-bus.lua` is the receiver. In the verified run, `WispBridgeInbox03` bootstrapped it and inbox02 supplied an in-session UI-only close/progress update. Both originals were backed up and restored. Neither inbox carries subsequent test message data. No remaining research slot means a setup blocker, not permission to reload.
 

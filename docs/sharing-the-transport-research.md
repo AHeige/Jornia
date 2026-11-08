@@ -1,4 +1,4 @@
-# Sharing the Wisp transport research
+# Sharing the Jornia transport research
 
 Checked 7 November 2026. This is an outreach plan; no forum messages have been posted.
 
@@ -25,16 +25,16 @@ The current lab uses 64 data filenames plus a clock, stable reads, checked packe
 
 The underlying presence signal was informed by NeverQuestAlone's doorbells. Our experiment uses those signals to carry the payload itself rather than only announcing a fresh one-shot inbox.
 
-Article: https://github.com/AHeige/Wisp/blob/main/docs/sending-text-through-wow-sound-api.md
+Article: https://github.com/AHeige/Jornia/blob/main/docs/sending-text-through-wow-sound-api.md
 
-Code: https://github.com/AHeige/Wisp
+Code: https://github.com/AHeige/Jornia
 
 Tested on macOS, Forever 1.60.1.70790 / Interface 16001. We would particularly appreciate independent tests of resource-presence caching, sound-disabled behavior and callback cost on Windows. Documented addon APIs do not imply Blizzard approval. AI tools assisted with development and writing.
 
 ## Before submitting
 
 - Read the community's current rules and select a technical/WIP category.
-- Keep the article and source links accessible without a Wisp invite or an AI account.
+- Keep the article and source links accessible without a Jornia invite or an AI account.
 - Do not describe the transport as ban-safe, unlimited, faster than pixel protocols, or the first of its kind.
 - The 15-second sample measures transport, not AI generation. Do not combine it with the older 6.1-second AI/inbox demonstration.
 - Prefer one specialist discussion first; answer technical questions before sharing more broadly. Do not ask for coordinated votes.

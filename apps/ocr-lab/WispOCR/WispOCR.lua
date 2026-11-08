@@ -13,7 +13,7 @@ local function label(y,size,text)
     s:SetPoint("TOPLEFT",20,y); s:SetWidth(580); s:SetJustifyH("LEFT"); s:SetTextColor(.94,.94,.92); s:SetText(text or ""); return s
 end
 label(-20,22,"WISP  /  COMPANION LAB")
-label(-54,12,"Enter sends this question to Wisp AI. Images stay on this Mac.")
+label(-54,12,"Enter sends this question to Jornia AI. Images stay on this Mac.")
 local state=label(-80,16,"Ready — open the local reader before sending.")
 local packet=label(-145,12,"")
 packet:SetFont("Fonts\\ARIALN.TTF",12,"");packet:SetHeight(180);packet:SetJustifyV("TOP");packet:SetWordWrap(false)
@@ -76,9 +76,9 @@ function WispOCRReceive(id,guid,status,hex,questID,actionExpires)
     if not pending or id~=pending.id or guid~=pending.guid or UnitGUID("player")~=pending.guid then return end
     local text=decode(hex); if not text then return end
     if status=="sending" then
-        state:SetText("Question read — sending to Wisp…")
+        state:SetText("Question read — sending to Jornia…")
     elseif status=="thinking" then
-        state:SetText("Question received — Wisp is thinking…")
+        state:SetText("Question received — Jornia is thinking…")
     elseif status=="done" or status=="error" then
         state:SetText(status=="done" and string.format("Reply received — %.1f s total",GetTime()-pending.started) or "Could not finish — your question is kept")
         answer:SetText(text:gsub("|","||")); packet:SetText("")
@@ -119,7 +119,7 @@ frame:SetScript("OnUpdate",function(_,dt)
         pending=nil;share:SetChecked(false);share:Enable();suggested=nil;navigate:Hide(); packet:SetText(""); state:SetText("Character changed — previous reply will not be shown."); edit:Enable(); return
     end
     if GetTime()-pending.started>55 or used>=96 then
-        state:SetText("No reply yet. Check Wisp on your Mac; question kept, no automatic resend.")
+        state:SetText("No reply yet. Check Jornia on your Mac; question kept, no automatic resend.")
         pending=nil;share:SetChecked(false);share:Enable(); packet:SetText(""); edit:Enable(); return
     end
     accumulated=accumulated+dt; if accumulated<.6 then return end; accumulated=0

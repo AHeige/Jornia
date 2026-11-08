@@ -3,10 +3,10 @@ package wisp
 import (
 	"context"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/storage"
 	"strings"
 	"testing"
 	"time"
-	"wisp/internal/storage"
 )
 
 func TestDatedCharacterOnlyEvidenceAndBounds(t *testing.T) {

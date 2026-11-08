@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"time"
 	"unicode/utf8"
-	"wisp/internal/wisp"
 )
 
 type EquippedItem struct {

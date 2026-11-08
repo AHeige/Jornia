@@ -14,11 +14,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/AHeige/Jornia/internal/ai"
+	"github.com/AHeige/Jornia/internal/httpapi"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"wisp/internal/ai"
-	"wisp/internal/httpapi"
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
 )
 
 func main() {
@@ -62,7 +62,7 @@ func run() error {
 	if err = pool.Ping(start); err != nil {
 		return errors.New("database connection failed")
 	}
-	store := &storage.Store{Pool: pool}
+	store := &storage.Store{Pool: pool, ExcludeForeverDB: env("FOREVERDB_ENABLED", "false") != "true"}
 	if command == "bootstrap" {
 		if err = store.Migrate(start); err != nil {
 			return err
@@ -73,7 +73,7 @@ func run() error {
 		log.Print("migrations, Ashenvale fixture, and reviewed Forever knowledge ready")
 		return nil
 	}
-	service := &wisp.Service{Store: store}
+	service := &wisp.Service{Store: store, QuestLogOnly: env("WISP_QUESTLOG_ONLY", "true") == "true"}
 	if gateway := os.Getenv("LANGCHAIN_URL"); gateway != "" {
 		parsed, err := url.Parse(gateway)
 		if err != nil || parsed.Scheme != "http" || parsed.Hostname() != "model" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
@@ -88,7 +88,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		log.Print("Legacy model proxy enabled; Wisp tool orchestration is owned by Go")
+		log.Print("Legacy model proxy enabled; Jornia tool orchestration is owned by Go")
 	} else if key := os.Getenv("BERGET_API_KEY"); key != "" {
 		base := env("BERGET_BASE_URL", "https://api.berget.ai/v1")
 		u, err := url.Parse(base)
@@ -110,7 +110,7 @@ func run() error {
 	}
 	server := &http.Server{Addr: env("LISTEN_ADDR", "127.0.0.1:8090"), Handler: httpapi.Handler(service, pool.Ping), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 40 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 8192}
 	done := make(chan error, 1)
-	go func() { log.Printf("Wisp listening on %s", server.Addr); done <- server.ListenAndServe() }()
+	go func() { log.Printf("Jornia listening on %s", server.Addr); done <- server.ListenAndServe() }()
 	select {
 	case err := <-done:
 		if errors.Is(err, http.ErrServerClosed) {

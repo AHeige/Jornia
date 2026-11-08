@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/foreverdb"
+	"github.com/AHeige/Jornia/internal/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-	"wisp/internal/foreverdb"
-	"wisp/internal/storage"
 )
 
 func main() {
@@ -23,6 +23,9 @@ func main() {
 func run() error {
 	max := flag.Int("max-requests", 200, "maximum provider requests; daily shared safety cap is 8000")
 	flag.Parse()
+	if os.Getenv("FOREVERDB_ENABLED") != "true" {
+		return json.NewEncoder(os.Stdout).Encode(map[string]string{"status": "paused", "reason": "operator_disabled"})
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	ctx, cancel := context.WithTimeout(ctx, 12*time.Minute)

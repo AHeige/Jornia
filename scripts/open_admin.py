@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Open Wisp's private invite admin through an owner SSH connection."""
+"""Open Jornia's private invite admin through an owner SSH connection."""
 import argparse,ipaddress,pathlib,socket,subprocess,time,urllib.error,urllib.request,webbrowser
 p=argparse.ArgumentParser(description=__doc__);p.add_argument('--no-browser',action='store_true');a=p.parse_args()
 ssh=['ssh','-o','BatchMode=yes','-i',str(pathlib.Path.home()/'.ssh/ubuntu_dev'),'-p','2222']
 command='docker inspect -f \'{{(index .NetworkSettings.Networks "wisp-private_backend").IPAddress}}\' wisp-private-admin-1'
 ip=subprocess.check_output(ssh+['leon@178.174.244.160',command],text=True).strip();address=ipaddress.ip_address(ip)
-if address.version!=4 or not address.is_private:raise SystemExit('Expected the private Wisp admin container address')
+if address.version!=4 or not address.is_private:raise SystemExit('Expected the private Jornia admin container address')
 with socket.socket()as probe:
  if probe.connect_ex(('127.0.0.1',18983))==0:raise SystemExit('Local port 18983 is already in use. Existing listener preserved.')
 tunnel=subprocess.Popen(ssh+['-o','ExitOnForwardFailure=yes','-N','-L',f'127.0.0.1:18983:{ip}:8091','leon@178.174.244.160'])

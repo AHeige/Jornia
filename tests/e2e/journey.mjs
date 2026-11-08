@@ -14,7 +14,7 @@ function lua(v){if(v===null)return 'nil';if(typeof v==='string')return JSON.stri
 const file=path.join(folder,'Wisp.lua');
 async function save(){await fs.writeFile(file,'WispDB = '+lua({schema:1,installation_id:packet.installation_id,characters:{[packet.character.id]:{...packet.character,events:packet.events},[other.character.id]:{...other.character,events:other.events}}}));}
 await save();let child,browser;
-async function start(){child=spawn(path.join(root,'.cache/wisp-companion'),['-no-browser','-listen','127.0.0.1:0','-data-dir',data,'-backend','http://127.0.0.1:1'],{cwd:root,stdio:['ignore','pipe','pipe']});return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('startup')),15000);child.stderr.on('data',x=>process.stderr.write(x));child.stdout.on('data',x=>{const m=String(x).match(/Wisp: (http:\/\/[^\s]+)/);if(m){clearTimeout(timer);resolve(m[1]);}});child.once('exit',code=>reject(Error('exit '+code)));});}
+async function start(){child=spawn(path.join(root,'.cache/jornia-companion'),['-no-browser','-listen','127.0.0.1:0','-data-dir',data,'-backend','http://127.0.0.1:1'],{cwd:root,stdio:['ignore','pipe','pipe']});return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('startup')),15000);child.stderr.on('data',x=>process.stderr.write(x));child.stdout.on('data',x=>{const m=String(x).match(/Jornia: (http:\/\/[^\s]+)/);if(m){clearTimeout(timer);resolve(m[1]);}});child.once('exit',code=>reject(Error('exit '+code)));});}
 async function stop(){if(child&&child.exitCode===null){const done=once(child,'exit');child.kill('SIGINT');await done;}}
 function ensure(value,message){if(!value)throw Error(message);}
 try{

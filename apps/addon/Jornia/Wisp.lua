@@ -1,7 +1,7 @@
--- Original Wisp addon code. Local event journal. No network bridge, chat collection, input simulation or combat automation.
+-- Original Jornia addon code. Local event journal. No network bridge, chat collection, input simulation or combat automation.
 local frame = CreateFrame("Frame")
 local current, lastZone, exportFrame
-local function say(text) print("|cffb7d9bbWisp:|r " .. text) end
+local function say(text) print("|cffb7d9bbJornia:|r " .. text) end
 local function public(value)
     if issecretvalue and issecretvalue(value) then return nil end
     return value
@@ -87,10 +87,10 @@ local function export()
         exportFrame = CreateFrame("Frame", "WispExportFrame", UIParent, "BasicFrameTemplateWithInset")
         exportFrame:SetSize(560, 330); exportFrame:SetPoint("CENTER"); exportFrame:SetMovable(true); exportFrame:EnableMouse(true)
         exportFrame:RegisterForDrag("LeftButton"); exportFrame:SetScript("OnDragStart", exportFrame.StartMoving); exportFrame:SetScript("OnDragStop", exportFrame.StopMovingOrSizing)
-        exportFrame.TitleText:SetText("Wisp — local adventure export")
+        exportFrame.TitleText:SetText("Jornia — local adventure export")
         local help = exportFrame:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
         help:SetPoint("TOPLEFT",18,-38); help:SetWidth(520); help:SetJustifyH("LEFT")
-        help:SetText("This contains only this character's Wisp journal. Nothing is sent automatically.\nCtrl+A, Ctrl+C; then paste into Import in the Wisp companion.")
+        help:SetText("This contains only this character's Jornia journal. Nothing is sent automatically.\nCtrl+A, Ctrl+C; then paste into Import in the Jornia companion.")
         local scroll = CreateFrame("ScrollFrame",nil,exportFrame,"UIPanelScrollFrameTemplate")
         scroll:SetPoint("TOPLEFT",18,-84);scroll:SetPoint("BOTTOMRIGHT",-34,18)
         local edit = CreateFrame("EditBox",nil,scroll)
@@ -112,13 +112,14 @@ local function acceptJournal()
 end
 if StaticPopupDialogs then
     StaticPopupDialogs.WISP_JOURNAL_CONSENT = {
-        text = "Wisp can automatically keep a local adventure journal for your characters: sessions, areas, levels, quest progress, equipped item IDs, professions and your notes. No chat is collected or uploaded. The companion can read Wisp's saved file after /reload or logout. You can pause with /wisp stop. Start recording?",
+        text = "Jornia can automatically keep a local adventure journal for your characters: sessions, areas, levels, quest progress, equipped item IDs, professions and your notes. No chat is collected or uploaded. The companion can read Jornia's saved file after /reload or logout. You can pause with /wisp stop. Start recording?",
         button1 = "Start journal", button2 = "Not now", timeout = 0, whileDead = true, hideOnEscape = true,
         OnAccept = function() acceptJournal() end,
         OnCancel = function() WispDB.consent = "declined"; current.recording = false end
     }
 end
-SLASH_WISP1 = "/wisp"
+SLASH_WISP1 = "/jornia"
+SLASH_WISP2 = "/wisp"
 SlashCmdList.WISP = function(message)
     if not current and not initialize() then return end
     local command, rest = message:match("^(%S*)%s*(.-)$")

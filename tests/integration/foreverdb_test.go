@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/foreverdb"
+	"github.com/AHeige/Jornia/internal/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
-	"wisp/internal/foreverdb"
-	"wisp/internal/storage"
 )
 
 func TestForeverDBIdempotenceBuildIsolationSearchCoverageAndFailures(t *testing.T) {
@@ -64,6 +64,27 @@ func TestForeverDBIdempotenceBuildIsolationSearchCoverageAndFailures(t *testing.
 	coverage, err := store.Coverage(ctx, "forever")
 	if err != nil || coverage["complete"] != false {
 		t.Fatal("coverage", err)
+	}
+	// Pausing a provider removes its facts from both search paths, graph and coverage,
+	// without deleting the preserved import or requiring provider credentials.
+	paused := &storage.Store{Pool: pool, ExcludeForeverDB: true}
+	for _, question := range []string{"Elixir of Minor Strength", "elixir minor strength"} {
+		hidden, e := paused.Retrieve(ctx, "forever", false, question)
+		if e != nil || len(hidden.Entities) != 0 || len(hidden.Sources) != 0 {
+			t.Fatal("paused provider search leaked", e, hidden)
+		}
+	}
+	hidden, e := paused.Graph(ctx, "forever", false)
+	if e != nil || len(hidden.Entities) != 0 {
+		t.Fatal("paused provider graph leaked", e)
+	}
+	report, e := paused.Coverage(ctx, "forever")
+	if e != nil || report["entities"].(int) != 0 || report["foreverdb"].(map[string]any)["status"] != "paused" {
+		t.Fatal("paused provider coverage", e, report)
+	}
+	pool.QueryRow(ctx, "SELECT count(*) FROM entities").Scan(&count)
+	if count != 1 {
+		t.Fatal("pause deleted stored data")
 	}
 	pool.Exec(ctx, `UPDATE api_ingest_state SET value='1.60.1.70791' WHERE key='foreverdb:build'`)
 	g, err = store.Retrieve(ctx, "forever", false, "Elixir of Minor Strength")

@@ -3,14 +3,14 @@ package companion
 import (
 	"context"
 	"encoding/json"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
 )
 
 func TestJourneyContextConsentAndIsolation(t *testing.T) {

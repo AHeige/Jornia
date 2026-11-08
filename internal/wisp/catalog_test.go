@@ -2,9 +2,9 @@ package wisp
 
 import (
 	"context"
+	"github.com/AHeige/Jornia/internal/storage"
 	"strings"
 	"testing"
-	"wisp/internal/storage"
 )
 
 type catalogWorld struct{ noWorld }

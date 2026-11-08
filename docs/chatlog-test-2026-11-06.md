@@ -27,7 +27,7 @@ Raw results remain in ignored `.cache/chatlog-test/`; original logs are neither 
 
 - Lua tests verify inert load/status, B triggered by received rather than outgoing echo, restoration of both original false/true states and inert delayed callbacks after stop.
 - An isolated Python fixture verifies append detection, timestamp parsing and exclusion of unrelated chat.
-- An initial `/run` attempt encountered WoW's generic custom-script warning before execution. This is not a transport result. Tests use addon commands instead; ordinary Wisp use should not require pasted `/run` scripts.
+- An initial `/run` attempt encountered WoW's generic custom-script warning before execution. This is not a transport result. Tests use addon commands instead; ordinary Jornia use should not require pasted `/run` scripts.
 
 ## Results
 

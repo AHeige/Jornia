@@ -2,10 +2,10 @@ package wisp
 
 import (
 	"context"
+	"github.com/AHeige/Jornia/internal/ai"
+	"github.com/AHeige/Jornia/internal/storage"
 	"testing"
 	"time"
-	"wisp/internal/ai"
-	"wisp/internal/storage"
 )
 
 func TestGamePlanUsesOnlyFreshObservedQuests(t *testing.T) {

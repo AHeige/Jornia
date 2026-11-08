@@ -1,12 +1,12 @@
-# Wisp experience review
+# Jornia experience review
 
 Owner: Codex · 2026-11-06 · implemented and reviewed
 
 ## Product direction
 
-Wisp is a personal companion and a character's field journal. The destination is an in-game Lua experience; the desktop app supplies local history and the AI connection. Improving the desktop alpha must not imply that the in-game transport is complete.
+Jornia is a personal companion and a character's field journal. The destination is an in-game Lua experience; the desktop app supplies local history and the AI connection. Improving the desktop alpha must not imply that the in-game transport is complete.
 
-Primary journey: **Open Wisp → choose a character → remember the last session → explore recorded places and milestones → ask Wisp → return to the same character later.** First use offers a journal connection or a clearly labelled demo. Settings support this journey; they are not the home screen.
+Primary journey: **Open Jornia → choose a character → remember the last session → explore recorded places and milestones → ask Jornia → return to the same character later.** First use offers a journal connection or a clearly labelled demo. Settings support this journey; they are not the home screen.
 
 English UI, dark forest/aged gold palette, local original concept art, restrained fantasy typography, readable text and explicit freshness. No invented XP, playtime, class, portraits, quest names or map coordinates. The character schema currently contains name, realm and ID; levels and places come from recorded events.
 
@@ -26,7 +26,7 @@ Inspected the actual 0.4.2 companion at localhost:18980, the published download 
 | Journey overview | 3 | Hidden under a disclosure; no visual hierarchy | Character landscape, last recorded place, counts and next action | 9 |
 | Timeline / milestones | 4 | Flat event list; everything looks alike | Dated chapters, distinct event types, readable notes and filters | 8 |
 | Places along the way | 3 | Places embedded in text | Ordered observed route; no invented geographic map | 8 |
-| Wisp / conversation | 5 | Generic bubbles, no companion presence | Clear Wisp identity, character scope, useful prompts, adjacent composer | 8 |
+| Jornia / conversation | 5 | Generic bubbles, no companion presence | Clear Jornia identity, character scope, useful prompts, adjacent composer | 8 |
 | Evidence / context sharing | 6 | Correct safeguards but verbose and visually weak | Compact explicit choice, exact preview, inspectable sources | 8 |
 | Journal setup / manual import | 5 | Long sidebar form always visible | Dedicated setup view, consent kept explicit, clear save/pause result | 8 |
 | Connection / privacy / export | 5 | Scattered under sidebar disclosures | Coherent settings, readable status, retained export/delete protections | 8 |
@@ -48,7 +48,7 @@ Inspected the actual 0.4.2 companion at localhost:18980, the published download 
 
 ### 0 — Evidence and design decision
 
-The baseline is a technical settings sidebar plus generic chat. The largest intervention is information architecture: make the recorded adventure the primary object, introduce a persistent character identity, and put Wisp beside that history through a dedicated companion view. The existing local data and receipt model are retained.
+The baseline is a technical settings sidebar plus generic chat. The largest intervention is information architecture: make the recorded adventure the primary object, introduce a persistent character identity, and put Jornia beside that history through a dedicated companion view. The existing local data and receipt model are retained.
 
 ### 1 — Structure and first visual pass
 
@@ -70,7 +70,7 @@ The user rejected the original droplet avatar and requested an entirely differen
 
 Verified the user-provided **Kungen Forever / EU** against Blizzard on 2026-11-06: profile level 28, Night Elf Warrior, 15 equipped items, official main character render and avatar. The actual browser UI fetched the snapshot, showed equipment names/rarities and source times, and kept the character's journey empty because no journal had been imported for it. This is an official static render, not a WebGL/interactive 3D model and not live state. Personal API snapshots remain local and outside the knowledge graph and AI context. Server-side credentials are never packaged.
 
-Actual narrow viewport measured at 390×844: portrait loaded; no horizontal overflow. First pass cropped the portrait poorly; a measured second pass changed mobile object-fit/position so the full character is visible. Desktop and mobile screenshot evidence: `ux-kungen-character.jpg`, `ux-mobile-character.jpg`. A fresh startup had no characters and unchecked consent; after approval one import found two character directories and one Wisp file, attached six events to the matching character and preserved the other as an empty directory identity.
+Actual narrow viewport measured at 390×844: portrait loaded; no horizontal overflow. First pass cropped the portrait poorly; a measured second pass changed mobile object-fit/position so the full character is visible. Desktop and mobile screenshot evidence: `ux-kungen-character.jpg`, `ux-mobile-character.jpg`. A fresh startup had no characters and unchecked consent; after approval one import found two character directories and one Jornia file, attached six events to the matching character and preserved the other as an empty directory identity.
 
 ## Final design assessment
 
@@ -82,7 +82,7 @@ The final delivery is **0.5.1**; previously built 0.5.0 archives remain unchange
 
 | Requirement | Authoritative evidence |
 | --- | --- |
-| Clear first-use journey | Fresh runtime at :18984: zero characters and unchecked consent before approval; two character folders + one Wisp file after approval; six entries attached to the matching character. |
+| Clear first-use journey | Fresh runtime at :18984: zero characters and unchecked consent before approval; two character folders + one Jornia file after approval; six entries attached to the matching character. |
 | Switch characters without mixing history | Actual browser: Thalara/Bramble drafts restored separately, conversations scoped, journal-sharing permission cleared. Packaged 0.5.1 restart preserved the two-folder roster and six entries without duplicates. |
 | Journey as primary surface | Rendered character scene, event-type filters, dated chapters, ordered observed places and a direct companion action. Screenshots `ux-journey-night.jpg` and `ux-kungen-character.jpg`. |
 | Real character and gear | Real HTTPS gateway → Blizzard lookup for Kungen Forever / EU returned level 28, Night Elf Warrior, 15 items and official render; actual local UI displayed them with dates and zero fabricated journal entries. |
@@ -97,6 +97,6 @@ The existing headless browser runners were adapted to the new view navigation an
 
 ### Personal GitHub publication
 
-Application source is private in [AHeige/Wisp](https://github.com/AHeige/Wisp). The static site and previously public preview assets are isolated in [AHeige/wisp-site](https://github.com/AHeige/wisp-site), with public versioned ZIPs. The verified download page is https://aheige.github.io/wisp-site/; unauthenticated downloads match both local SHA-256 hashes. The previous Logos download root forwards there. Only the protected API remains on the existing VM endpoint. No company repository or private player database was published.
+Application source is private in [AHeige/Wisp](https://github.com/AHeige/Jornia). The static site and previously public preview assets are isolated in [AHeige/wisp-site](https://github.com/AHeige/wisp-site), with public versioned ZIPs. The verified download page is https://aheige.github.io/wisp-site/; unauthenticated downloads match both local SHA-256 hashes. The previous Logos download root forwards there. Only the protected API remains on the existing VM endpoint. No company repository or private player database was published.
 
 The Pages export is reproducible with `python3 scripts/build_download.py --pages-output /path/to/site`: it copies only referenced public assets, rewrites project-relative paths and points downloads at public GitHub release assets. Source and executable packages remain separate from the public website repository.

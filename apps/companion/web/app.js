@@ -10,7 +10,7 @@ const id = () => crypto.randomUUID();
 // persisted receipts, no automatic replay, and read-only recovery after lost replies.
 class Mutations {
   flights = new Map();
-  async read(path) {const r = await fetch(path,{headers:{'X-Wisp-Token':token}});if(!r.ok)throw new Error('Could not read local state. Reopen Wisp.');return r.json();}
+  async read(path) {const r = await fetch(path,{headers:{'X-Wisp-Token':token}});if(!r.ok)throw new Error('Could not read local state. Reopen Jornia.');return r.json();}
   async submit(key,path,payload,onPending) {
     if(this.flights.has(key))return this.flights.get(key);
     onPending?.(true);
@@ -46,10 +46,10 @@ function answerNode(question,answer) {
   const group=element('article','space-y-3');
   const user=element('div','chat chat-end');user.append(element('div','chat-bubble whitespace-pre-wrap',question));
   const ai=element('div','chat chat-start');const content=element('div','max-w-full');
-  content.append(element('div','chat-header mb-1 text-sm text-base-content/65',answer.sources?.some(s=>s.id.startsWith('character:'))?'Wisp · your character':answer.route==='local_memory'?'Wisp · your journal':answer.sources?.some(s=>s.id.startsWith('memory:'))?'Wisp · your journey & world knowledge':'Wisp · world knowledge'));
+  content.append(element('div','chat-header mb-1 text-sm text-base-content/65',answer.sources?.some(s=>s.id.startsWith('character:'))?'Jornia · your character':answer.route==='local_memory'?'Jornia · your journal':answer.sources?.some(s=>s.id.startsWith('memory:'))?'Jornia · your journey & world knowledge':'Jornia · world knowledge'));
   content.append(element('div','chat-bubble whitespace-pre-wrap leading-relaxed',answer.text));
   if(answer.sources?.some(source=>source.id.startsWith('foreverdb:'))){const credit=element('a','link text-xs','Data from ForeverDB.net');credit.href='https://foreverdb.net';credit.target='_blank';credit.rel='noopener noreferrer';content.append(credit);}
-  if(answer.sources?.length){const details=element('details','mt-2 text-xs text-base-content/70');details.append(element('summary','cursor-pointer',answer.route==='local_memory'?'View journal evidence':'View sources'));const list=element('ul','mt-2 space-y-2');for(const source of answer.sources){const item=element('li');if(/^https:\/\//.test(source.uri)){const link=element('a','underline',source.title);link.href=source.uri;link.target='_blank';link.rel='noopener noreferrer';item.append(link);}else if(source.uri?.startsWith('wisp-local:event/')){const evidence=element('button','text-link',source.title+' →');evidence.type='button';evidence.addEventListener('click',()=>{activeFilter='all';renderTimeline();setView('journey',true);const eventId=decodeURIComponent(source.uri.slice('wisp-local:event/'.length));const row=[...document.querySelectorAll('[data-event-id]')].find(e=>e.dataset.eventId===eventId);if(row){row.focus();row.scrollIntoView({block:'center'});}});item.append(evidence);}else item.textContent=source.title+' · '+source.revision;list.append(item);}details.append(list);if(answer.warnings?.length)details.append(element('p','mt-2 leading-relaxed',answer.warnings.join(' ')));if(sourceExpiry(answer))details.append(element('p','mt-2 leading-relaxed','Time-limited world source. This answer is removed after its source expires and Wisp is used again. Your journal is unaffected.'));content.append(details);}
+  if(answer.sources?.length){const details=element('details','mt-2 text-xs text-base-content/70');details.append(element('summary','cursor-pointer',answer.route==='local_memory'?'View journal evidence':'View sources'));const list=element('ul','mt-2 space-y-2');for(const source of answer.sources){const item=element('li');if(/^https:\/\//.test(source.uri)){const link=element('a','underline',source.title);link.href=source.uri;link.target='_blank';link.rel='noopener noreferrer';item.append(link);}else if(source.uri?.startsWith('wisp-local:event/')){const evidence=element('button','text-link',source.title+' →');evidence.type='button';evidence.addEventListener('click',()=>{activeFilter='all';renderTimeline();setView('journey',true);const eventId=decodeURIComponent(source.uri.slice('wisp-local:event/'.length));const row=[...document.querySelectorAll('[data-event-id]')].find(e=>e.dataset.eventId===eventId);if(row){row.focus();row.scrollIntoView({block:'center'});}});item.append(evidence);}else item.textContent=source.title+' · '+source.revision;list.append(item);}details.append(list);if(answer.warnings?.length)details.append(element('p','mt-2 leading-relaxed',answer.warnings.join(' ')));if(sourceExpiry(answer))details.append(element('p','mt-2 leading-relaxed','Time-limited world source. This answer is removed after its source expires and Jornia is used again. Your journal is unaffected.'));content.append(details);}
   if(answer.model){const meta=element('p','answer-tech mt-2',answer.model+' · '+(answer.estimated_cost_eur==null?'cost unknown':'≈ €'+answer.estimated_cost_eur.toFixed(6)));const evidence=content.querySelector('details');if(evidence)evidence.append(meta);else{const details=element('details');details.append(element('summary','cursor-pointer','Answer details'),meta);content.append(details);}}
   ai.append(content);group.append(user,ai);return group;
 }
@@ -125,7 +125,7 @@ $('forget').addEventListener('click',async()=>{if(!selected||!confirm('Permanent
 // Acknowledged import through the existing shared mutation runtime; activation never resets history.
 $('demo-start').addEventListener('click',async()=>{
  $('demo-status').textContent='Preparing the demo journal…';$('welcome-status').textContent='Preparing your demo journal…';
- try {const receipt=await mutations.submit('demo','/local/demo',{},busy=>{$('demo-start').disabled=busy;});selected=receipt.result.character_id;lastReceipt=null;$('question').value='';showError('');await refresh();$('demo-status').textContent='Demo journal ready. Explore your journey or talk to Wisp.';setView('journey',true);}
+ try {const receipt=await mutations.submit('demo','/local/demo',{},busy=>{$('demo-start').disabled=busy;});selected=receipt.result.character_id;lastReceipt=null;$('question').value='';showError('');await refresh();$('demo-status').textContent='Demo journal ready. Explore your journey or talk to Jornia.';setView('journey',true);}
  catch(error){$('demo-status').textContent=error.message;$('welcome-status').textContent=error.message;}
 });
 $('connection-check').addEventListener('click',async()=>{
@@ -141,12 +141,12 @@ async function refreshJournal(){
  const status=await mutations.read('/local/journal');const config=status.config;
  if(!journalLoaded){journalRevision=config.revision;$('wow-root').value=config.root||'';$('journal-consent').checked=config.consent_version===2;journalLoaded=true;$('journal-panel').open=config.revision===0;}
  $('journal-pause').disabled=journalBusy||!config.enabled;
- $('journal-status').textContent=(config.enabled?'Journal reading is active. ':'Journal reading is paused. ')+(status.last_import?'Last import: '+localTime(status.last_import)+'. ':'')+(config.enabled?status.characters+' character folders · '+status.files+' Wisp journals. ':'')+(status.error||'');
+ $('journal-status').textContent=(config.enabled?'Journal reading is active. ':'Journal reading is paused. ')+(status.last_import?'Last import: '+localTime(status.last_import)+'. ':'')+(config.enabled?status.characters+' character folders · '+status.files+' Jornia journals. ':'')+(status.error||'');
 }
 async function configureJournal(enabled){
  const firstImport=state.characters.length===0;
  $('journal-action').textContent=enabled?'Saving your choice…':'Pausing journal reading…';
- try{const receipt=await mutations.submit('journal','/local/journal',{root:$('wow-root').value,enabled,consent_version:enabled?2:0,expected_revision:journalRevision},busy=>{journalBusy=busy;$('journal-enable').disabled=busy;$('journal-pause').disabled=busy;});journalRevision=receipt.result.revision;$('journal-panel').open=false;$('journal-action').textContent=enabled?'Your choice is saved. Existing Wisp journals will be read automatically.':'Reading is paused. Your saved history is kept. Pause in-game recording with /wisp stop.';await refreshJournal();await refresh();if(firstImport&&state.characters.length)setView('characters',true);}
+ try{const receipt=await mutations.submit('journal','/local/journal',{root:$('wow-root').value,enabled,consent_version:enabled?2:0,expected_revision:journalRevision},busy=>{journalBusy=busy;$('journal-enable').disabled=busy;$('journal-pause').disabled=busy;});journalRevision=receipt.result.revision;$('journal-panel').open=false;$('journal-action').textContent=enabled?'Your choice is saved. Existing Jornia journals will be read automatically.':'Reading is paused. Your saved history is kept. Pause in-game recording with /wisp stop.';await refreshJournal();await refresh();if(firstImport&&state.characters.length)setView('characters',true);}
  catch(error){$('journal-action').textContent=error.message;}
 }
 $('journal-form').addEventListener('submit',event=>{event.preventDefault();if(!$('journal-consent').checked)return;configureJournal(true);});
@@ -157,7 +157,7 @@ function renderTimeline(){
  $('journey-summary').textContent=journey.total?journey.total+' recorded entries · '+journey.places+' places · '+journey.completed_quests+' completed quest IDs.':'';
  if(journey.saved_state){const s=journey.saved_state;$('journey-summary').textContent+=' Saved checkpoint: level '+s.level+' · '+s.zone+' · '+localTime(s.observed_at)+'. Recorded state, not live.';}
  const list=$('journey-events');list.replaceChildren();let day='';
- $('timeline-empty').querySelector('h3').textContent=journey.total?'No entries here yet.':'Your first chapter is waiting.';$('timeline-empty').querySelector('p').textContent=journey.total?'Choose another filter or let your next session add to the story.':'Your character is here. Connect the Wisp addon to start recording a journey.';$('timeline-connect').classList.toggle('hidden',!!journey.total);
+ $('timeline-empty').querySelector('h3').textContent=journey.total?'No entries here yet.':'Your first chapter is waiting.';$('timeline-empty').querySelector('p').textContent=journey.total?'Choose another filter or let your next session add to the story.':'Your character is here. Connect the Jornia addon to start recording a journey.';$('timeline-connect').classList.toggle('hidden',!!journey.total);
  const entries=(journey.events||[]).filter(e=>activeFilter==='all'||(activeFilter==='place'?['zone','snapshot','session_start','session_end'].includes(e.kind):(activeFilter==='quest_completed'?e.kind.startsWith('quest_'):e.kind===activeFilter)));
  for(const e of entries){
   const date=new Date(e.observed_at*1000).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
@@ -215,7 +215,7 @@ async function loadContext(){
 $('ai').addEventListener('change',()=>{resetContext();loadContext();});
 $('share-journey').addEventListener('change',()=>{if($('share-journey').checked){$('context-preview').open=true;if(!contextPreview||contextCharacter!==selected)loadContext();}});
 
-$('access-form').addEventListener('submit',async event=>{event.preventDefault();$('access-status').textContent='Checking your invite code…';try{await mutations.submit('access','/local/access',{token:$('access-code').value.trim()},busy=>{$('access-save').disabled=busy;});$('access-code').value='';$('access-status').textContent='Wisp is connected. You can now ask AI questions.';$('connection-status').textContent='Invite code and connection verified.';}catch(error){$('access-status').textContent=error.message;}});
+$('access-form').addEventListener('submit',async event=>{event.preventDefault();$('access-status').textContent='Checking your invite code…';try{await mutations.submit('access','/local/access',{token:$('access-code').value.trim()},busy=>{$('access-save').disabled=busy;});$('access-code').value='';$('access-status').textContent='Jornia is connected. You can now ask AI questions.';$('connection-status').textContent='Invite code and connection verified.';}catch(error){$('access-status').textContent=error.message;}});
 
 // Armory is dated local context; only the exact reviewed projection may be shared.
 function renderProfile(){

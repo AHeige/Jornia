@@ -43,7 +43,7 @@ knowledge-check:
 
 .PHONY: e2e
 e2e:
-	go build -o .cache/wisp-companion ./apps/companion
+	go build -o .cache/jornia-companion ./apps/companion
 	WISP_TEST_EXPORT_PATH="$(CURDIR)/.cache/addon-export.txt" go test -count=1 -run TestAddonExport ./internal/companion
 	npm ci --prefix tests/e2e --no-audit --no-fund
 	npm test --prefix tests/e2e

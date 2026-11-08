@@ -1,4 +1,4 @@
--- Wisp's own 8-byte parallel presence transport. No addon loads per message.
+-- Jornia's own 8-byte parallel presence transport. No addon loads per message.
 if SlashCmdList.WISPRETURNBLOCK then SlashCmdList.WISPRETURNBLOCK('hide') end
 if SlashCmdList.WISPRETURNBUS then SlashCmdList.WISPRETURNBUS('hide') end
 if WispOCRPanel then WispOCRPanel:Hide() end

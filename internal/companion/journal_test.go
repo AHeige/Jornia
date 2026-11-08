@@ -238,7 +238,7 @@ func TestAddonConsentAndAutomaticSessions(t *testing.T) {
 	if err := vm.DoString(mock); err != nil {
 		t.Fatal(err)
 	}
-	b, _ := os.ReadFile(filepath.Join("..", "..", "apps", "addon", "Wisp", "Wisp.lua"))
+	b, _ := os.ReadFile(filepath.Join("..", "..", "apps", "addon", "Jornia", "Wisp.lua"))
 	if err := vm.DoString(string(b)); err != nil {
 		t.Fatal(err)
 	}

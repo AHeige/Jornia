@@ -6,14 +6,14 @@ import (
 	"net/url"
 	"time"
 
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 )
 
 // English local prompts remain offline and retain the original player's note text.
 func (s *Server) englishMemory(ctx context.Context, char string, full bool) (wisp.Answer, error) {
 	zero := 0.0
-	a := wisp.Answer{Status: "unknown", Text: "There is no recorded history for this character yet. Connect a Wisp journal or try the demo.", GameVersion: "forever", Route: "local_memory", Sources: []storage.Source{}, EvidenceIDs: []string{}, Warnings: []string{}, EstimatedCostEUR: &zero}
+	a := wisp.Answer{Status: "unknown", Text: "There is no recorded history for this character yet. Connect a Jornia journal or try the demo.", GameVersion: "forever", Route: "local_memory", Sources: []storage.Source{}, EvidenceIDs: []string{}, Warnings: []string{}, EstimatedCostEUR: &zero}
 	j, err := s.Store.Journey(ctx, char)
 	if err != nil || len(j.Events) == 0 {
 		return a, err
@@ -65,16 +65,16 @@ func (s *Server) englishMemory(ctx context.Context, char string, full bool) (wis
 	}
 	for _, e := range evidence {
 		a.EvidenceIDs = append(a.EvidenceIDs, "memory:"+e.ID)
-		a.Sources = append(a.Sources, storage.Source{ID: e.ID, Title: "Local Wisp journal", URI: "wisp-local:event/" + url.PathEscape(e.ID), Revision: e.ClientVersion + " / " + e.ClientBuild, License: "Private player history", ValidationStatus: "user_imported"})
+		a.Sources = append(a.Sources, storage.Source{ID: e.ID, Title: "Local Jornia journal", URI: "wisp-local:event/" + url.PathEscape(e.ID), Revision: e.ClientVersion + " / " + e.ClientBuild, License: "Private player history", ValidationStatus: "user_imported"})
 	}
 	a.Warnings = []string{"Recorded history, not your live position. Imported files may have been edited."}
 	if char == DemoCharacterID {
 		a.Text = "Demo data — invented history. " + a.Text
 		a.Warnings = []string{"Synthetic events, not observations from WoW or verification of the client."}
 		for i := range a.Sources {
-			a.Sources[i].Title = "Wisp demo journal · synthetic"
+			a.Sources[i].Title = "Jornia demo journal · synthetic"
 			a.Sources[i].ValidationStatus = "synthetic_demo"
-			a.Sources[i].License = "Wisp test data"
+			a.Sources[i].License = "Jornia test data"
 		}
 	}
 	return a, nil

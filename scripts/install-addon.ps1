@@ -8,11 +8,11 @@ if (!(Test-Path -LiteralPath (Join-Path $root 'WTF')) -and !(Test-Path -LiteralP
 $source = Join-Path $PSScriptRoot 'AddOns\Wisp'
 if (!(Test-Path -LiteralPath (Join-Path $source 'Wisp_Camelot.toc'))) { throw 'Addon source is missing from this bundle.' }
 $addons = Join-Path $root 'Interface\AddOns'
-$target = Join-Path $addons 'Wisp'
+$target = Join-Path $addons 'Jornia'
 New-Item -ItemType Directory -Force -Path $addons | Out-Null
 if (Test-Path -LiteralPath $target) {
     $existing = Join-Path $target 'Wisp_Camelot.toc'
-    if (!(Test-Path -LiteralPath $existing) -or !(Select-String -LiteralPath $existing -SimpleMatch 'Wisp contributors' -Quiet)) { throw 'An unrelated Wisp addon may already exist. Nothing was overwritten; choose a separate test client or inspect it manually.' }
+    if (!(Test-Path -LiteralPath $existing) -or !(Select-String -LiteralPath $existing -SimpleMatch 'Jornia contributors' -Quiet)) { throw 'An unrelated Jornia addon may already exist. Nothing was overwritten; choose a separate test client or inspect it manually.' }
 
     $backup = Join-Path $env:LOCALAPPDATA ('Wisp\addon-backups\Wisp-' + (Get-Date -Format 'yyyyMMdd-HHmmss-ffff'))
     New-Item -ItemType Directory -Force -Path (Split-Path $backup) | Out-Null
@@ -20,4 +20,4 @@ if (Test-Path -LiteralPath $target) {
     Write-Host "Previous addon backed up to $backup"
 }
 Copy-Item -LiteralPath $source -Destination $addons -Recurse -Force
-Write-Host "Installed $target. Restart the client, enable Wisp and type /wisp."
+Write-Host "Installed $target. Restart the client, enable Jornia and type /wisp."

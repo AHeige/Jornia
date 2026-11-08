@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/harness"
+	"github.com/AHeige/Jornia/internal/storage"
 	"strings"
 	"time"
 	"unicode/utf8"
-	"wisp/internal/harness"
-	"wisp/internal/storage"
 )
 
 type GameObjective struct {
@@ -57,13 +57,22 @@ type Action struct {
 	QuestID   int    `json:"quest_id"`
 	ExpiresAt int64  `json:"expires_at"`
 }
+type ObjectiveRemainder struct {
+	Index     int    `json:"index"`
+	Text      string `json:"text,omitempty"`
+	Remaining *int   `json:"remaining,omitempty"`
+	Complete  bool   `json:"complete"`
+}
+
 type Candidate struct {
-	ID          string `json:"id"`
-	QuestID     int    `json:"quest_id"`
-	Title       string `json:"title"`
-	Goal        string `json:"goal"`
-	EvidenceID  string `json:"evidence_id"`
-	CanNavigate bool   `json:"can_navigate"`
+	Remaining   []ObjectiveRemainder `json:"objectives"`
+	Guidance    string               `json:"guidance"`
+	ID          string               `json:"id"`
+	QuestID     int                  `json:"quest_id"`
+	Title       string               `json:"title"`
+	Goal        string               `json:"goal"`
+	EvidenceID  string               `json:"evidence_id"`
+	CanNavigate bool                 `json:"can_navigate"`
 }
 type GamePlan struct {
 	Candidates []Candidate     `json:"candidates"`
@@ -143,13 +152,30 @@ func BuildGamePlan(ctx context.Context, s *GameSnapshot, fetch func(context.Cont
 					if ready {
 						goal = "check_turn_in"
 					}
-					plan.Candidates = append(plan.Candidates, Candidate{ID: fmt.Sprintf("quest:%d", q.ID), QuestID: q.ID, Title: q.Title, Goal: goal, EvidenceID: fmt.Sprintf("state:quest:%d", q.ID), CanNavigate: q.Waypoint})
+					candidate := Candidate{ID: fmt.Sprintf("quest:%d", q.ID), QuestID: q.ID, Title: q.Title, Goal: goal, EvidenceID: fmt.Sprintf("state:quest:%d", q.ID), CanNavigate: q.Waypoint, Remaining: []ObjectiveRemainder{}, Guidance: "Observed objectives. Location and eligibility are not supplied."}
+					for i, objective := range q.Objectives {
+						progress := ObjectiveRemainder{Index: i + 1, Text: objective.Text, Complete: objective.Finished}
+						if objective.Fulfilled != nil && objective.Required != nil {
+							remaining := *objective.Required - *objective.Fulfilled
+							if remaining < 0 {
+								remaining = 0
+							}
+							progress.Remaining = &remaining
+						}
+						candidate.Remaining = append(candidate.Remaining, progress)
+					}
+					if q.Complete {
+						candidate.Guidance = "The client marks this quest complete; its turn-in marker can be checked in the game. Recipient and position are not supplied."
+					} else if len(q.Objectives) == 0 {
+						candidate.Guidance = "Objective details are unavailable until the player opens this quest."
+					}
+					plan.Candidates = append(plan.Candidates, candidate)
 				}
 			}
 		}
 		return json.Marshal(plan.Candidates)
 	})
-	register("retrieve_world_evidence", "Retrieve bounded versioned world facts from the Wisp store", func(ctx context.Context, _ json.RawMessage) (json.RawMessage, error) {
+	register("retrieve_world_evidence", "Retrieve bounded versioned world facts from the Jornia store", func(ctx context.Context, _ json.RawMessage) (json.RawMessage, error) {
 		var err error
 		g, err = fetch(ctx)
 		if err != nil {

@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/AHeige/Jornia/internal/storage"
 	"github.com/jackc/pgx/v5"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-	"wisp/internal/storage"
 )
 
 type Worker struct {

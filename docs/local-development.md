@@ -10,7 +10,7 @@ Requires Docker with Compose and an available Docker daemon. Go 1.26+ and Python
 2. Run `make up`.
 3. Run `make eval`.
 
-On this Mac the working daemon is the `colima-logos-graph` context. Wisp uses its own Compose project, containers, network, and volume alongside existing services. The separate `colima` daemon returned filesystem input/output errors and was not modified. A repository-local Compose v5.7.0 binary was downloaded from Docker's official GitHub release and checked against the release's SHA-256 file. Until Compose is installed globally, use:
+On this Mac the working daemon is the `colima-logos-graph` context. Jornia uses its own Compose project, containers, network, and volume alongside existing services. The separate `colima` daemon returned filesystem input/output errors and was not modified. A repository-local Compose v5.7.0 binary was downloaded from Docker's official GitHub release and checked against the release's SHA-256 file. Until Compose is installed globally, use:
 
 ```sh
 DOCKER_CONTEXT=colima-logos-graph make up COMPOSE=./.cache/docker-compose

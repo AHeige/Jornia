@@ -1,6 +1,6 @@
-# Wisp 0.5.1 — Character journeys
+# Jornia 0.5.1 — Character journeys
 
-A new character-first desktop experience: a midnight-blue/amber identity and lantern-spirit companion, a dedicated journey timeline and place trail, per-character drafts/conversations, and a character roster. First-use approval discovers local WoW character directories and imports existing Wisp journals. Optional public Forever Armory lookup adds the official character render and equipped item list with source dates. Provider credentials remain server-side.
+A new character-first desktop experience: a midnight-blue/amber identity and lantern-spirit companion, a dedicated journey timeline and place trail, per-character drafts/conversations, and a character roster. First-use approval discovers local WoW character directories and imports existing Jornia journals. Optional public Forever Armory lookup adds the official character render and equipped item list with source dates. Provider credentials remain server-side.
 
 English setup and failure states, explicit journal sharing, offline memory, receipt recovery, export and forget controls are preserved. The download page and executed Lua preview use the same visual identity.
 

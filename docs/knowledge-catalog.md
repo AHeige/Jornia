@@ -1,4 +1,4 @@
-# Wisp category and source catalog
+# Jornia category and source catalog
 
 Updated 6 November 2026. The goal is useful answers in defined areas, not the largest possible counter. This note records the catalog rollout before approved ForeverDB ingestion.
 
@@ -61,4 +61,4 @@ The user's preference is to collect data and own the knowledge store. Permitted 
 
 Voluntary gameplay observations are a potential later source. Existing journals are not automatically uploaded or repurposed. Central observations need separate opt-in and a distinct schema excluding private history. Area guides and subjective experiences can be authored/reviewed separately.
 
-Operational verification: 25 categories and 31 actual registry questions against the VM passed, including missing talents/lore/experiences and unimplemented planners. No model calls. Go tests, vet and isolated-schema PostgreSQL integration cases passed. API image `wisp-private-api:20261106-catalog1` was healthy; only Wisp API was recreated. The existing 15-minute ingestion schedule and unrelated containers remained. Rollback configuration: `.env.pre-catalog-20261106` on the VM. No ForeverDB import was active at this stage; see its later delivery checklist.
+Operational verification: 25 categories and 31 actual registry questions against the VM passed, including missing talents/lore/experiences and unimplemented planners. No model calls. Go tests, vet and isolated-schema PostgreSQL integration cases passed. API image `wisp-private-api:20261106-catalog1` was healthy; only Jornia API was recreated. The existing 15-minute ingestion schedule and unrelated containers remained. Rollback configuration: `.env.pre-catalog-20261106` on the VM. No ForeverDB import was active at this stage; see its later delivery checklist.

@@ -60,8 +60,14 @@ def complete(session,carrier,packet,samples,ocr_ms,stop,pads):
             finally:token=None
             carrier.present(carrier.thinking,False)
             if accepted['status']!='completed':raise RuntimeError('Invite was not verified')
-            result=dict(text='AI connected. You can now ask Wisp.',route='connection')
+            result=dict(text='AI connected. You can now ask Jornia.',route='connection')
         else:
+            if packet.get('registration'):
+                registered=api(session,'/local/native-character',dict(mutation_id='native-register-'+packet['id'],**packet['registration']))
+                identity=registered.get('result') or {}
+                if registered['status']!='completed' or not identity.get('character_id') or identity.get('excluded'):raise RuntimeError('Character registration not confirmed')
+                packet['character_id']=identity['character_id']
+                session['identities'][packet['guid']]=packet['character_id']
             payload=dict(mutation_id='native-'+packet['id'],character_id=packet['character_id'],question=packet['question'],ai=True)
             if packet.get('snapshot') is not None:payload.update(snapshot=packet['snapshot'],snapshot_approved=True)
             if stop.is_set():raise InterruptedError('Reader stopped')
@@ -72,7 +78,7 @@ def complete(session,carrier,packet,samples,ocr_ms,stop,pads):
             if accepted['status']!='completed':raise RuntimeError('No completed local receipt')
             result=accepted['result']
     except Exception as error:
-        failure='Invite could not be verified. Check the code and Wisp desktop connection.' if packet.get('activation') else 'No confirmed reply. Check Wisp desktop; your draft is kept. No automatic resend.'
+        failure='Invite could not be verified. Check the code and Jornia desktop connection.' if packet.get('activation') else 'No confirmed reply. Check Jornia desktop; your draft is kept. No automatic resend.'
         print(json.dumps(dict(status='api_not_confirmed',error_type=type(error).__name__,request_id=packet['id'])),flush=True)
     try:
         encoded=reply(packet,result,failure)
@@ -87,12 +93,40 @@ def complete(session,carrier,packet,samples,ocr_ms,stop,pads):
         carrier.phase=True
 
 
+def recover_owned(root):
+    """Recover fixed owned carriers after interruption; never overwrite ambiguous files."""
+    from bus import restore
+    restore(root,width=64)
+    addons=root.resolve(strict=True)/'Interface/AddOns'
+    for n in (65,66):
+        folder=addons/f'WispOCRInbox{n:03d}'
+        p=folder/(folder.name+'_Camelot.toc');held=Carrier.hold(p)
+        if folder.is_symlink() or p.is_symlink() or held.is_symlink():raise ValueError('Recovery symlink rejected')
+        if held.exists():
+            if p.exists():raise ValueError('Ambiguous status carrier; originals preserved')
+            if b'## Dependencies: WispOCR' not in held.read_bytes():raise ValueError('Unexpected carrier original')
+            held.rename(p)
+    for n in range(67,81):
+        folder=addons/f'WispOCRInbox{n:03d}'
+        p=folder/'Inbox.lua';held=folder/'Inbox.lua.wispconnect-hold'
+        if folder.is_symlink() or p.is_symlink() or held.is_symlink():raise ValueError('Recovery symlink rejected')
+        if not held.exists():continue
+        if not p.is_file() or not re.fullmatch(r'WispConnectPads=WispConnectPads or \{\};WispConnectPads\[\d+\]=\{id="[a-f0-9]{16}",hex="[a-f0-9]{64}"\}\n',p.read_text()):
+            raise ValueError('Invite file changed; originals preserved')
+        held.replace(p)
+    print('Owned transport files restored. No journal or player data changed.',flush=True)
+
+
 def run(a):
     if a.session.stat().st_mode&0o077:raise ValueError('Session must be owner-only')
     session=json.loads(a.session.read_text())
     if not re.fullmatch(r'http://127\.0\.0\.1:\d+',session['base_url']):raise ValueError('Expected loopback session')
     lock=open(a.session.with_name('native-reader.lock'),'a')
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    if a.recover:
+        try:recover_owned(a.root)
+        finally:lock.close()
+        return
     carrier=ChatCarrier(a.root);pads=InvitePads(a.root);stop=threading.Event();process=None;worker=None;last_capture=0;announced=False
     def beat():
         phase=True
@@ -136,7 +170,7 @@ def run(a):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--session',type=pathlib.Path,default=pathlib.Path.home()/'Library/Application Support/Wisp/ocr-session.json');p.add_argument('--capture',type=pathlib.Path,default=pathlib.Path('.cache/ocr-test/wisp-companion-capture').resolve());a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--recover',action='store_true',help='Recover only owned interrupted carrier files, then exit');p.add_argument('--session',type=pathlib.Path,default=next((x for x in [pathlib.Path.home()/'Library/Application Support/Jornia/ocr-session.json',pathlib.Path.home()/'Library/Application Support/Wisp/ocr-session.json'] if x.exists()),pathlib.Path.home()/'Library/Application Support/Jornia/ocr-session.json'));p.add_argument('--capture',type=pathlib.Path,default=pathlib.Path('.cache/ocr-test/wisp-companion-capture').resolve());a=p.parse_args()
     def interrupted(*_):raise KeyboardInterrupt
     signal.signal(signal.SIGTERM,interrupted)
     try:run(a)

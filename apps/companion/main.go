@@ -16,7 +16,7 @@ import (
 	"runtime"
 	"time"
 
-	"wisp/internal/companion"
+	"github.com/AHeige/Jornia/internal/companion"
 )
 
 //go:embed web/index.html web/app.js web/style.css web/media/*
@@ -29,12 +29,12 @@ func main() {
 }
 func run() error {
 	listen := flag.String("listen", "127.0.0.1:8787", "local loopback address")
-	backend := flag.String("backend", "https://wisp.logosab.com", "central Wisp API: HTTPS or SSH-forwarded loopback HTTP")
+	backend := flag.String("backend", "https://wisp.logosab.com", "central Jornia API: HTTPS or SSH-forwarded loopback HTTP")
 	data := flag.String("data-dir", "", "local private storage directory")
 	ocrLab := flag.Bool("ocr-lab", false, "explicitly enable local OCR experiment session credentials")
 	noBrowser := flag.Bool("no-browser", false, "do not open the browser automatically")
 	vm := flag.Bool("vm", false, "connect through the dedicated private VM SSH tunnel")
-	prepareVM := flag.Bool("prepare-vm", false, "create only a dedicated local Wisp SSH key and print its public-key path")
+	prepareVM := flag.Bool("prepare-vm", false, "create only a dedicated local Jornia SSH key and print its public-key path")
 	flag.Parse()
 	if *data == "" {
 		base, err := os.UserConfigDir()
@@ -44,7 +44,11 @@ func run() error {
 		if runtime.GOOS == "windows" && os.Getenv("LOCALAPPDATA") != "" {
 			base = os.Getenv("LOCALAPPDATA")
 		}
-		*data = filepath.Join(base, "Wisp")
+		*data = filepath.Join(base, "Jornia")
+		// Never strand existing private journals during the product rename.
+		if _, err := os.Stat(filepath.Join(base, "Wisp", "player.db")); err == nil {
+			*data = filepath.Join(base, "Wisp")
+		}
 	}
 	connectionDir := filepath.Join(*data, "connection")
 	if *prepareVM {
@@ -104,7 +108,7 @@ func run() error {
 	go journal.Run(journalContext)
 	server := &http.Server{Handler: app.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 8192}
 	address := "http://" + listener.Addr().String()
-	fmt.Println("Wisp:", address)
+	fmt.Println("Jornia:", address)
 	fmt.Println("Your local database:", filepath.Join(*data, "player.db"))
 	fmt.Println("Close this console to quit. No game history is sent automatically.")
 	if !*noBrowser {

@@ -17,8 +17,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"wisp/internal/storage"
-	"wisp/internal/wisp"
+	"github.com/AHeige/Jornia/internal/storage"
+	"github.com/AHeige/Jornia/internal/wisp"
 )
 
 type Server struct {
@@ -63,6 +63,7 @@ func NewServer(store *Store, backend, host string, assets fs.FS) (*Server, error
 }
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("POST /local/native-character", s.registerNativeCharacter)
 	mux.HandleFunc("POST /local/access", s.configureAccess)
 	mux.HandleFunc("POST /local/profile", s.configureProfile)
 	mux.HandleFunc("GET /local/installations", func(w http.ResponseWriter, r *http.Request) {
@@ -365,7 +366,7 @@ func (s *Server) Handler() http.Handler {
 		}
 		if strings.HasPrefix(r.URL.Path, "/local/") {
 			if subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Wisp-Token")), []byte(s.Token)) != 1 {
-				reply(w, 403, map[string]string{"error": "Reopen the Wisp window."})
+				reply(w, 403, map[string]string{"error": "Reopen the Jornia window."})
 				return
 			}
 			if r.Method == "POST" && origin != "http://"+s.Host {
@@ -382,7 +383,7 @@ func (s *Server) runAsk(req Ask) {
 	answer, err := s.answer(ctx, req)
 	if err != nil {
 		status := "failed"
-		message := "Wisp could not return an answer. Your draft is kept; no reply has been invented."
+		message := "Jornia could not return an answer. Your draft is kept; no reply has been invented."
 		if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "transport") {
 			status = "needs_attention"
 			message = "The result is uncertain. This request will not be sent again automatically. Your draft is kept."
@@ -525,9 +526,9 @@ func (s *Server) memory(ctx context.Context, char string) (wisp.Answer, error) {
 		a.Text = "Demodata — påhittad spelhistorik. " + a.Text
 		a.Warnings = []string{"Syntetiska testhändelser. Detta är inte observationer från WoW eller verifiering av klienten."}
 		for i := range a.Sources {
-			a.Sources[i].Title = "Wisp demojournal · syntetisk"
+			a.Sources[i].Title = "Jornia demojournal · syntetisk"
 			a.Sources[i].ValidationStatus = "synthetic_demo"
-			a.Sources[i].License = "Wisp testdata"
+			a.Sources[i].License = "Jornia testdata"
 		}
 	}
 	return a, nil

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Wisp's eight-byte parallel return experiment. Stdlib, no network/AI calls."""
+"""Jornia's eight-byte parallel return experiment. Stdlib, no network/AI calls."""
 import argparse
 import json
 import pathlib

@@ -11,12 +11,12 @@ const data=await fs.mkdtemp(path.join(root,'.cache/e2e-'));
 const packet=await fs.readFile(path.join(root,'.cache/addon-export.txt'),'utf8');
 let child,browser;
 async function start(backend=process.env.WISP_API_URL||'http://127.0.0.1:8090') {
- child=spawn(path.join(root,'.cache/wisp-companion'),['-no-browser','-listen','127.0.0.1:0','-data-dir',data,'-backend',backend],{cwd:root,stdio:['ignore','pipe','pipe']});
+ child=spawn(path.join(root,'.cache/jornia-companion'),['-no-browser','-listen','127.0.0.1:0','-data-dir',data,'-backend',backend],{cwd:root,stdio:['ignore','pipe','pipe']});
  return await new Promise((resolve,reject)=>{
   const timer=setTimeout(()=>reject(new Error('Companion startup timed out')),15000);
   child.once('exit',code=>{clearTimeout(timer);reject(new Error('Companion exited '+code));});
   child.stderr.on('data',buffer=>process.stderr.write(buffer));
-  child.stdout.on('data',buffer=>{const match=String(buffer).match(/Wisp: (http:\/\/[^\s]+)/);if(match){clearTimeout(timer);resolve(match[1]);}});
+  child.stdout.on('data',buffer=>{const match=String(buffer).match(/Jornia: (http:\/\/[^\s]+)/);if(match){clearTimeout(timer);resolve(match[1]);}});
  });
 }
 async function stop(){if(child&&child.exitCode===null){const done=once(child,'exit');child.kill('SIGINT');await done;}}

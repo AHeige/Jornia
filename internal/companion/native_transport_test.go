@@ -37,7 +37,7 @@ func TestNativeTransportTwoRepliesAndIdentityRejection(t *testing.T) {
 	if err := vm.DoString(mock); err != nil {
 		t.Fatal(err)
 	}
-	code, err := os.ReadFile("../../apps/addon/Wisp/Transport.lua")
+	code, err := os.ReadFile("../../apps/addon/Jornia/Transport.lua")
 	if err != nil {
 		t.Fatal(err)
 	}

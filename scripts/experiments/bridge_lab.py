@@ -23,7 +23,7 @@ if a.action == 'install':
         name = f'WispBridgeInbox{slot:02d}'
         target = addons / name
         target.mkdir()
-        (target / f'{name}_Camelot.toc').write_text(f'## Interface: 16001\n## Title: Wisp research inbox {slot}\n## LoadOnDemand: 1\n## Dependencies: WispBridgeLab\nInbox.lua\n')
+        (target / f'{name}_Camelot.toc').write_text(f'## Interface: 16001\n## Title: Jornia research inbox {slot}\n## LoadOnDemand: 1\n## Dependencies: WispBridgeLab\nInbox.lua\n')
         (target / 'Inbox.lua').write_text('WispBridgeLabReceive("696e697469616c", "5374617274757020636f6e74726f6c20746578742e")\n')
     print('Installed inert lab + four one-shot inboxes. Start WoW, then write a reply before consuming slot 1.')
 else:

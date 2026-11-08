@@ -1,8 +1,8 @@
-# Wisp visual OCR transport on 6 November 2026
+# Jornia visual OCR transport on 6 November 2026
 
 ## New user direction
 
-A dedicated Lua chat is open in WoW. Enter should make the question readable from that window and send it through Wisp → backend → Berget → backend → addon reply. This now takes priority over SpeakText. Transport must not require reload, logout or client exit.
+A dedicated Lua chat is open in WoW. Enter should make the question readable from that window and send it through Jornia → backend → Berget → backend → addon reply. This now takes priority over SpeakText. Transport must not require reload, logout or client exit.
 
 ## First local evidence
 
@@ -39,7 +39,7 @@ At that checkpoint image OCR was verified but live capture, outbox UI, Enter det
 
 ## E2E lab implemented later that day
 
-A later instruction prioritized the whole chain. We built separate Wisp OCR Lab, a Python-standard-library controller, native Objective-C ScreenCaptureKit/Vision capture and explicit `-ocr-lab` in the Go companion. No large new dependency. See `scripts/experiments/ocr/README.md` for running/data limits.
+A later instruction prioritized the whole chain. We built separate Jornia OCR Lab, a Python-standard-library controller, native Objective-C ScreenCaptureKit/Vision capture and explicit `-ocr-lab` in the Go companion. No large new dependency. See `scripts/experiments/ocr/README.md` for running/data limits.
 
 Return now used 96 preinstalled LoD slots rather than one manually loaded inbox. The addon consumed the next slot every 600 ms while pending; the controller wrote sent/received/final state to all owned inboxes only on actual state changes. This finite cost does not prove unlimited chat.
 

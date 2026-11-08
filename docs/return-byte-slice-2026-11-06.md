@@ -1,4 +1,4 @@
-# Wisp reusable byte and text return on 6 November 2026
+# Jornia reusable byte and text return on 6 November 2026
 
 Later follow-up: [eight-byte acknowledged block transfer](return-block-slice-2026-11-06.md) is complete. This report preserves the earlier byte slice and its limits.
 

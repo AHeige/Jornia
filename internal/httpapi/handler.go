@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"wisp/internal/wisp"
+	"github.com/AHeige/Jornia/internal/wisp"
 )
 
 func Handler(service *wisp.Service, ping func(context.Context) error) http.Handler {

@@ -15,7 +15,7 @@ def case(group,q,status='answered',contains=None,**fields):
 if a.catalog:
  for e in json.loads(a.catalog.read_text()):
   for prefix in ['Tell me about ','Vad är ']:case('catalog',prefix+e['name'],'answered',e['name'])
-for q in ["What is the exact live drop chance for every item in Ashenvale?","Can you confirm every Forever quest is imported?","What is my current inventory?","Which quests do I have active right now?","Where is Unknown Wisp Test Village?","Who gives Nonexistent Wisp Quest?","Vad har jag i väskan just nu?","Vilka quests har jag aktiva just nu?","What comes after Nonexistent Wisp Quest?","Where is My Made Up Dungeon?"]:
+for q in ["What is the exact live drop chance for every item in Ashenvale?","Can you confirm every Forever quest is imported?","What is my current inventory?","Which quests do I have active right now?","Where is Unknown Jornia Test Village?","Who gives Nonexistent Jornia Quest?","Vad har jag i väskan just nu?","Vilka quests har jag aktiva just nu?","What comes after Nonexistent Jornia Quest?","Where is My Made Up Dungeon?"]:
  case('missing',q,'unknown')
 for version in ['retail','classic','era','not-a-game']:
  case('version','Where is Astranaar?','unknown',game_version=version)

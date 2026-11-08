@@ -13,10 +13,10 @@ const backend=http.createServer(async(req,res)=>{res.setHeader('content-type','a
  asks.push(q);res.end(JSON.stringify({status:'answered',text:q.character?'Your selected dated snapshot lists Synthetic Pauldrons.':'No personal context was sent.',route:'berget',model:'test-model',game_version:'forever',evidence_ids:q.character?['character:profile']:[],sources:q.character?[{id:'character:profile',title:'Selected local Armory snapshot',uri:'wisp-local:character/profile',revision:'test',validation_status:'user_imported'}]:[],warnings:['Synthetic browser test.']}));});backend.listen(0,'127.0.0.1');await once(backend,'listening');
 function ensure(x,m){if(!x)throw Error(m);}
 try{
- child=spawn(process.env.WISP_TEST_BINARY||path.join(root,'.cache/wisp-companion'),['-no-browser','-listen','127.0.0.1:0','-data-dir',data,'-backend','http://127.0.0.1:'+backend.address().port],{stdio:['ignore','pipe','pipe']});
- const base=await new Promise((resolve,reject)=>{child.stdout.on('data',x=>{const m=String(x).match(/Wisp: (http:\/\/[^\s]+)/);if(m)resolve(m[1]);});child.once('exit',code=>reject(Error('exit '+code)));});
+ child=spawn(process.env.WISP_TEST_BINARY||path.join(root,'.cache/jornia-companion'),['-no-browser','-listen','127.0.0.1:0','-data-dir',data,'-backend','http://127.0.0.1:'+backend.address().port],{stdio:['ignore','pipe','pipe']});
+ const base=await new Promise((resolve,reject)=>{child.stdout.on('data',x=>{const m=String(x).match(/Jornia: (http:\/\/[^\s]+)/);if(m)resolve(m[1]);});child.once('exit',code=>reject(Error('exit '+code)));});
  browser=await chromium.launch({headless:true});const page=await browser.newPage({viewport:{width:1280,height:1000}});await page.goto(base);await settings(page);
- await page.locator('#access-code').fill(access);await page.locator('#access-save').click();await page.getByText('Wisp is connected.',{exact:false}).waitFor();
+ await page.locator('#access-code').fill(access);await page.locator('#access-save').click();await page.getByText('Jornia is connected.',{exact:false}).waitFor();
  await page.locator('#profile-name').fill('Aster');await page.locator('#profile-surname').fill('Test');await page.locator('#profile-consent').check();await page.locator('#profile-load').click();await page.getByText('Character saved.',{exact:false}).waitFor({state:'attached'});await companion(page);
  await page.locator('#ai').check();await page.getByText('Dated class, race, level',{exact:false}).waitFor();
  await page.locator('#question').fill('Compare my saved equipment');await page.locator('#ask-submit').click();await page.getByRole('log').getByText('No personal context was sent.',{exact:true}).waitFor();ensure(!asks[0].character,'Implicit profile sharing');

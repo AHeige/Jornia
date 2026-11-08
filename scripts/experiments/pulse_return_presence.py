@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pulse only Wisp's disposable, pre-existing zero-byte research asset.
+"""Pulse only Jornia's disposable, pre-existing zero-byte research asset.
 No WoW input, settings, network, imports or inference. Lua must already be probing.
 """
 import argparse
@@ -13,7 +13,7 @@ def pulse(root, cycles, half_period):
     lab = root / 'Interface/AddOns/WispBridgeLab'
     target = lab / 'wispreturn_pulse.wav'
     if not (root / 'WTF').is_dir() or lab.is_symlink() or not lab.is_dir():
-        raise ValueError('Expected installed Wisp research lab')
+        raise ValueError('Expected installed Jornia research lab')
     if target.is_symlink() or not target.is_file() or target.stat().st_size != 0:
         raise ValueError('Expected only our existing zero-byte pulse asset')
     if not 1 <= cycles <= 20 or not .25 <= half_period <= 2 or cycles * half_period * 2 > 40:
