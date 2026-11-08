@@ -201,3 +201,23 @@ filter. The queue reported all six catalogs current at priority -10 and 432
 quest-detail jobs current at priority -9, including previously cached details.
 These are provider catalog/refresh counts, not independently verified quest
 availability or complete route coverage. No chat/API services were restarted.
+
+### Quest totals: metadata is not the enumerable catalog
+
+A subsequent live check on 8 November found `/meta` advertising 6,614 quests,
+while `/quests?limit=1` reported 3,992 (the previously cached catalog reported
+3,991). All 3,991 previously enumerated quest details were already stored. Do
+not report 3,991/6,614 as an import-completion percentage: these endpoints have
+different observed totals, and the cause has not been established. The
+[provider documentation](https://foreverdb.net/developers) describes the list as
+quests with its guide; it documents no switch to enumerate the metadata-only
+remainder. Do not guess IDs or sweep numeric ranges to close the gap.
+
+Refresh the documented quest pages and import newly discovered IDs within the
+normal shared budget. A one-off reconciliation was bounded to 60 worker
+requests, with current unfiltered quest-list jobs moved ahead of the large
+detail backlog. Retry jobs and provider cooldowns were not reset. Three
+successful diagnostic calls and one rejected call were conservatively charged
+to the same daily ledger before use. The provider documents 60 requests/minute
+and 10,000/day; our existing 1.1-second pacing, 8,000/day safety cap and hourly
+200-request batches remain stricter. Revisit limits if the provider changes them.
