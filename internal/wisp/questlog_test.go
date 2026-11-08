@@ -117,3 +117,22 @@ func TestRichGuidanceUsesObservedDirectionsAndSurvivesMissingFollowups(t *testin
 		}
 	}
 }
+
+type identityWorld struct {
+	forbiddenWorld
+	ids []int
+}
+
+func (w *identityWorld) RetrieveQuestContext(_ context.Context, _ string, _ bool, _ string, ids []int) (storage.Graph, error) {
+	w.ids = ids
+	return storage.Graph{GameVersion: "forever"}, nil
+}
+func TestCurrentAndTurnedInQuestsReachIdentityRetrieval(t *testing.T) {
+	store := &identityWorld{}
+	service := Service{Store: store}
+	now := time.Now().Unix()
+	_, err := service.Ask(context.Background(), Request{GameVersion: "forever", Question: "Vad gör jag nu?", Snapshot: &GameSnapshot{CapturedAt: now, Level: 3, Quests: []GameQuest{{ID: 3901, Title: "Localized title"}}, CompletedQuests: []CompletedQuest{{ID: 376, ObservedAt: now, Confirmation: "turn_in_event"}}}})
+	if err != nil || len(store.ids) != 2 || store.ids[0] != 3901 || store.ids[1] != 376 {
+		t.Fatal(err, store.ids)
+	}
+}

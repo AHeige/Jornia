@@ -2,6 +2,8 @@ package storage
 
 import (
 	"context"
+	"fmt"
+	"github.com/jackc/pgx/v5"
 	"strings"
 	"unicode"
 )
@@ -9,6 +11,31 @@ import (
 // Retrieve finds anchors in SQL before loading a bounded two-hop neighborhood.
 // Corpus size is independent of the model's context window.
 func (s *Store) Retrieve(ctx context.Context, version string, spoilers bool, question string) (Graph, error) {
+	return s.retrieve(ctx, version, spoilers, question, []string{})
+}
+
+// RetrieveQuestContext anchors observed IDs to the current provider build. Localized
+// titles are display text, not the identity of a quest. Existing source filters apply.
+func (s *Store) RetrieveQuestContext(ctx context.Context, version string, spoilers bool, question string, questIDs []int) (Graph, error) {
+	anchors := []string{}
+	if version == "forever" && !s.ExcludeForeverDB && len(questIDs) > 0 && len(questIDs) <= 32 {
+		var build string
+		err := s.Pool.QueryRow(ctx, `SELECT value FROM api_ingest_state WHERE key='foreverdb:build'`).Scan(&build)
+		if err != nil && err != pgx.ErrNoRows {
+			return Graph{}, err
+		}
+		seen := map[int]bool{}
+		for _, id := range questIDs {
+			if id > 0 && build != "" && !seen[id] {
+				anchors = append(anchors, fmt.Sprintf("foreverdb:%s:quests:%d", build, id))
+				seen[id] = true
+			}
+		}
+	}
+	return s.retrieve(ctx, version, spoilers, question, anchors)
+}
+
+func (s *Store) retrieve(ctx context.Context, version string, spoilers bool, question string, questAnchors []string) (Graph, error) {
 	g := Graph{GameVersion: version, Entities: []Entity{}, Edges: []Edge{}, Sources: []Source{}}
 	normalized := strings.Map(func(r rune) rune {
 		if unicode.IsLetter(r) || unicode.IsNumber(r) {
@@ -28,10 +55,10 @@ func (s *Store) Retrieve(ctx context.Context, version string, spoilers bool, que
 	for word := range searchStopwords {
 		stopNames = append(stopNames, word)
 	}
-	if words == "" {
+	if words == "" && len(questAnchors) == 0 {
 		return g, nil
 	}
-	rows, err := s.Pool.Query(ctx, `SELECT e.id FROM entities e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND (NOT $6 OR s.id NOT LIKE 'foreverdb:%') AND lower(e.name)<>ALL($5) AND to_tsvector('simple',e.name||' '||e.id) @@ to_tsquery('simple',$4) AND ($2 OR NOT e.spoiler) AND s.validation_status IN ('fixture','source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) AND (s.id NOT LIKE 'foreverdb:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key='foreverdb:build')) AND (position(' '||btrim(regexp_replace(lower(e.name),'[^[:alnum:]]+',' ','g'))||' ' in $3)>0 OR position(' '||btrim(regexp_replace(lower(e.id),'[^[:alnum:]]+',' ','g'))||' ' in $3)>0) ORDER BY length(e.name) DESC,e.id LIMIT 24`, version, spoilers, normalized, words, stopNames, s.ExcludeForeverDB)
+	rows, err := s.Pool.Query(ctx, `SELECT e.id FROM entities e JOIN sources s ON s.id=e.source_id WHERE e.game_version=$1 AND (NOT $6 OR s.id NOT LIKE 'foreverdb:%') AND lower(e.name)<>ALL($5) AND (e.id=ANY($7) OR to_tsvector('simple',e.name||' '||e.id) @@ to_tsquery('simple',$4)) AND ($2 OR NOT e.spoiler) AND s.validation_status IN ('fixture','source_checked','verified') AND (s.expires_at IS NULL OR s.expires_at>now()) AND (s.id NOT LIKE 'blizzard-api:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key LIKE 'namespace:%')) AND (s.id NOT LIKE 'foreverdb:%' OR s.provenance->>'effective_version' IN(SELECT value FROM api_ingest_state WHERE key='foreverdb:build')) AND (e.id=ANY($7) OR position(' '||btrim(regexp_replace(lower(e.name),'[^[:alnum:]]+',' ','g'))||' ' in $3)>0 OR position(' '||btrim(regexp_replace(lower(e.id),'[^[:alnum:]]+',' ','g'))||' ' in $3)>0) ORDER BY (e.id=ANY($7)) DESC,length(e.name) DESC,e.id LIMIT 24`, version, spoilers, normalized, words, stopNames, s.ExcludeForeverDB, questAnchors)
 	if err != nil {
 		return g, err
 	}

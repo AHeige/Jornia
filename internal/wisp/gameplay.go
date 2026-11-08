@@ -189,7 +189,7 @@ func BuildGamePlan(ctx context.Context, s *GameSnapshot, fetch func(context.Cont
 					if ready {
 						goal = "check_turn_in"
 					}
-					candidate := Candidate{ID: fmt.Sprintf("quest:%d", q.ID), QuestID: q.ID, Title: q.Title, Goal: goal, EvidenceID: fmt.Sprintf("state:quest:%d", q.ID), CanNavigate: q.Waypoint, Remaining: []ObjectiveRemainder{}, Guidance: "Observed objectives. Location and eligibility are not supplied."}
+					candidate := Candidate{ID: fmt.Sprintf("quest:%d", q.ID), QuestID: q.ID, Title: q.Title, Goal: goal, EvidenceID: fmt.Sprintf("state:quest:%d", q.ID), CanNavigate: q.Waypoint, Remaining: []ObjectiveRemainder{}, Guidance: "Observed objectives. This observation does not establish a location or eligibility; consult separately supplied world evidence."}
 					for i, objective := range q.Objectives {
 						progress := ObjectiveRemainder{Index: i + 1, Text: objective.Text, Complete: objective.Finished}
 						if objective.Fulfilled != nil && objective.Required != nil {
@@ -202,7 +202,7 @@ func BuildGamePlan(ctx context.Context, s *GameSnapshot, fetch func(context.Cont
 						candidate.Remaining = append(candidate.Remaining, progress)
 					}
 					if q.Complete {
-						candidate.Guidance = "The client marks this quest complete; its turn-in marker can be checked in the game. Recipient and position are not supplied."
+						candidate.Guidance = "The client marks this quest ready to turn in, not already handed in. This observation alone does not identify the recipient; use separately supplied world evidence when available."
 					} else if len(q.Objectives) == 0 {
 						candidate.Guidance = "Objective details are unavailable until the player opens this quest."
 					}

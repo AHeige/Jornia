@@ -136,6 +136,20 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 			}
 			return storage.Graph{GameVersion: r.GameVersion}, nil
 		}
+		if r.Snapshot != nil {
+			if retriever, ok := s.Store.(interface {
+				RetrieveQuestContext(context.Context, string, bool, string, []int) (storage.Graph, error)
+			}); ok {
+				ids := []int{}
+				for _, q := range r.Snapshot.Quests {
+					ids = append(ids, q.ID)
+				}
+				for _, q := range r.Snapshot.CompletedQuests {
+					ids = append(ids, q.ID)
+				}
+				return retriever.RetrieveQuestContext(ctx, r.GameVersion, r.Spoilers, snapshotQuestion(r), ids)
+			}
+		}
 		if retriever, ok := s.Store.(interface {
 			Retrieve(context.Context, string, bool, string) (storage.Graph, error)
 		}); ok {
