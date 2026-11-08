@@ -28,3 +28,9 @@ This is the user's settled product direction, recorded on 6 November 2026.
 - The intended chat flow is: write a message, press Enter, see a short waiting status in the same chat, receive the answer. Do not require a separate technical transfer window.
 - The current visible OCR transfer card is a laboratory mechanism, not an accepted player experience. Do not call it ready for normal users until invisible transport has been demonstrated during uninterrupted play, including failure and recovery behavior.
 - Preserve verified behavior while replacing the mechanism. Hiding the Lua card alone disables its OCR path and does not satisfy this requirement.
+
+### Small in-chat QR exception (8 November 2026)
+
+- The user subsequently approved one small QR tile at a fixed position in the top-right corner of the chat. This is an explicit exception to the earlier fully invisible transport requirement, not permission to restore the large encoded OCR card.
+- Keep raw packets, checksums and diagnostic labels out of the player experience. The QR tile must stay inside the chat, preserve readable messages and input, and require no extra player action.
+- Measure real quest context, repeated messages, movement/resizing, failure and manual recovery during uninterrupted play. A successful generated QR fixture alone does not establish a usable native chat or Windows readiness.

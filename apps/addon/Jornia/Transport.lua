@@ -109,9 +109,12 @@ local function snapshot(q,include)
  if #body()>480 and #rows==1 then return nil,'Open a shorter quest or shorten the question; this context does not fit the current bridge.' end
  return body()
 end
+local function display(text)
+ if T.Display then T.Display(text)else wireText:SetText(text)end
+end
 local function receipt(kind,value,digest)
  local p=pending;local fields=string.format('%s %s %s %03d %04d %010.0f',kind,p.nonce,p.binding,p.seq,value,digest)
- wireText:SetText(fields..' '..string.format('%05d',checksum(fields)))
+ display(fields..' '..string.format('%05d',checksum(fields)))
 end
 local function fail(message,code)
  local p=pending;if not p then return end
@@ -154,16 +157,17 @@ end
 local function begin(body,owner,kind)
  local reason=ready(owner);if reason then return nil,reason end
  sequence=sequence+1;local id=session..string.format('%010d%06d',time(),sequence);local binding=string.format('%05d',checksum(owner));local nonce=string.format('%08d',math.random(10000000,99999999))
- pending={id=id,guid=owner,kind=kind,binding=binding,nonce=nonce,seq=0,previous=true,buffer='',started=GetTime()};elapsed=0
  local hex=body:gsub('.',function(c)return string.format('%02x',c:byte())end);local lines={};for i=1,#hex,64 do local groups={};local row=hex:sub(i,i+63);for j=1,#row,4 do groups[#groups+1]=row:sub(j,j+3)end;lines[#lines+1]=table.concat(groups,' ')end
- local height=math.max(220,math.min(650,80+(#lines+2)*24));card:SetHeight(height);wireText:SetHeight(height-80);transferNote:ClearAllPoints();transferNote:SetPoint('TOPLEFT',12,-height+19)
+ if not T.Display then local height=math.max(220,math.min(650,80+(#lines+2)*24));card:SetHeight(height);wireText:SetHeight(height-80);transferNote:ClearAllPoints();transferNote:SetPoint('TOPLEFT',12,-height+19) end
  local check=adler(id..binding..nonce..body)
- wireText:SetText('WISPBEGIN4 '..id..' '..binding..' '..nonce..' '..string.format('%010.0f',check)..'\n'..table.concat(lines,'\n')..'\nWISPEND')
+ local ok=pcall(display,'WISPBEGIN4 '..id..' '..binding..' '..nonce..' '..string.format('%010.0f',check)..'\n'..table.concat(lines,'\n')..'\nWISPEND')
+ if not ok then card:Hide();return nil,'The message could not be prepared. Your draft is kept; try a shorter question.'end
+ pending={id=id,guid=owner,kind=kind,binding=binding,nonce=nonce,seq=0,previous=true,buffer='',started=GetTime()};elapsed=0
  card:Show();return id
 end
 function T.Send(q,owner,include)
  if #q<1 or #q>160 then return nil,'Please shorten the question to 160 UTF-8 bytes.' end
- local body,reason=snapshot(q,include);if not body then return nil,reason end;if #body>640 then return nil,'Please shorten the question to include this context.' end
+ local body,reason=snapshot(q,include);if not body then return nil,reason end;if #body>(T.MaxBodyBytes or 640) then return nil,'Please shorten the question to include this context.' end
  return begin(body,owner,'ask')
 end
 local function xor(a,b)local n,place=0,1;for i=1,8 do if a%2~=b%2 then n=n+place end;a=math.floor(a/2);b=math.floor(b/2);place=place*2 end;return n end

@@ -58,6 +58,30 @@ static CGRect panel(CGImageRef image) {
  CGFloat height=maxy-miny;
  return CGRectIntersection(cardMode?CGRectMake(minx+8,miny+28,maxx-minx-16,height-60):CGRectMake(minx+8,miny+height*.22,maxx-minx-16,height*.33),CGRectMake(0,0,w,h));
 }
+// QR is an explicit alternate lab mode. No text recognition or glyph repair.
+static BOOL qrMode=NO;
+static CGRect qrBox;
+static int qrMisses=0;
+static NSDictionary *readQR(CGImageRef image) {
+ CGRect bounds=CGRectMake(0,0,CGImageGetWidth(image),CGImageGetHeight(image));
+ CGRect box=CGRectIsNull(qrBox)?bounds:CGRectIntersection(bounds,qrBox);
+ if(CGRectIsNull(box)||CGRectIsEmpty(box))box=bounds;
+ CGImageRef crop=CGImageCreateWithImageInRect(image,box);
+ VNDetectBarcodesRequest *r=[VNDetectBarcodesRequest new];r.symbologies=@[VNBarcodeSymbologyQR];
+ CFAbsoluteTime start=CFAbsoluteTimeGetCurrent();
+ BOOL ok=[[[VNImageRequestHandler alloc]initWithCGImage:crop options:@{}]performRequests:@[r] error:nil];
+ NSMutableArray *values=[NSMutableArray array];
+ if(ok)for(VNBarcodeObservation *o in r.results){NSString *text=o.payloadStringValue;
+  if(!text||text.length>1800||!([text hasPrefix:@"JORNIAQR1\n"]||[text hasPrefix:@"WBACK "]||[text hasPrefix:@"WBDONE "]||[text hasPrefix:@"WBFAIL "]))continue;
+  [values addObject:text];CGRect b=o.boundingBox;
+  CGRect located=CGRectMake(box.origin.x+b.origin.x*box.size.width,box.origin.y+(1-CGRectGetMaxY(b))*box.size.height,b.size.width*box.size.width,b.size.height*box.size.height);
+  // Leave quiet-zone/resize room; subsequent decoding is confined to this tile.
+  qrBox=CGRectIntersection(bounds,CGRectInset(located,-36,-36));qrMisses=0;
+ }
+ if(!values.count&&++qrMisses>=5){qrBox=CGRectNull;qrMisses=0;}
+ NSDictionary *result=@{@"qr":values,@"ocr_ms":@((CFAbsoluteTimeGetCurrent()-start)*1000),@"crop_width":@(CGImageGetWidth(crop)),@"crop_height":@(CGImageGetHeight(crop))};
+ CGImageRelease(crop);return result;
+}
 // Keep one current frame; no screenshot files or frame queue are retained.
 @interface WispFrames:NSObject<SCStreamOutput,SCStreamDelegate>
 @property(nonatomic) CVPixelBufferRef latest;
@@ -75,10 +99,11 @@ static CGRect panel(CGImageRef image) {
 @end
 int main(int argc,const char *argv[]) {
  @autoreleasepool {
-  const char *file=NULL;for(int i=1;i<argc;i++){if(!strcmp(argv[i],"--card"))cardMode=YES;else if(!strcmp(argv[i],"--fast"))fastMode=YES;else if(!strcmp(argv[i],"--diagnostic"))diagnostic=YES;else if(!strcmp(argv[i],"--save-card")&&i+1<argc)saveCard=[NSString stringWithUTF8String:argv[++i]];else if(!strcmp(argv[i],"--file")&&i+1<argc)file=argv[++i];}
+  qrBox=CGRectNull;
+  const char *file=NULL;for(int i=1;i<argc;i++){if(!strcmp(argv[i],"--qr"))qrMode=YES;else if(!strcmp(argv[i],"--card"))cardMode=YES;else if(!strcmp(argv[i],"--fast"))fastMode=YES;else if(!strcmp(argv[i],"--diagnostic"))diagnostic=YES;else if(!strcmp(argv[i],"--save-card")&&i+1<argc)saveCard=[NSString stringWithUTF8String:argv[++i]];else if(!strcmp(argv[i],"--file")&&i+1<argc)file=argv[++i];}
   if(file){
    NSBitmapImageRep *rep=[[NSBitmapImageRep alloc]initWithData:[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:file]]];
-   if(!rep)return 2;CGRect box=panel(rep.CGImage);if(CGRectIsNull(box)){emit(@{@"error":@"panel_not_found"});return 4;}
+   if(!rep)return 2;if(qrMode){emit(readQR(rep.CGImage));return 0;}CGRect box=panel(rep.CGImage);if(CGRectIsNull(box)){emit(@{@"error":@"panel_not_found"});return 4;}
    CGImageRef crop=CGImageCreateWithImageInRect(rep.CGImage,box);VNRecognizeTextRequest *r=request();
    CFAbsoluteTime start=CFAbsoluteTimeGetCurrent();
    [[[VNImageRequestHandler alloc]initWithCGImage:crop options:@{}] performRequests:@[r] error:nil];
@@ -115,6 +140,7 @@ int main(int argc,const char *argv[]) {
     [[NSRunLoop currentRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.05]];
     CVPixelBufferRef pixel=[frames take];if(!pixel)continue;lastFrame=CFAbsoluteTimeGetCurrent();if(lastFrame-tick>1){tick=lastFrame;emit(@{@"capture_tick":@YES});}
     CIImage *ci=[CIImage imageWithCVPixelBuffer:pixel];CGImageRef image=[images createCGImage:ci fromRect:ci.extent];CVPixelBufferRelease(pixel);if(!image)continue;
+    if(qrMode){emit(readQR(image));CGImageRelease(image);continue;}
     CGRect box=panel(image);
     if(!CGRectIsNull(box)){
      CGImageRef crop=CGImageCreateWithImageInRect(image,box);

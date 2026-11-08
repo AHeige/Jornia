@@ -118,8 +118,27 @@ def parse(lines,identities):
     except (ValueError,TypeError,UnicodeError):return None
 
 
+def qr_lines(sample):
+    """Exact QR UTF-8 payloads share the existing schema, IDs and integrity checks."""
+    values=sample.get('qr')
+    if not isinstance(values,list) or len(values)!=1 or not isinstance(values[0],str):return None
+    text=values[0]
+    try:
+        if len(text.encode())>584:return None
+    except UnicodeError:return None
+    if text.startswith('JORNIAQR1\n'):
+        parts=text.split('\n',2)
+        if len(parts)!=3 or not re.fullmatch(r'\d{24} \d{5} \d{8} \d{10}',parts[1]) or len(parts[2].encode())>523:return None
+        return ['WISPBEGIN4 '+parts[1],parts[2].encode().hex(),'WISPEND']
+    if re.fullmatch(r'(WBACK|WBDONE|WBFAIL) \d{8} \d{5} \d{3} \d{4} \d{10} \d{5}',text):return [text]
+    return None
+
+
 def parse_observation(sample,identities):
     """Try bounded Vision alternatives; accept one unique checksum-valid packet."""
+    if 'qr' in sample:
+        lines=qr_lines(sample)
+        return parse(lines,identities) if lines else None
     initial=parse(sample.get('lines',[]),identities)
     if initial is not None:return initial
     if not any(str(line).startswith('WISPBEGIN4 ') for line in sample.get('lines',[])):return None

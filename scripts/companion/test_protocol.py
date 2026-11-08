@@ -80,4 +80,22 @@ class NumericOCRTest(unittest.TestCase):
   self.assertIsNone(parse([header,raw.encode().hex().replace('7b','7c',1),'WISPEND'],{guid:'local'}))
   self.assertEqual(normalize_ocr_lines(['WBACK 123456781271$0010008000000000000000'])[0],'WBACK 12345678 12715 001 0008 0000000000 00000')
 
+class QRTest(unittest.TestCase):
+ def test_exact_unicode_context_receipts_and_rejected_damage(self):
+  from protocol import qr_lines,parse_observation
+  guid='Player-test';ident='123456781794000000000001';binding=f'{checksum(guid):05d}';nonce='12345678'
+  state=[int(time.time()),2,'Deathknell','70790',0,[[376,'The Damned',0,0,[[1,4,6,0,'Scavenger Paw']],['Find wolves south.','Collect paws.','',0]]]]
+  raw=json.dumps(dict(q='Vad saknas? 中文',s=state),ensure_ascii=False,separators=(',',':'))
+  header=f'{ident} {binding} {nonce} {zlib.adler32((ident+binding+nonce+raw).encode()):010d}'
+  value='JORNIAQR1\n'+header+'\n'+raw
+  packet=parse_observation(dict(qr=[value]),{guid:'local'})
+  self.assertEqual(packet['question'],'Vad saknas? 中文');self.assertEqual(packet['snapshot']['quests'][0]['objectives'][0]['fulfilled'],4)
+  self.assertIsNone(parse_observation(dict(qr=[value.replace('south','north')]),{guid:'local'}))
+  self.assertIsNone(parse_observation(dict(qr=[value,value]),{guid:'local'}))
+  self.assertIsNone(parse_observation(dict(qr=[value]),{'Player-wrong':'other'}))
+  self.assertIsNone(qr_lines(dict(qr=['https://example.com'])))
+  ack='WBACK 12345678 12715 001 0008 0000000000 00000'
+  self.assertEqual(qr_lines(dict(qr=[ack])),[ack])
+  self.assertIsNone(qr_lines(dict(qr=[ack.replace('12715','1271S')])))
+
 if __name__=='__main__':unittest.main()

@@ -93,7 +93,7 @@ local function layout()
  end
  if connectButton then place(connectButton,compact and w-120 or 20,compact and -42 or -308,100,28);UI.compactIdentity:SetWidth(compact and w-160 or 280) end
  local cw,ch=chat:GetWidth(),chat:GetHeight()
- place(chatText,0,0,cw,math.max(40,ch-104))
+ place(chatText,0,0,cw-(UI.Config.transferWidth or 0),math.max(40,ch-104))
  if UI.ShareContext then place(UI.ShareContext,0,-ch+88,22,22);UI.shareLabel:ClearAllPoints();UI.shareLabel:SetPoint('TOPLEFT',28,-ch+84);UI.shareLabel:SetWidth(cw-28) end
  place(input,6,-ch+63,cw-116,30);place(sendButton,cw-98,-ch+63,98,30)
  status:ClearAllPoints();status:SetPoint('TOPLEFT',0,-ch+22);status:SetWidth(cw)
@@ -103,6 +103,9 @@ local function layout()
  if window.SetResizeBounds then window:SetResizeBounds(minW,minH,compact and 700 or 1100,760) end
  resize:ClearAllPoints();resize:SetPoint('BOTTOMRIGHT',-3,3)
  selectTab(tab);layoutBusy=false
+end
+function UI.SetTransferWidth(width)
+ UI.Config.transferWidth=width;layout()
 end
 function UI.ShowConnection()
  if not window then return end

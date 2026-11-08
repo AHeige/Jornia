@@ -35,6 +35,8 @@ The current friend-test backend uses observed quest context, with a separate exa
 
 See [richer quest guidance and its limits](docs/richer-quest-guidance-2026-11-08.md).
 
+The [small in-chat QR experiment](docs/in-chat-qr-2026-11-08.md) replaces the large visible OCR card in the Mac lab. It is not part of the public desktop bundles.
+
 ## Development
 
 ```sh

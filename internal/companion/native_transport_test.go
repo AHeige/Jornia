@@ -52,6 +52,10 @@ func TestNativeTransportTwoRepliesAndIdentityRejection(t *testing.T) {
 	if err = vm.DoString(`assert(not WispCompanionTransport.Send('Hello',GUID,false));PULSE();PULSE();PULSE()`); err != nil {
 		t.Fatal(err)
 	}
+	// A display failure must not accept a send or strand a hidden pending operation.
+	if err = vm.DoString(`WispCompanionTransport.Display=function()error('test renderer failure')end;assert(not WispCompanionTransport.Send('Hello',GUID,false));assert(not WispCompanionTransport.IsPending());WispCompanionTransport.Display=nil`); err != nil {
+		t.Fatal(err)
+	}
 	for turn := 0; turn < 3; turn++ {
 		if err = vm.DoString(`CLOCK=true;BYTES=string.rep(string.char(255),8);PULSE();ID=assert(WispCompanionTransport.Send('Where next?',GUID,true));assert(not WispCompanionTransport.Send('Duplicate',GUID,false))`); err != nil {
 			t.Fatal(err)

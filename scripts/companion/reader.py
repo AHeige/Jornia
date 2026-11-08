@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 import urllib.request
-from protocol import parse,parse_observation,normalize_ocr_lines,reply,frame
+from protocol import parse,parse_observation,normalize_ocr_lines,qr_lines,reply,frame
 from invite import InvitePads
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]/'experiments/return_bus'))
 from bus import Carrier
@@ -41,7 +41,7 @@ def transfer(carrier,packet,payload,samples,stop):
         if stop.is_set():raise InterruptedError('Reader stopped')
         try:sample=samples.get(timeout=.3)
         except queue.Empty:continue
-        got=receipt(normalize_ocr_lines(sample.get('lines',[])))
+        got=receipt(qr_lines(sample) or []) if 'qr' in sample else receipt(normalize_ocr_lines(sample.get('lines',[])))
         if not got:continue
         action=validate(got,packet['nonce'],packet['binding'],index,wire,payload,'')
         if action=='ignore':continue
@@ -137,7 +137,7 @@ def run(a):
     heartbeat=threading.Thread(target=beat);heartbeat.start()
     seen=set();last=None;count=0;samples=queue.Queue(maxsize=32)
     try:
-        process=subprocess.Popen([str(a.capture),'--card','--fast'],stdout=subprocess.PIPE,text=True)
+        process=subprocess.Popen([str(a.capture)]+(['--qr'] if a.qr else ['--card','--fast']),stdout=subprocess.PIPE,text=True)
         for line in process.stdout:
             sample=json.loads(line)
             if sample.get('error'):raise RuntimeError(sample['error'])
@@ -157,6 +157,9 @@ def run(a):
             count=count+1 if signature==last else 1;last=signature
             if count<2 or packet['id'] in seen:continue
             seen.add(packet['id'])
+            if a.qr:
+                snap=packet.get('snapshot') or {}
+                print(json.dumps(dict(status='qr_accepted',request_id=packet['id'],decode_ms=round(sample.get('ocr_ms',0),1),crop_width=sample.get('crop_width'),crop_height=sample.get('crop_height'),has_context=bool(snap),quests=len(snap.get('quests',[])))),flush=True)
             while not samples.empty():samples.get_nowait()
             worker=threading.Thread(target=complete,args=(session,carrier,packet,samples,round(sample.get('ocr_ms',0),1),stop,pads));worker.start()
     finally:
@@ -170,7 +173,7 @@ def run(a):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--recover',action='store_true',help='Recover only owned interrupted carrier files, then exit');p.add_argument('--session',type=pathlib.Path,default=next((x for x in [pathlib.Path.home()/'Library/Application Support/Jornia/ocr-session.json',pathlib.Path.home()/'Library/Application Support/Wisp/ocr-session.json'] if x.exists()),pathlib.Path.home()/'Library/Application Support/Jornia/ocr-session.json'));p.add_argument('--capture',type=pathlib.Path,default=pathlib.Path('.cache/ocr-test/wisp-companion-capture').resolve());a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--qr',action='store_true',help='Decode the small in-chat QR tile instead of the laboratory OCR card');p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--recover',action='store_true',help='Recover only owned interrupted carrier files, then exit');p.add_argument('--session',type=pathlib.Path,default=next((x for x in [pathlib.Path.home()/'Library/Application Support/Jornia/ocr-session.json',pathlib.Path.home()/'Library/Application Support/Wisp/ocr-session.json'] if x.exists()),pathlib.Path.home()/'Library/Application Support/Jornia/ocr-session.json'));p.add_argument('--capture',type=pathlib.Path,default=pathlib.Path('.cache/ocr-test/wisp-companion-capture').resolve());a=p.parse_args()
     def interrupted(*_):raise KeyboardInterrupt
     signal.signal(signal.SIGTERM,interrupted)
     try:run(a)
