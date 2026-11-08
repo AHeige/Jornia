@@ -53,3 +53,19 @@ A second native request returned through the channel in 8,539.8 ms (OCR 69.8 ms,
 The final repeated native turn-in question produced a valid uncertainty response: the available description did not name a return recipient. That is distinct from the earlier citation-validation failure. Its OCR measured 71.0 ms and its post-recognition flow 7,014.2 ms, with a 6,366.0 ms return. A synthetic explicit-return case passed against the live model.
 
 Structured local character identity is not included in the central snapshot schema. Approved game-provided quest text is sent as context and can itself contain names inserted by the game; this slice does not claim to anonymize arbitrary narrative text. It is not added to shared world knowledge.
+
+## Product acceptance correction: transport must remain invisible
+
+On 8 November the user explicitly rejected any visible transfer code in normal play. The live exchanges above prove a technical channel, not an acceptable finished chat experience.
+
+The target is an ordinary in-game conversation: submit with Enter, retain the message in the conversation, show a brief inline waiting status, then show the reply. Keep input acknowledgement immediate and stable; a static status is sufficient while waiting and must not imply a confirmed answer. Technical details belong in an explicitly opened diagnostic mode.
+
+Acceptance checks:
+
+- No hexadecimal card, checksum, transport marker or extra technical window appears on submit.
+- The question remains readable while waiting.
+- Failure preserves the draft and explains the outcome without exposing the transport.
+- Timeout, helper interruption and recovery do not reveal transfer data or replay a paid request.
+- Delivery still occurs during an uninterrupted game session.
+
+The current implementation does not meet these checks: its reader depends on the rendered encoded card. Simply hiding or making that card transparent breaks the read path. No invisible replacement has yet been implemented or verified; the current experiment is preserved until a replacement actually works.

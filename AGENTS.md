@@ -21,3 +21,10 @@ This is the user's settled product direction, recorded on 6 November 2026.
 - Write documentation, comments, development instructions, default UI copy and operator messages in English.
 - Keep multilingual query aliases, explicit localized replies and Unicode/language test fixtures intact. Repository language must not remove supported player languages.
 - Preserve historical measurements, identifiers, source URLs, raw evaluation outputs and recorded user data. Explain non-English evidence in English rather than rewriting what a test originally observed.
+
+## Player-facing transport experience
+
+- The player must never see transport code, encoded packets, checksums or diagnostic markers during normal use. This is an explicit product requirement from 8 November 2026.
+- The intended chat flow is: write a message, press Enter, see a short waiting status in the same chat, receive the answer. Do not require a separate technical transfer window.
+- The current visible OCR transfer card is a laboratory mechanism, not an accepted player experience. Do not call it ready for normal users until invisible transport has been demonstrated during uninterrupted play, including failure and recovery behavior.
+- Preserve verified behavior while replacing the mechanism. Hiding the Lua card alone disables its OCR path and does not satisfy this requirement.
