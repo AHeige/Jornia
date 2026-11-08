@@ -75,7 +75,7 @@ end
 local function layout()
  if layoutBusy or not window then return end;layoutBusy=true
  local w,h=window:GetWidth(),window:GetHeight()
- local minW,minH=mode=='compact' and 340 or 760,mode=='compact' and 260 or 500
+ local minW,minH=mode=='compact' and 340 or 760,mode=='compact' and math.max(260,(UI.Config.transferHeight or 0)+188)or 500
  w=math.max(minW,math.min(w,mode=='compact' and 700 or 1100));h=math.max(minH,math.min(h,760))
  if window:GetWidth()~=w or window:GetHeight()~=h then window:SetSize(w,h) end
  sizes[mode]={w,h};lastW,lastH=w,h
@@ -152,12 +152,13 @@ function UI.AddMessage(role,text,owner)
  table.insert(messages[owner],(role=='user' and '|cffefbb70YOU|r\n' or '|cffefbb70JORNIA|r\n')..safe(text))
  if owner==key() then renderMessages() end
 end
-function UI.SetProgress(requestID,owner,text)
- if pending and pending.id==requestID and pending.character==owner then pending.progress=text;if owner==key() then status:SetText(safe(text))end end
+function UI.SetProgress(requestID,owner,text,phase)
+ if pending and pending.id==requestID and pending.character==owner then pending.progress=text;UI.Activity=phase or UI.Activity;if owner==key() then status:SetText(safe(text))end end
 end
 function UI.Resolve(requestID,owner,text,isError,metadata)
  if not pending or pending.id~=requestID or pending.character~=owner then return false end
  local sentDraft=pending.draft
+ UI.Activity=isError and 'error' or 'ready'
  pending=nil
  if isError and sentDraft then
   drafts[owner]=sentDraft
@@ -180,6 +181,7 @@ function UI.Show(person,events)
  character=person or character;entries=events or entries
  if not window then
   window=surface(UIParent,50,-20,860,540,.035,.055,.09);window:ClearAllPoints();window:SetPoint('CENTER');window:SetFrameStrata('DIALOG')
+  window:SetBackdropColor(.035,.055,.09,.86)
   window:SetMovable(true);window:SetResizable(true);window:SetClampedToScreen(true);window:EnableMouse(true);window:RegisterForDrag('LeftButton')
   window:SetScript('OnDragStart',window.StartMoving);window:SetScript('OnDragStop',window.StopMovingOrSizing)
   window:SetScript('OnHide',window.StopMovingOrSizing)
@@ -223,7 +225,7 @@ function UI.Show(person,events)
    -- Sender must acknowledge acceptance with an operation ID. Nil/error preserves the draft.
    local ok,id,reason=pcall(UI.OnSend,question,key(),UI.ShareContext and UI.ShareContext:GetChecked() or false)
    if not ok or type(id)~='string' or id=='' then status:SetText(type(reason)=='string' and safe(reason) or 'No acceptance confirmed. Draft kept; check Jornia.');return end
-   pending={id=id,character=key(),draft=question};UI.AddMessage('user',question);drafts[key()]='';input:SetText('');input:ClearFocus();updatePending()
+   pending={id=id,character=key(),draft=question};UI.Activity='sending';UI.AddMessage('user',question);drafts[key()]='';input:SetText('');input:ClearFocus();updatePending()
   end
   input:SetScript('OnEnterPressed',send);sendButton=button(chat,'Ask Jornia',490,-207,98,send)
   status=label(chat,'',0,-253,612,10,true)

@@ -153,7 +153,7 @@ local function accept(data,phase)
  if #b<11 then receipt('WBACK',#b,adler(b));return end
  local length=u16(b,10)
  if u16(b,8)~=tonumber(p.binding) or length>4096 then fail('Reply identity or size rejected.',7);return end
- UI.SetProgress(p.id,p.guid,'Receiving Jornia’s reply…')
+ UI.SetProgress(p.id,p.guid,'Receiving Jornia’s reply…','receiving')
  local expected=11+length+4
  if #b<expected then receipt('WBACK',#b,adler(b));return end
  local digest=u32(b,expected-3)
@@ -223,7 +223,7 @@ card:SetScript('OnUpdate',function(_,dt)
  if probe(control)~=true or probe(absent)~=false then p.candidate=nil;return end
  local phase=probe(clock)
  if phase==nil or phase==p.previous then
-  if p.seq==0 and probe(thinking)==false then UI.SetProgress(p.id,p.guid,'Jornia is thinking…') end
+  if p.seq==0 and probe(thinking)==false then UI.SetProgress(p.id,p.guid,'Jornia is thinking…','thinking') end
   p.candidate=nil;return
  end
  local bytes={};for j=0,7 do local n=0;for i=1,8 do local bit=probe(paths[j*8+i]);if bit==nil then p.candidate=nil;return end;if bit then n=n+2^(i-1)end end;bytes[j+1]=string.char(n)end
@@ -232,7 +232,7 @@ card:SetScript('OnUpdate',function(_,dt)
  if p.candidate==data and p.phase==phase then accept(data,phase) else p.candidate=data;p.phase=phase end
 end)
 T.IsPending=function()return pending~=nil end
-T.Stop=function()if pending then fail('The local adapter was replaced. Check desktop history before retrying.',9)end;pump:SetScript('OnUpdate',nil);card:SetScript('OnUpdate',nil);card:Hide()end
+T.Stop=function()if T.StopSigil then T.StopSigil()end;if pending then fail('The local adapter was replaced. Check desktop history before retrying.',9)end;pump:SetScript('OnUpdate',nil);card:SetScript('OnUpdate',nil);card:Hide()end
 -- Publish only after initialization succeeds; failed setup must not strand the UI.
 WispCompanionTransport=T
 UI.OnSend=T.Send
