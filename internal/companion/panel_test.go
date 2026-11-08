@@ -20,6 +20,7 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
  function methods:SetWidth(w)self.w=w end;function methods:SetHeight(h)self.h=h end
  function methods:GetWidth()return self.w end;function methods:GetHeight()return self.h end
  function methods:GetFrameLevel()return 1 end;function methods:StartMoving()self.moving=true end
+ function methods:IsShown()return self.shown end
  function methods:SetShown(b)self.shown=b end;function methods:Show()self.shown=true end;function methods:Hide()self.shown=false end
  function methods:SetText(s)self.text=s;if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self)end end
  function methods:GetText()return self.text end
@@ -67,6 +68,14 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
  UI.connectionInput.scripts.OnEnterPressed();assert(attempts==1 and #c.Messages.lines==before)
  assert(not UI.ResolveConnection('wrong','one','Wrong',false));assert(UI.ResolveConnection('connect1','one','Connected',false));assert(#c.Messages.lines==before and not c.Input.disabled)
  UI.ShareContext:SetChecked(false);UI.ShareContext.scripts.OnClick(UI.ShareContext);UI.Show(b,{});assert(UI.ShareContext:GetChecked());UI.Show(a,{});assert(not UI.ShareContext:GetChecked());UI.SetMode('compact');assert(not UI.ShareContext:GetChecked())
+ assert(UI.Controls.Connect.caption:GetText()=='Settings')
+ assert(UI.ConnectionState=='connected' and UI.aiStatus:GetText():find('AI ready',1,true))
+ c.Input:SetText('Keep while journey updates');local oldStatus=c.Status:GetText()
+ UI.Update({id='one',name='One',level=17,zone='Ashenvale'},{{kind='quest_progress',quest_id=376,quest_title='Progress test',zone='Ashenvale',level=17,objectives={{text='Goal: 2/3'}}}})
+ assert(c.Input:GetText()=='Keep while journey updates' and c.Status:GetText()==oldStatus)
+ assert(c.JourneyText:GetText():find('Progress test',1,true) and c.JourneyText:GetText():find('Goal: 2/3',1,true))
+ assert(not UI.ShareContext:GetChecked())
+
 
  `); err != nil {
 		t.Fatal(err)

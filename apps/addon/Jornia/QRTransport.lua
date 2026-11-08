@@ -53,7 +53,7 @@ local observer=CreateFrame('Frame');local elapsed=0
 observer:SetScript('OnUpdate',function(_,dt)
  elapsed=elapsed+dt;if elapsed<.08 then return end;elapsed=0
  local parent=UI.Controls and UI.Controls.Chat;if not parent then return end
- if UI.GetMode()=='compact' and UI.Controls.Window:GetHeight()<reserved+204 then UI.Controls.Window:SetHeight(reserved+204)end
+ if UI.GetMode()=='compact' and UI.Controls.Window:GetHeight()<reserved+176 then UI.Controls.Window:SetHeight(reserved+176)end
  if not sigil then makeSigil(parent)elseif attached~=parent then sigil:SetParent(parent);sigil:ClearAllPoints();sigil:SetPoint('TOPRIGHT',parent,'TOPRIGHT',0,0);attached=parent end
  local phase=UI.Activity or 'idle';local active=T.IsPending()
  local colors=phase=='error' and {.92,.61,.30}or themes[theme]
@@ -112,4 +112,4 @@ elseif UI.Controls then
  local function reserve()UI.Controls.Messages:SetWidth(UI.Controls.Chat:GetWidth()-reserved)end
  reserve();if not T.QRReserveHook then UI.Controls.Window:HookScript('OnUpdate',reserve);T.QRReserveHook=true end
 end
-UI.Config.footer='Selected text is sent to Jornia AI. QR images stay on this computer.'
+UI.Config.footer='Your journey stays local. Selected context is shared when you send.'

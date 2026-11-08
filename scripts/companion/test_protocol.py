@@ -109,4 +109,16 @@ class CompletedQuestTest(unittest.TestCase):
   state[5]=[];meta['d'][0][3]='missing_from_log'
   with self.assertRaises(ValueError):expand_snapshot(state)
 
+class PersonalContextTest(unittest.TestCase):
+ def test_observed_identity_and_partial_journey(self):
+  from protocol import expand_snapshot
+  now=int(time.time());meta=dict(c=8,r=5,e=[],p=[],m=['quests'],i=['Cone Thrower','Mage','Undead'],j=[['session_start',now-20,'Tirisfal Glades','Deathknell',3]])
+  snap=expand_snapshot([now,3,'Tirisfal Glades','70862',1,[],meta])
+  self.assertEqual(snap['name'],'Cone Thrower');self.assertEqual(snap['class_name'],'Mage');self.assertTrue(snap['journey_partial'])
+  self.assertEqual(snap['recent_journey'][0]['subzone'],'Deathknell')
+  meta['j'][0][0]='note'
+  with self.assertRaises(ValueError):expand_snapshot([now,3,'Tirisfal Glades','70862',1,[],meta])
+  meta['j']=[];meta['i'][0]='x'*101
+  with self.assertRaises(ValueError):expand_snapshot([now,3,'Tirisfal Glades','70862',1,[],meta])
+
 if __name__=='__main__':unittest.main()

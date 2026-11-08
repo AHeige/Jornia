@@ -2,6 +2,8 @@
 WispJournalUI = {}
 local UI = WispJournalUI
 UI.Config = {}
+UI.SettingsOwnsContext = true
+UI.ConnectionState = "unknown"
 UI.ClearsAcceptedInput = true
 local window,rail,chat,journey,chatText,journeyText,status,input,tabs,sendButton,modeButton,closeButton,resize,footer,connectButton
 local character,entries,messages,drafts,contextSharing={},{},{},{},{}
@@ -39,17 +41,36 @@ local function renderMessages()
  chatText:Clear()
  for _,message in ipairs(messages[key()] or {}) do chatText:AddMessage(message) end
 end
-local function updateJourney()
- if not journeyText then return end
+function UI.JourneyLines(events)
  local lines={}
- for i=#entries,math.max(1,#entries-4),-1 do
-  local e=entries[i]
-  local action=e.kind=='quest_completed' and ('Quest #'..tostring(e.quest_id)..' completed') or e.kind=='level_up' and ('Reached level '..tostring(e.level)) or e.kind=='note' and 'A note to remember' or 'A moment in '..(e.subzone or e.zone or '')
+ for i=#events,math.max(1,#events-5),-1 do
+  local e=events[i];local quest=e.quest_title and e.quest_title~='' and e.quest_title or ('Quest #'..tostring(e.quest_id or '?'))
+  local actions={quest_completed=quest..' · turned in',quest_accepted=quest..' · accepted',quest_progress=quest..' · progress',quest_removed=quest..' · left quest log',level_up='Reached level '..tostring(e.level or '?'),equipment_changed='Equipment changed',death='Fell in battle',resurrected='Back on your feet',note='A note to remember',session_start='Back in Azeroth',snapshot='Your journey began'}
+  local action=actions[e.kind]or('Arrived in '..(e.subzone~='' and e.subzone or e.zone or 'Azeroth'))
   lines[#lines+1]='|cffefbb70'..safe(action)..'|r\n'..safe(e.zone)..(e.subzone and e.subzone~='' and (' / '..safe(e.subzone)) or '')..' · Level '..tostring(e.level or '?')
-  if e.kind=='note' and e.note~='' then lines[#lines+1]=safe(e.note) end
+  if e.kind=='note' and e.note and e.note~=''then lines[#lines+1]=safe(e.note)
+  elseif e.kind=='quest_progress' and e.objectives and e.objectives[1]then lines[#lines+1]=safe(e.objectives[1].text or '')end
   lines[#lines+1]=''
  end
- journeyText:SetText(table.concat(lines,'\n'))
+ return table.concat(lines,'\n')
+end
+local function updateJourney()
+ if journeyText then journeyText:SetText(UI.JourneyLines(entries))end
+end
+function UI.Update(person,events)
+ if not window or not window:IsShown()then return false end
+ if person.id~=key()then UI.Show(person,events);return true end
+ character=person;entries=events or entries
+ UI.nameLabel:SetText(safe(person.name));UI.identity:SetText('Level '..tostring(person.level)..'\n'..safe(person.zone))
+ UI.compactIdentity:SetText(safe(person.name)..' · Lv '..tostring(person.level))
+ updateJourney();return true
+end
+function UI.UpdateAIStatus()
+ local transport=WispCompanionTransport
+ local available=transport and transport.IsReaderAvailable and transport.IsReaderAvailable()
+ local text=available==false and 'Desktop reader offline · start Jornia desktop' or UI.ConnectionState=='connected' and 'AI ready · last response confirmed' or UI.ConnectionState=='attention' and 'AI needs attention · check Jornia desktop' or 'AI connection not checked · send a question to try'
+ if UI.aiStatus then UI.aiStatus:SetText(text)end
+ if connectButton then connectButton.caption:SetText('Settings')end
 end
 local function selectTab(which)
  tab=which;chat:SetShown(mode=='compact' or which=='chat');journey:SetShown(mode=='full' and which=='journey')
@@ -75,7 +96,7 @@ end
 local function layout()
  if layoutBusy or not window then return end;layoutBusy=true
  local w,h=window:GetWidth(),window:GetHeight()
- local minW,minH=mode=='compact' and 340 or 760,mode=='compact' and math.max(260,(UI.Config.transferHeight or 0)+188)or 500
+ local minW,minH=mode=='compact' and 340 or 760,mode=='compact' and math.max(260,(UI.Config.transferHeight or 0)+160)or 500
  w=math.max(minW,math.min(w,mode=='compact' and 700 or 1100));h=math.max(minH,math.min(h,760))
  if window:GetWidth()~=w or window:GetHeight()~=h then window:SetSize(w,h) end
  sizes[mode]={w,h};lastW,lastH=w,h
@@ -94,8 +115,8 @@ local function layout()
  end
  if connectButton then place(connectButton,compact and w-120 or 20,compact and -42 or -308,100,28);UI.compactIdentity:SetWidth(compact and w-160 or 280) end
  local cw,ch=chat:GetWidth(),chat:GetHeight()
- place(chatText,0,0,cw-(UI.Config.transferWidth or 0),math.max(40,ch-104))
- if UI.ShareContext then place(UI.ShareContext,0,-ch+88,22,22);UI.shareLabel:ClearAllPoints();UI.shareLabel:SetPoint('TOPLEFT',28,-ch+84);UI.shareLabel:SetWidth(cw-28) end
+ place(chatText,0,0,cw-(UI.Config.transferWidth or 0),math.max(40,ch-(UI.SettingsOwnsContext and 76 or 104)))
+ if UI.ShareContext and not UI.SettingsOwnsContext then place(UI.ShareContext,0,-ch+88,22,22);UI.shareLabel:ClearAllPoints();UI.shareLabel:SetPoint('TOPLEFT',28,-ch+84);UI.shareLabel:SetWidth(cw-28) end
  place(input,6,-ch+63,cw-116,30);place(sendButton,cw-98,-ch+63,98,30)
  status:ClearAllPoints();status:SetPoint('TOPLEFT',0,-ch+22);status:SetWidth(cw)
  local jw,jh=journey:GetWidth(),journey:GetHeight()
@@ -111,11 +132,16 @@ end
 function UI.ShowConnection()
  if not window then return end
  if not UI.connectionWindow then
-  local box=surface(UIParent,0,0,480,240,.035,.055,.09);box:ClearAllPoints();box:SetPoint('CENTER');box:SetFrameStrata('FULLSCREEN_DIALOG');box:EnableMouse(true)
-  label(box,'Connect Jornia AI',20,-18,430,21,true)
-  label(box,'Paste your private invite code. Jornia desktop must be running.\nThe code stays out of your chat, journey and SavedVariables.',20,-56,430,12)
-  local edit=CreateFrame('EditBox',nil,box,'InputBoxTemplate');place(edit,26,-108,424,30);edit:SetFontObject(ChatFontNormal);edit:SetAutoFocus(false);edit:SetMaxLetters(64);edit:SetPassword(true)
-  local result=label(box,'',20,-151,430,11,true)
+  local box=surface(UIParent,0,0,480,335,.035,.055,.09);box:ClearAllPoints();box:SetPoint('CENTER');box:SetFrameStrata('FULLSCREEN_DIALOG');box:EnableMouse(true)
+  label(box,'Settings',20,-18,430,21,true)
+  label(box,'Your character',20,-54,430,12,true)
+  UI.ShareContext:SetParent(box);place(UI.ShareContext,16,-76,22,22);UI.ShareContext:Show()
+  UI.shareLabel:SetParent(box);UI.shareLabel:ClearAllPoints();UI.shareLabel:SetPoint('TOPLEFT',44,-80);UI.shareLabel:SetWidth(410);UI.shareLabel:SetText('Use character and recent journey context');UI.shareLabel:Show()
+  label(box,'Shares your name, race, class, level and quests when you send.\nJourney questions include up to three recorded moments.',20,-110,430,11)
+  UI.aiStatus=label(box,'',20,-156,430,11,true)
+  label(box,'Invite code · only needed to connect or replace access',20,-182,430,11)
+  local edit=CreateFrame('EditBox',nil,box,'InputBoxTemplate');place(edit,26,-206,424,30);edit:SetFontObject(ChatFontNormal);edit:SetAutoFocus(false);edit:SetMaxLetters(64);edit:SetPassword(true)
+  local result=label(box,'',20,-246,430,11,true)
   local submit
   local function activate()
    if pending then result:SetText('Wait for the current operation to finish.');return end
@@ -125,19 +151,19 @@ function UI.ShowConnection()
    if not ok or type(id)~='string' then result:SetText(type(reason)=='string'and safe(reason)or'Connection was not accepted. Nothing was saved.');return end
    pending={id=id,character=key(),connection=true};submit:Disable();result:SetText('Checking invite code…');updatePending()
   end
-  submit=button(box,'Connect AI',238,-191,108,activate)
-  button(box,'Close',358,-191,98,function()edit:SetText('');edit:ClearFocus();box:Hide()end)
+  submit=button(box,'Connect AI',238,-285,108,activate)
+  button(box,'Close',358,-285,98,function()edit:SetText('');edit:ClearFocus();box:Hide()end)
   edit:SetScript('OnEnterPressed',activate);edit:SetScript('OnEscapePressed',function()edit:SetText('');edit:ClearFocus();box:Hide()end)
   box:SetScript('OnHide',function()edit:SetText('');edit:ClearFocus()end)
   UI.connectionWindow=box;UI.connectionInput=edit;UI.connectionStatus=result;UI.connectionSubmit=submit
  end
- UI.connectionWindow:Show();UI.connectionInput:SetFocus()
+ UI.UpdateAIStatus();UI.connectionWindow:Show();UI.connectionInput:ClearFocus()
 end
 function UI.ResolveConnection(id,owner,text,isError)
  if not pending or not pending.connection or pending.id~=id or pending.character~=owner then return false end
  pending=nil;updatePending()
  if UI.connectionStatus then UI.connectionStatus:SetText(safe(text));UI.connectionSubmit:Enable() end
- if connectButton and not isError then connectButton.caption:SetText('AI connected') end
+ UI.ConnectionState=isError and 'attention' or 'connected';UI.UpdateAIStatus()
  return true
 end
 function UI.SetMode(value)
@@ -152,6 +178,13 @@ function UI.AddMessage(role,text,owner)
  table.insert(messages[owner],(role=='user' and '|cffefbb70YOU|r\n' or '|cffefbb70JORNIA|r\n')..safe(text))
  if owner==key() then renderMessages() end
 end
+-- Preserve the current conversation during an idle first-party UI upgrade.
+function UI.RestoreSession(lines,draft)
+ if pending or not input then return false end
+ messages[key()]={}
+ for i=math.max(1,#lines-199),#lines do if type(lines[i])=='string'then table.insert(messages[key()],lines[i])end end
+ drafts[key()]=draft or '';input:SetText(drafts[key()]);renderMessages();updatePending();return true
+end
 function UI.SetProgress(requestID,owner,text,phase)
  if pending and pending.id==requestID and pending.character==owner then pending.progress=text;UI.Activity=phase or UI.Activity;if owner==key() then status:SetText(safe(text))end end
 end
@@ -159,6 +192,7 @@ function UI.Resolve(requestID,owner,text,isError,metadata)
  if not pending or pending.id~=requestID or pending.character~=owner then return false end
  local sentDraft=pending.draft
  UI.Activity=isError and 'error' or 'ready'
+ UI.ConnectionState=isError and 'attention' or 'connected';UI.UpdateAIStatus()
  pending=nil
  if isError and sentDraft then
   drafts[owner]=sentDraft
@@ -199,7 +233,7 @@ function UI.Show(person,events)
   UI.compactTitle=label(window,'JORNIA',18,-16,100,19);UI.compactIdentity=label(window,'',18,-43,280,11,true)
   modeButton=button(window,'Compact chat',700,-10,108,function()UI.SetMode(mode=='full' and 'compact' or 'full')end)
   closeButton=button(window,'×',810,-10,28,function()window:Hide()end)
-  connectButton=button(window,'Connect AI',20,-308,100,function()UI.ShowConnection()end)
+  connectButton=button(window,'Settings',20,-308,100,function()UI.ShowConnection()end)
   closeButton.caption:ClearAllPoints();closeButton.caption:SetPoint('CENTER');closeButton.caption:SetWidth(26);closeButton.caption:SetJustifyH('CENTER')
   UI.title=label(window,'Your story so far.',214,-56,600,20)
   chat=CreateFrame('Frame',nil,window);journey=CreateFrame('Frame',nil,window)
@@ -231,7 +265,8 @@ function UI.Show(person,events)
   status=label(chat,'',0,-253,612,10,true)
   UI.ShareContext=CreateFrame('CheckButton',nil,chat,'UICheckButtonTemplate');UI.ShareContext:SetChecked(true)
   UI.ShareContext:SetScript('OnClick',function(self)contextSharing[key()]=self:GetChecked() and true or false;if UI.OnContextPreference then UI.OnContextPreference(key(),contextSharing[key()])end end)
-  UI.shareLabel=label(chat,'Include current character context',28,-232,580,11)
+  UI.shareLabel=label(chat,'Use character and recent journey context',28,-232,580,11)
+  if UI.SettingsOwnsContext then UI.ShareContext:Hide();UI.shareLabel:Hide()end
   UI.ShareContext:SetScript('OnEnter',function(self)if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetText('Current character context');GameTooltip:AddLine('Reads level, area, class/race IDs, gear IDs, profession ranks, a limited quest/progress snapshot, and recent confirmed turn-ins when you send.',1,1,1,true);GameTooltip:AddLine('Selected text goes through Jornia to Berget. Images stay local. Missing fields remain unknown.',1,1,1,true);GameTooltip:Show()end end)
   UI.ShareContext:SetScript('OnLeave',function()if GameTooltip then GameTooltip:Hide()end end)
 

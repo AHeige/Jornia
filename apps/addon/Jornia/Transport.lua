@@ -33,6 +33,7 @@ local function probe(path)local ok,success,handle=pcall(PlaySoundFile,path,'Mast
 pump:SetScript('OnUpdate',function(_,dt)
  heartTime=heartTime+dt;if heartTime<.5 then return end;heartTime=0
  local v=probe(heartbeat);if v~=nil and heartPhase~=nil and v~=heartPhase then aliveAt=GetTime();heartEdges=heartEdges+1 end;heartPhase=v
+ if UI.UpdateAIStatus then UI.UpdateAIStatus()end
 end)
 local function quote(s)return '"'..s:gsub('\\','\\\\'):gsub('"','\\"'):gsub('[%z\1-\31]',function(c)return string.format('\\u%04x',c:byte())end)..'"' end
 local function clip(s,n)
@@ -57,6 +58,11 @@ local function encodeRows(rows)
 end
 local function snapshot(q,include)
  local state=include and WispClientState and WispClientState.Snapshot() or nil
+ local journey={};local lower=q:lower()
+ local history=include and (lower:find('hur hamnade',1,true)or lower:find('min resa',1,true)or lower:find('how did i get',1,true)or lower:find('my journey',1,true)or lower:find('how did i end up',1,true))
+ if history and WispClientState.RecentJourney then
+  for _,e in ipairs(WispClientState.RecentJourney())do journey[#journey+1]='['..quote(e.kind)..','..e.observed_at..','..quote(e.zone)..','..quote(e.subzone)..','..e.level..']'end
+ end
  local completed={};local completionRelevant=false;local rows={};local truncated=false;local gear={};local skills={};local missing={}
  if include and not state then return nil,'Current character state is unavailable. Reopen Jornia after the journal is ready.' end
  if state then
@@ -106,8 +112,10 @@ local function snapshot(q,include)
  local function body()
   local done={};for _,c in ipairs(completed)do done[#done+1]='['..c.id..','..quote(c.title)..','..c.at..','..quote(c.confirmation)..',['..table.concat(c.names,',')..']]'end
   local completion=#done>0 and ',"d":['..table.concat(done,',')..']' or ''
+  local personal=state and ',"i":['..quote(state.name or '')..','..quote(state.class_name or '')..','..quote(state.race_name or '')..']'or ''
+  local travel=history and ',"j":['..table.concat(journey,',')..']'or ''
   local snap='null'
-  if state then snap='['..state.observed_at..','..state.level..','..quote(state.zone)..','..quote(state.client_build)..','..(truncated and '1' or '0')..',['..encodeRows(rows)..'],{"c":'..(state.class_id or 0)..',"r":'..(state.race_id or 0)..',"e":['..table.concat(gear,',')..'],"p":['..table.concat(skills,',')..'],"m":['..table.concat(missing,',')..']'..completion..'}]'end
+  if state then snap='['..state.observed_at..','..state.level..','..quote(state.zone)..','..quote(state.client_build)..','..(truncated and '1' or '0')..',['..encodeRows(rows)..'],{"c":'..(state.class_id or 0)..',"r":'..(state.race_id or 0)..',"e":['..table.concat(gear,',')..'],"p":['..table.concat(skills,',')..'],"m":['..table.concat(missing,',')..']'..completion..personal..travel..'}]'end
   local identity=''
   local current=WispJournalRuntime and WispJournalRuntime.Current()
   if current and WispDB and type(WispDB.installation_id)=='string' then
@@ -115,6 +123,9 @@ local function snapshot(q,include)
   end
   return '{"q":'..quote(q)..',"s":'..snap..identity..'}'
  end
+ if history then completed={}end
+ if history and #body()>480 then rows={};gear={};skills={};truncated=true;missing={quote('quests'),quote('equipment'),quote('professions')}end
+ while #body()>480 and #journey>0 do table.remove(journey,1)end
  -- Protect useful quest objectives before optional gear/profession context.
  -- Keep a bounded completion fact before optional active narrative.
  while #body()>480 and #completed>1 do table.remove(completed)end
@@ -187,7 +198,7 @@ local function begin(body,owner,kind)
  local ok=pcall(display,'WISPBEGIN4 '..id..' '..binding..' '..nonce..' '..string.format('%010.0f',check)..'\n'..table.concat(lines,'\n')..'\nWISPEND')
  if not ok then card:Hide();return nil,'The message could not be prepared. Your draft is kept; try a shorter question.'end
  pending={id=id,guid=owner,kind=kind,binding=binding,nonce=nonce,seq=0,previous=true,buffer='',started=GetTime()};elapsed=0
- card:Show();return id
+ UI.Activity='sending';card:Show();return id
 end
 function T.Send(q,owner,include)
  if #q<1 or #q>160 then return nil,'Please shorten the question to 160 UTF-8 bytes.' end
@@ -231,6 +242,7 @@ card:SetScript('OnUpdate',function(_,dt)
  local data=table.concat(bytes)
  if p.candidate==data and p.phase==phase then accept(data,phase) else p.candidate=data;p.phase=phase end
 end)
+T.IsReaderAvailable=function()return aliveAt~=nil and GetTime()-aliveAt<=5 and heartEdges>=2 end
 T.IsPending=function()return pending~=nil end
 T.Stop=function()if T.StopSigil then T.StopSigil()end;if pending then fail('The local adapter was replaced. Check desktop history before retrying.',9)end;pump:SetScript('OnUpdate',nil);card:SetScript('OnUpdate',nil);card:Hide()end
 -- Publish only after initialization succeeds; failed setup must not strand the UI.

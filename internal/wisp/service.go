@@ -103,6 +103,9 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if r.Snapshot != nil && r.GameVersion != "forever" && r.GameVersion != "" {
 		return Answer{}, errors.New("game snapshot belongs to Forever")
 	}
+	if answer, handled := personalIdentity(r); handled {
+		return answer, nil
+	}
 	if !s.QuestLogOnly {
 		if answer, handled, err := s.catalogAnswer(ctx, r); handled {
 			return answer, err
@@ -136,7 +139,14 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 			}
 			return storage.Graph{GameVersion: r.GameVersion}, nil
 		}
-		if r.Snapshot != nil {
+		if classKnowledgeRequest(r) && classSpellIntent.MatchString(r.Question) {
+			if reader, ok := s.Store.(interface {
+				ClassOptions(context.Context, string, string, int) (storage.Graph, error)
+			}); ok {
+				return reader.ClassOptions(ctx, r.GameVersion, classNames[r.Snapshot.ClassID], r.Snapshot.Level)
+			}
+		}
+		if r.Snapshot != nil && !classKnowledgeRequest(r) {
 			if retriever, ok := s.Store.(interface {
 				RetrieveQuestContext(context.Context, string, bool, string, []int) (storage.Graph, error)
 			}); ok {

@@ -49,7 +49,19 @@ type CompletedQuest struct {
 	Confirmation   string   `json:"confirmation"`
 	ObjectiveTexts []string `json:"objective_texts"`
 }
+type JourneyStep struct {
+	Kind       string `json:"kind"`
+	ObservedAt int64  `json:"observed_at"`
+	Zone       string `json:"zone"`
+	Subzone    string `json:"subzone,omitempty"`
+	Level      int    `json:"level"`
+}
 type GameSnapshot struct {
+	Name            string           `json:"name,omitempty"`
+	ClassName       string           `json:"class_name,omitempty"`
+	RaceName        string           `json:"race_name,omitempty"`
+	RecentJourney   []JourneyStep    `json:"recent_journey,omitempty"`
+	JourneyPartial  bool             `json:"journey_partial,omitempty"`
 	CompletedQuests []CompletedQuest `json:"completed_quests,omitempty"`
 	ClassID         int              `json:"class_id,omitempty"`
 	RaceID          int              `json:"race_id,omitempty"`
@@ -94,6 +106,19 @@ type GamePlan struct {
 func ValidateSnapshot(s *GameSnapshot) error {
 	if s == nil {
 		return nil
+	}
+	if len(s.Name) > 100 || len(s.ClassName) > 80 || len(s.RaceName) > 80 || !utf8.ValidString(s.Name+s.ClassName+s.RaceName) || len(s.RecentJourney) > 3 {
+		return errors.New("invalid personal snapshot")
+	}
+	for _, e := range s.RecentJourney {
+		if e.ObservedAt <= 0 || e.ObservedAt > s.CapturedAt+5 || e.Level < 1 || e.Level > 100 || len(e.Zone) > 80 || len(e.Subzone) > 80 || !utf8.ValidString(e.Zone+e.Subzone) {
+			return errors.New("invalid journey step")
+		}
+		switch e.Kind {
+		case "zone", "snapshot", "session_start", "level_up", "quest_completed":
+		default:
+			return errors.New("unsupported journey step")
+		}
 	}
 	now := time.Now().Unix()
 	if s.CapturedAt > now+5 || s.CapturedAt < now-90 || s.Level < 1 || s.Level > 100 || len(s.Zone) > 160 || !utf8.ValidString(s.Zone) || len(s.ClientBuild) > 30 || len(s.Quests) > 32 {
@@ -252,6 +277,9 @@ func (p GamePlan) Action(choice string, s *GameSnapshot, evidence []string) *Act
 }
 func snapshotQuestion(r Request) string {
 	q := retrievalQuestion(r)
+	if classKnowledgeRequest(r) {
+		return r.Question + " " + classNames[r.Snapshot.ClassID]
+	}
 	if r.Snapshot != nil {
 		q += " " + r.Snapshot.Zone
 		for _, done := range r.Snapshot.CompletedQuests {

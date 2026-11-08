@@ -90,3 +90,20 @@ func TestCompletionIsExplicitAndDistinctFromActiveQuest(t *testing.T) {
 		t.Fatal("absence accepted as completion proof")
 	}
 }
+
+func TestObservedPersonalContextAndBoundedJourney(t *testing.T) {
+	now := time.Now().Unix()
+	s := &GameSnapshot{CapturedAt: now, Level: 3, Name: "Cone Thrower", ClassName: "Mage", RaceName: "Undead", JourneyPartial: true, RecentJourney: []JourneyStep{{Kind: "session_start", ObservedAt: now - 10, Zone: "Tirisfal Glades", Subzone: "Deathknell", Level: 3}}}
+	if err := ValidateSnapshot(s); err != nil {
+		t.Fatal(err)
+	}
+	s.RecentJourney[0].Kind = "note"
+	if ValidateSnapshot(s) == nil {
+		t.Fatal("private note accepted as journey context")
+	}
+	s.RecentJourney[0].Kind = "zone"
+	s.RecentJourney[0].ObservedAt = now + 30
+	if ValidateSnapshot(s) == nil {
+		t.Fatal("future history accepted")
+	}
+}

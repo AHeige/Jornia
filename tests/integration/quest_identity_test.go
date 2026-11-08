@@ -59,6 +59,21 @@ func TestQuestIdentityRetrievalKeepsBuildExpiryAndProviderBoundaries(t *testing.
 			t.Fatal("promoted source")
 		}
 	}
+
+	if err = json.Unmarshal([]byte(`{"data":{"id":8,"name":"Mage","abilities":[{"name":"Fireball","learned":"trainer","ranks":[{"rank":"Rank 1","level":1,"spellId":133}]},{"name":"Frostbolt","learned":"trainer","ranks":[{"rank":"Rank 1","level":4,"spellId":116}]}]},"meta":{"build":"1.60.1.70862","client":"test"}}`), &d); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = w.Save(ctx, "/api/v1/classes/mage", d); err != nil {
+		t.Fatal(err)
+	}
+	classGraph, e := s.ClassOptions(ctx, "forever", "Mage", 3)
+	if e != nil || len(classGraph.Entities) != 2 || len(classGraph.Sources) != 1 {
+		t.Fatal("numeric class identity", e, classGraph)
+	}
+	hiddenClass, e := (&storage.Store{Pool: pool, ExcludeForeverDB: true}).ClassOptions(ctx, "forever", "Mage", 3)
+	if e != nil || len(hiddenClass.Entities) != 0 {
+		t.Fatal("paused class leaked", e)
+	}
 	assertHidden := func(store *storage.Store, version string) {
 		t.Helper()
 		g, e := store.RetrieveQuestContext(ctx, version, false, "Unrelated localized question", []int{376})
@@ -72,8 +87,16 @@ func TestQuestIdentityRetrievalKeepsBuildExpiryAndProviderBoundaries(t *testing.
 		t.Fatal(err)
 	}
 	assertHidden(s, "forever")
+	hiddenClass, e = s.ClassOptions(ctx, "forever", "Mage", 3)
+	if e != nil || len(hiddenClass.Entities) != 0 {
+		t.Fatal("expired or old class leaked", e)
+	}
 	if _, err = pool.Exec(ctx, `UPDATE sources SET expires_at=now()+interval '1 day'; UPDATE api_ingest_state SET value='1.60.1.70863' WHERE key='foreverdb:build'`); err != nil {
 		t.Fatal(err)
 	}
 	assertHidden(s, "forever")
+	hiddenClass, e = s.ClassOptions(ctx, "forever", "Mage", 3)
+	if e != nil || len(hiddenClass.Entities) != 0 {
+		t.Fatal("expired or old class leaked", e)
+	}
 }

@@ -46,8 +46,9 @@ local function quests()
 end
 local function make()
  local id=call(UnitGUID,'player');if type(id)~='string' or id==''then return end
- local _,build,_,interface=call(GetBuildInfo);local _,_,class=call(UnitClass,'player');local _,_,race=call(UnitRace,'player')
- local state={schema=1,observed_at=time(),revision=revision+1,level=num(call(UnitLevel,'player'),100)or 0,zone=txt(call(GetZoneText)),subzone=txt(call(GetSubZoneText)),client_build=txt(build,30),interface=num(interface),class_id=num(class),race_id=num(race),xp=num(call(UnitXP,'player')),xp_max=num(call(UnitXPMax,'player')),dead=call(UnitIsDeadOrGhost,'player')==true,equipment={},professions={}}
+ local _,build,_,interface=call(GetBuildInfo);local className,_,class=call(UnitClass,'player');local raceName,_,race=call(UnitRace,'player')
+ local current=character()
+ local state={name=txt(current and current.name or call(UnitName,'player'),100),class_name=txt(className,80),race_name=txt(raceName,80),schema=1,observed_at=time(),revision=revision+1,level=num(call(UnitLevel,'player'),100)or 0,zone=txt(call(GetZoneText)),subzone=txt(call(GetSubZoneText)),client_build=txt(build,30),interface=num(interface),class_id=num(class),race_id=num(race),xp=num(call(UnitXP,'player')),xp_max=num(call(UnitXPMax,'player')),dead=call(UnitIsDeadOrGhost,'player')==true,equipment={},professions={}}
  state.quests,state.truncated,state.quests_available=quests()
  state.equipment_available=type(GetInventoryItemID)=='function'
  state.professions_available=type(GetProfessions)=='function' and type(GetProfessionInfo)=='function'
@@ -119,6 +120,17 @@ function S.Completed()
    rows[#rows+1]={id=id,title=txt(title,100),observed_at=flag==true and time() or e.observed_at,confirmation=flag==true and 'client_flag' or 'turn_in_event',objective_texts=names}
    if #rows>=8 then break end
   end
+ end
+ return rows
+end
+
+-- A bounded, explicitly partial extract of the player's own recorded journey.
+function S.RecentJourney()
+ local c=character();if not canRecord(c)then return {}end
+ local rows={};local allowed={zone=true,snapshot=true,session_start=true,level_up=true,quest_completed=true}
+ for i=#c.events,1,-1 do
+  local e=c.events[i]
+  if allowed[e.kind]then table.insert(rows,1,{kind=e.kind,observed_at=e.observed_at,zone=txt(e.zone,40),subzone=txt(e.subzone,40),level=e.level});if #rows==3 then break end end
  end
  return rows
 end
