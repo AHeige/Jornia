@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 import urllib.request
-from protocol import parse,reply,frame
+from protocol import parse,parse_observation,normalize_ocr_lines,reply,frame
 from invite import InvitePads
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]/'experiments/return_bus'))
 from bus import Carrier
@@ -41,7 +41,7 @@ def transfer(carrier,packet,payload,samples,stop):
         if stop.is_set():raise InterruptedError('Reader stopped')
         try:sample=samples.get(timeout=.3)
         except queue.Empty:continue
-        got=receipt(sample.get('lines',[]))
+        got=receipt(normalize_ocr_lines(sample.get('lines',[])))
         if not got:continue
         action=validate(got,packet['nonce'],packet['binding'],index,wire,payload,'')
         if action=='ignore':continue
@@ -137,7 +137,7 @@ def run(a):
     heartbeat=threading.Thread(target=beat);heartbeat.start()
     seen=set();last=None;count=0;samples=queue.Queue(maxsize=32)
     try:
-        process=subprocess.Popen([str(a.capture),'--card'],stdout=subprocess.PIPE,text=True)
+        process=subprocess.Popen([str(a.capture),'--card','--fast'],stdout=subprocess.PIPE,text=True)
         for line in process.stdout:
             sample=json.loads(line)
             if sample.get('error'):raise RuntimeError(sample['error'])
@@ -151,7 +151,7 @@ def run(a):
                     try:samples.get_nowait()
                     except queue.Empty:pass
                 samples.put_nowait(sample);continue
-            packet=parse(sample.get('lines',[]),session['identities'])
+            packet=parse_observation(sample,session['identities'])
             if packet is None:last=None;count=0;continue
             signature=json.dumps(packet,sort_keys=True)
             count=count+1 if signature==last else 1;last=signature

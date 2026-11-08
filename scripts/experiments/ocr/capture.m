@@ -21,8 +21,9 @@ static BOOL awaitCapture(dispatch_semaphore_t ready,double seconds) {
  }
  return YES;
 }
+static BOOL fastMode=NO;
 static VNRecognizeTextRequest *request(void) {
- VNRecognizeTextRequest *r=[VNRecognizeTextRequest new]; r.recognitionLevel=VNRequestTextRecognitionLevelAccurate;
+ VNRecognizeTextRequest *r=[VNRecognizeTextRequest new]; r.recognitionLevel=fastMode?VNRequestTextRecognitionLevelFast:VNRequestTextRecognitionLevelAccurate;
  r.usesLanguageCorrection=NO; r.recognitionLanguages=@[@"en-US"]; return r;
 }
 // A four-corner pure-magenta frame marks the explicitly opened Jornia panel.
@@ -74,7 +75,7 @@ static CGRect panel(CGImageRef image) {
 @end
 int main(int argc,const char *argv[]) {
  @autoreleasepool {
-  const char *file=NULL;for(int i=1;i<argc;i++){if(!strcmp(argv[i],"--card"))cardMode=YES;else if(!strcmp(argv[i],"--diagnostic"))diagnostic=YES;else if(!strcmp(argv[i],"--save-card")&&i+1<argc)saveCard=[NSString stringWithUTF8String:argv[++i]];else if(!strcmp(argv[i],"--file")&&i+1<argc)file=argv[++i];}
+  const char *file=NULL;for(int i=1;i<argc;i++){if(!strcmp(argv[i],"--card"))cardMode=YES;else if(!strcmp(argv[i],"--fast"))fastMode=YES;else if(!strcmp(argv[i],"--diagnostic"))diagnostic=YES;else if(!strcmp(argv[i],"--save-card")&&i+1<argc)saveCard=[NSString stringWithUTF8String:argv[++i]];else if(!strcmp(argv[i],"--file")&&i+1<argc)file=argv[++i];}
   if(file){
    NSBitmapImageRep *rep=[[NSBitmapImageRep alloc]initWithData:[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:file]]];
    if(!rep)return 2;CGRect box=panel(rep.CGImage);if(CGRectIsNull(box)){emit(@{@"error":@"panel_not_found"});return 4;}
@@ -120,8 +121,9 @@ int main(int argc,const char *argv[]) {
      if(saveCard){if([[NSFileManager defaultManager]fileExistsAtPath:saveCard])return 6;NSBitmapImageRep *rep=[[NSBitmapImageRep alloc]initWithCGImage:crop];NSData *png=[rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}];[png writeToFile:saveCard atomically:YES];emit(@{@"saved_card":@YES});CGImageRelease(crop);CGImageRelease(image);return 0;}
      CFAbsoluteTime start=CFAbsoluteTimeGetCurrent();
      BOOL ok=[[[VNImageRequestHandler alloc]initWithCGImage:crop options:@{}]performRequests:@[r]error:nil];
-     NSMutableArray *lines=[NSMutableArray array];if(ok)for(VNRecognizedTextObservation *o in r.results){VNRecognizedText *c=[o topCandidates:1].firstObject;if(c)[lines addObject:c.string];}
-     emit(@{@"lines":lines,@"ocr_ms":@((CFAbsoluteTimeGetCurrent()-start)*1000)});CGImageRelease(crop);
+     NSMutableArray *lines=[NSMutableArray array],*candidates=[NSMutableArray array];
+     if(ok)for(VNRecognizedTextObservation *o in r.results){NSMutableArray *row=[NSMutableArray array];for(VNRecognizedText *c in [o topCandidates:3]){[row addObject:c.string];}if(row.count){[lines addObject:row.firstObject];[candidates addObject:row];}}
+     emit(@{@"lines":lines,@"candidates":candidates,@"ocr_ms":@((CFAbsoluteTimeGetCurrent()-start)*1000)});CGImageRelease(crop);
     }
     CGImageRelease(image);
    }}

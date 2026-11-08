@@ -24,7 +24,8 @@ func TestLiveStateQuestProgressConsentAndFreshQuestionCapture(t *testing.T) {
  function GetBuildInfo()return '1.60.1','70790','date',16001 end;function UnitLevel()return LEVEL end
  function GetZoneText()return 'Tirisfal Glades' end;function GetSubZoneText()return 'Deathknell' end
  function GetInventoryItemID(_,slot)if slot==16 then return ITEM end end
- C_QuestLog={GetNumQuestLogEntries=function()return HASQUEST and 1 or 0 end,GetInfo=function()return {questID=376,title='The Damned'}end,IsComplete=function()return false end,GetQuestObjectives=function()return {{text='Scavenger Paw',type='item',numFulfilled=PROGRESS,numRequired=6,finished=false}}end}
+ function GetQuestLogQuestText()return 'Walk west to the ruined farm.','Bring six paws back.' end
+ C_QuestLog={GetSelectedQuest=function()return 376 end,GetNextWaypointText=function()return 'West of the chapel' end,GetNumQuestLogEntries=function()return HASQUEST and 1 or 0 end,GetInfo=function()return {questID=376,title='The Damned'}end,IsComplete=function()return false end,GetQuestObjectives=function()return {{text='Scavenger Paw',type='item',numFulfilled=PROGRESS,numRequired=6,finished=false}}end}
  function FIRE(event,arg)for _,f in ipairs(FRAMES)do if f.scripts.OnEvent then f.scripts.OnEvent(f,event,arg)end end end
  `
 	if err := vm.DoString(mock); err != nil {
@@ -39,7 +40,7 @@ func TestLiveStateQuestProgressConsentAndFreshQuestionCapture(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := vm.DoString(`FIRE('PLAYER_LOGIN');assert(WispClientState.Current.level==15);assert(not WispDB.characters['Player-test'].current_state);SlashCmdList.WISP('start');local c=WispDB.characters['Player-test'];assert(c.current_state.level==15);local n=#c.events;FIRE('QUEST_LOG_UPDATE');assert(#c.events==n);PROGRESS=2;FIRE('QUEST_LOG_UPDATE');assert(#c.events==n+1 and c.events[#c.events].kind=='quest_progress');FIRE('QUEST_LOG_UPDATE');assert(#c.events==n+1);LEVEL=16;local snap=WispClientState.Snapshot();assert(snap.level==16 and snap.quests[1].objectives[1].fulfilled==2);ITEM=101;FIRE('PLAYER_EQUIPMENT_CHANGED',16);assert(c.events[#c.events].kind=='equipment_changed');HASQUEST=false;FIRE('QUEST_LOG_UPDATE');assert(c.events[#c.events].kind=='quest_removed');local saved=c.current_state;SlashCmdList.WISP('stop');LEVEL=17;WispClientState.Snapshot();assert(c.current_state==saved and c.current_state.level==16);assert(WispClientState.Current.level==17)`); err != nil {
+	if err := vm.DoString(`FIRE('PLAYER_LOGIN');assert(WispClientState.Current.level==15);assert(not WispDB.characters['Player-test'].current_state);SlashCmdList.WISP('start');local c=WispDB.characters['Player-test'];assert(c.current_state.level==15);local n=#c.events;FIRE('QUEST_LOG_UPDATE');assert(#c.events==n);PROGRESS=2;FIRE('QUEST_LOG_UPDATE');assert(#c.events==n+1 and c.events[#c.events].kind=='quest_progress');FIRE('QUEST_LOG_UPDATE');assert(#c.events==n+1);LEVEL=16;local snap=WispClientState.Snapshot();assert(snap.level==16 and snap.quests[1].objectives[1].fulfilled==2);assert(snap.quests[1].description=='Walk west to the ruined farm.' and snap.quests[1].waypoint_text=='West of the chapel');C_QuestLog.GetSelectedQuest=function()return 999 end;assert(WispClientState.Snapshot().quests[1].description=='');C_QuestLog.GetSelectedQuest=function()return 376 end;ITEM=101;FIRE('PLAYER_EQUIPMENT_CHANGED',16);assert(c.events[#c.events].kind=='equipment_changed');HASQUEST=false;FIRE('QUEST_LOG_UPDATE');assert(c.events[#c.events].kind=='quest_removed');local saved=c.current_state;SlashCmdList.WISP('stop');LEVEL=17;WispClientState.Snapshot();assert(c.current_state==saved and c.current_state.level==16);assert(WispClientState.Current.level==17)`); err != nil {
 		t.Fatal(err)
 	}
 }

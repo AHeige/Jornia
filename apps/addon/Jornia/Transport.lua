@@ -2,16 +2,16 @@
 -- No chat logging, network calls, game memory access or gameplay automation.
 local UI=WispJournalUI
 if not UI then return end
-WispCompanionTransport={}
-local T=WispCompanionTransport
+local T={}
 local card=CreateFrame('Frame','WispCompanionTransferCard',UIParent,'BackdropTemplate')
-card:SetSize(860,420);card:SetPoint('BOTTOMLEFT',UIParent,'BOTTOMLEFT',20,110);card:SetFrameStrata('FULLSCREEN_DIALOG')
+card:Hide()
+card:SetSize(1060,650);card:SetPoint('BOTTOMLEFT',UIParent,'BOTTOMLEFT',20,110);card:SetFrameStrata('FULLSCREEN_DIALOG')
 card:SetBackdrop({bgFile='Interface\\Buttons\\WHITE8X8',edgeFile='Interface\\Buttons\\WHITE8X8',edgeSize=1})
 card:SetBackdropColor(.025,.035,.055,1);card:SetBackdropBorderColor(.25,.35,.5,1)
 for _,point in ipairs({'TOPLEFT','TOPRIGHT','BOTTOMLEFT','BOTTOMRIGHT'})do local t=card:CreateTexture(nil,'OVERLAY');t:SetSize(3,3);t:SetPoint(point);t:SetColorTexture(1,0,1,1)end
-local function label(y,size,text)local f=card:CreateFontString(nil,'OVERLAY');f:SetFont('Fonts\\ARIALN.TTF',size,'');f:SetPoint('TOPLEFT',12,y);f:SetWidth(836);f:SetJustifyH('LEFT');f:SetJustifyV('TOP');f:SetText(text or '');return f end
+local function label(y,size,text)local f=card:CreateFontString(nil,'OVERLAY');f:SetFont('Fonts\\ARIALN.TTF',size,'');f:SetPoint('TOPLEFT',12,y);f:SetWidth(1036);f:SetJustifyH('LEFT');f:SetJustifyV('TOP');f:SetText(text or '');return f end
 label(-10,14,'Jornia · local message transfer')
-local wireText=label(-40,16,'');wireText:SetHeight(316);wireText:SetWordWrap(true)
+local wireText=label(-40,20,'');wireText:SetHeight(546);wireText:SetWordWrap(true)
 local transferNote=label(-401,10,'Local OCR · images stay on this Mac · keep this card visible while waiting')
 card:Hide();T.Frame=card;T.Packet=wireText
 local root='Interface\\AddOns\\'
@@ -35,6 +35,26 @@ pump:SetScript('OnUpdate',function(_,dt)
  local v=probe(heartbeat);if v~=nil and heartPhase~=nil and v~=heartPhase then aliveAt=GetTime();heartEdges=heartEdges+1 end;heartPhase=v
 end)
 local function quote(s)return '"'..s:gsub('\\','\\\\'):gsub('"','\\"'):gsub('[%z\1-\31]',function(c)return string.format('\\u%04x',c:byte())end)..'"' end
+local function clip(s,n)
+ s=s or '';n=math.max(0,n);if #s<=n then return s end
+ while n>0 and s:byte(n+1)>=128 and s:byte(n+1)<=191 do n=n-1 end
+ return s:sub(1,n)
+end
+local function tail(s,n)
+ if #s<=n then return s end
+ local first=math.max(1,#s-math.max(0,n)+1)
+ while first<=#s and s:byte(first)>=128 and s:byte(first)<=191 do first=first+1 end
+ return s:sub(first)
+end
+local function encodeRows(rows)
+ local encoded={}
+ for _,r in ipairs(rows)do
+  local detail=''
+  if r.description~='' or r.objective~='' or r.waypoint~='' or r.cut then detail=',['..quote(r.description)..','..quote(r.objective)..','..quote(r.waypoint)..','..(r.cut and '1' or '0')..']' end
+  encoded[#encoded+1]=r.prefix..detail..']'
+ end
+ return table.concat(encoded,',')
+end
 local function snapshot(q,include)
  local state=include and WispClientState and WispClientState.Snapshot() or nil
  local rows={};local truncated=false;local gear={};local skills={};local missing={}
@@ -56,7 +76,7 @@ local function snapshot(q,include)
   for i,quest in ipairs(ordered)do
    if i>4 then truncated=true;break end
    local goals={};for j,o in ipairs(quest.objectives or {})do local title=o.text or '';if #title>80 then title='';truncated=true end;goals[#goals+1]='['..j..','..(o.fulfilled or -1)..','..(o.required or -1)..','..(o.finished and '1' or '0')..','..quote(title)..']' end
-   rows[#rows+1]='['..quest.id..','..quote(quest.title or '')..','..(quest.complete and '1' or '0')..','..(quest.waypoint and '1' or '0')..',['..table.concat(goals,',')..']]'
+   rows[#rows+1]={prefix='['..quest.id..','..quote(quest.title or '')..','..(quest.complete and '1' or '0')..','..(quest.waypoint and '1' or '0')..',['..table.concat(goals,',')..']',description=quest.description or '',objective=quest.objective_text or '',waypoint=quest.waypoint_text or '',cut=quest.text_truncated or false}
   end
   for _,item in ipairs(state.equipment or {})do gear[#gear+1]='['..item.slot..','..item.item_id..']' end
   for _,skill in ipairs(state.professions or {})do if skill.skill_id and skill.skill_id>0 then skills[#skills+1]='['..skill.skill_id..','..(skill.rank or 0)..','..(skill.max_rank or 0)..']'end end
@@ -67,7 +87,7 @@ local function snapshot(q,include)
  end
  local function body()
   local snap='null'
-  if state then snap='['..state.observed_at..','..state.level..','..quote(state.zone)..','..quote(state.client_build)..','..(truncated and '1' or '0')..',['..table.concat(rows,',')..'],{"c":'..(state.class_id or 0)..',"r":'..(state.race_id or 0)..',"e":['..table.concat(gear,',')..'],"p":['..table.concat(skills,',')..'],"m":['..table.concat(missing,',')..']}]'end
+  if state then snap='['..state.observed_at..','..state.level..','..quote(state.zone)..','..quote(state.client_build)..','..(truncated and '1' or '0')..',['..encodeRows(rows)..'],{"c":'..(state.class_id or 0)..',"r":'..(state.race_id or 0)..',"e":['..table.concat(gear,',')..'],"p":['..table.concat(skills,',')..'],"m":['..table.concat(missing,',')..']}]'end
   local identity=''
   local current=WispJournalRuntime and WispJournalRuntime.Current()
   if current and WispDB and type(WispDB.installation_id)=='string' then
@@ -76,10 +96,17 @@ local function snapshot(q,include)
   return '{"q":'..quote(q)..',"s":'..snap..identity..'}'
  end
  -- Protect useful quest objectives before optional gear/profession context.
- while #body()>640 and #gear>0 do table.remove(gear);truncated=true end
- while #body()>640 and #skills>0 do table.remove(skills);truncated=true end
- while #body()>640 and #rows>1 do table.remove(rows);truncated=true end
- if #body()>640 and #rows==1 then return nil,'Open a shorter quest or shorten the question; this context does not fit the current bridge.' end
+ while #body()>480 and #gear>0 do table.remove(gear);truncated=true end
+ while #body()>480 and #skills>0 do table.remove(skills);truncated=true end
+ while #body()>480 and #rows>1 do table.remove(rows);truncated=true end
+ -- Prefer game objective/waypoint instructions over a long narrative. Mark every cut.
+ for _,field in ipairs({'description','objective','waypoint'})do
+  while #body()>480 and #rows==1 and #rows[1][field]>0 do
+   local trim=field=='description' and tail or clip
+   rows[1][field]=trim(rows[1][field],#rows[1][field]-24);rows[1].cut=true
+  end
+ end
+ if #body()>480 and #rows==1 then return nil,'Open a shorter quest or shorten the question; this context does not fit the current bridge.' end
  return body()
 end
 local function receipt(kind,value,digest)
@@ -128,10 +155,10 @@ local function begin(body,owner,kind)
  local reason=ready(owner);if reason then return nil,reason end
  sequence=sequence+1;local id=session..string.format('%010d%06d',time(),sequence);local binding=string.format('%05d',checksum(owner));local nonce=string.format('%08d',math.random(10000000,99999999))
  pending={id=id,guid=owner,kind=kind,binding=binding,nonce=nonce,seq=0,previous=true,buffer='',started=GetTime()};elapsed=0
- local hex=body:gsub('.',function(c)return string.format('%02x',c:byte())end);local lines={};for i=1,#hex,96 do lines[#lines+1]=hex:sub(i,i+95)end
- local height=math.max(220,math.min(420,80+(#lines+2)*18));card:SetHeight(height);wireText:SetHeight(height-80);transferNote:ClearAllPoints();transferNote:SetPoint('TOPLEFT',12,-height+19)
- local check=checksum(id..binding..nonce..body)
- wireText:SetText('WISPBEGIN3 '..id..' '..binding..' '..nonce..' '..string.format('%05d',check)..'\n'..table.concat(lines,'\n')..'\nWISPEND')
+ local hex=body:gsub('.',function(c)return string.format('%02x',c:byte())end);local lines={};for i=1,#hex,64 do local groups={};local row=hex:sub(i,i+63);for j=1,#row,4 do groups[#groups+1]=row:sub(j,j+3)end;lines[#lines+1]=table.concat(groups,' ')end
+ local height=math.max(220,math.min(650,80+(#lines+2)*24));card:SetHeight(height);wireText:SetHeight(height-80);transferNote:ClearAllPoints();transferNote:SetPoint('TOPLEFT',12,-height+19)
+ local check=adler(id..binding..nonce..body)
+ wireText:SetText('WISPBEGIN4 '..id..' '..binding..' '..nonce..' '..string.format('%010.0f',check)..'\n'..table.concat(lines,'\n')..'\nWISPEND')
  card:Show();return id
 end
 function T.Send(q,owner,include)
@@ -176,10 +203,12 @@ card:SetScript('OnUpdate',function(_,dt)
  local data=table.concat(bytes)
  if p.candidate==data and p.phase==phase then accept(data,phase) else p.candidate=data;p.phase=phase end
 end)
+T.IsPending=function()return pending~=nil end
+T.Stop=function()if pending then fail('The local adapter was replaced. Check desktop history before retrying.',9)end;pump:SetScript('OnUpdate',nil);card:SetScript('OnUpdate',nil);card:Hide()end
+-- Publish only after initialization succeeds; failed setup must not strand the UI.
+WispCompanionTransport=T
 UI.OnSend=T.Send
 UI.OnConnect=T.Connect
 UI.Config.disconnectedText=nil
 UI.Config.footer='Questions use local OCR. Images stay here; selected text is sent to Jornia AI.'
-T.IsPending=function()return pending~=nil end
-T.Stop=function()if pending then fail('The local adapter was replaced. Check desktop history before retrying.',9)end;pump:SetScript('OnUpdate',nil);card:SetScript('OnUpdate',nil);card:Hide()end
 print('|cffffc466Jornia:|r Native chat adapter ready. Start the local reader before sending. Images stay local.')

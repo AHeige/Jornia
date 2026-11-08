@@ -1,6 +1,8 @@
 # Jornia
 
-**Journey in Azeroth.** A personal companion grounded in your current quest log.
+**Your Journey in Azeroth.** A little guidance for the road ahead.
+
+A personal companion grounded in your current quest log and private character history.
 
 An experimental World of Warcraft: Forever companion with a central knowledge graph and a private local adventure journal.
 
@@ -29,7 +31,9 @@ The existing [download page](https://aheige.github.io/wisp-site/) provides the 0
 
 The product is now Jornia (formerly Wisp). Use `/jornia` or `/jorniamini` in game; `/wisp` and `/wispmini` remain aliases. Existing addon folder/SavedVariables IDs, transport markers, headers and deployed infrastructure identifiers retain their legacy names to preserve compatibility. Existing local `Wisp/player.db` is reused; new installations use a Jornia data directory. Historical captures and raw experiment records retain the names actually observed.
 
-The current friend-test backend is quest-log-only. ForeverDB refresh is paused and its stored facts are excluded from served knowledge. No ForeverDB key is needed for this flow. See [the current delivery checklist](docs/questlog-companion-delivery-2026-11-08.md).
+The current friend-test backend uses observed quest context, with a separate exact-build register for explicitly verified follow-up relationships. ForeverDB refresh is paused and its stored facts are excluded from served knowledge. No ForeverDB key is needed for this flow. See [the current delivery checklist](docs/questlog-companion-delivery-2026-11-08.md).
+
+See [richer quest guidance and its limits](docs/richer-quest-guidance-2026-11-08.md).
 
 ## Development
 

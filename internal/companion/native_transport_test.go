@@ -2,6 +2,8 @@ package companion
 
 import (
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	lua "github.com/yuin/gopher-lua"
 	"hash/adler32"
@@ -9,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 func TestNativeTransportTwoRepliesAndIdentityRejection(t *testing.T) {
@@ -31,6 +34,8 @@ func TestNativeTransportTwoRepliesAndIdentityRejection(t *testing.T) {
   if n==65 then return true end;if n==66 then return HEART and true or nil end
   if n then return math.floor(BYTES:byte(math.floor((n-1)/8)+1)/2^((n-1)%8))%2==1 and true or nil end
  end
+ C_QuestLog={GetSelectedQuest=function()return 123 end}
+ WispClientState={Snapshot=function()return {observed_at=time(),level=2,zone='Deathknell',client_build='70790',quests_available=true,equipment_available=true,professions_available=true,quests={{id=999,title='Other',objectives={}},{id=123,title='Selected',description=string.rep('å',450)..' You will find wolves south.',objective_text='Collect the paws west of the chapel.',waypoint_text='West of the chapel',objectives={{text='Paws',fulfilled=4,required=6}}}},equipment={},professions={}}end}
  function PULSE()NOW=NOW+1;HEART=not HEART;FRAMES[2].scripts.OnUpdate(FRAMES[2],1)end
  function SEND(s)BYTES=s;CLOCK=not CLOCK;WispCompanionTransport.Frame.scripts.OnUpdate(nil,.06);WispCompanionTransport.Frame.scripts.OnUpdate(nil,.06)end
  `
@@ -48,11 +53,30 @@ func TestNativeTransportTwoRepliesAndIdentityRejection(t *testing.T) {
 		t.Fatal(err)
 	}
 	for turn := 0; turn < 3; turn++ {
-		if err = vm.DoString(`CLOCK=true;BYTES=string.rep(string.char(255),8);PULSE();ID=assert(WispCompanionTransport.Send('Where next?',GUID,false));assert(not WispCompanionTransport.Send('Duplicate',GUID,false))`); err != nil {
+		if err = vm.DoString(`CLOCK=true;BYTES=string.rep(string.char(255),8);PULSE();ID=assert(WispCompanionTransport.Send('Where next?',GUID,true));assert(not WispCompanionTransport.Send('Duplicate',GUID,false))`); err != nil {
 			t.Fatal(err)
 		}
 		line := vm.GetGlobal("WispCompanionTransport").(*lua.LTable).RawGetString("Packet").(*lua.LTable).RawGetString("text").String()
 		fields := strings.Fields(strings.Split(line, "\n")[0])
+		lines := strings.Split(line, "\n")
+		raw, err := hex.DecodeString(strings.ReplaceAll(strings.Join(lines[1:len(lines)-1], ""), " ", ""))
+		if err != nil || len(raw) > 640 || !utf8.Valid(raw) {
+			t.Fatal("invalid bounded UTF-8 snapshot", err)
+		}
+		var body map[string]any
+		if err = json.Unmarshal(raw, &body); err != nil {
+			t.Fatal(err)
+		}
+		quests := body["s"].([]any)[5].([]any)
+		if len(quests) != 1 {
+			t.Fatal("selected quest not prioritized")
+		}
+		quest := quests[0].([]any)
+		detail := quest[5].([]any)
+		if quest[0].(float64) != 123 || detail[2] != "West of the chapel" || detail[3].(float64) != 1 || !strings.HasSuffix(detail[0].(string), "wolves south.") {
+			t.Fatal("directions or truncation lost", quest)
+		}
+
 		var nonce uint32
 		var binding uint16
 		fmt.Sscan(fields[3], &nonce)

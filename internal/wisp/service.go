@@ -49,6 +49,7 @@ type Knowledge interface {
 }
 type Service struct {
 	QuestLogOnly            bool
+	QuestGuidance           bool
 	Store                   Knowledge
 	Generator               ai.Generator
 	InputPrice, OutputPrice *float64
@@ -113,8 +114,26 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 	if swedish {
 		a.Text = "Jag saknar källbelagda uppgifter för den frågan och spelversionen."
 	}
+	guidanceUnavailable := false
 	plan, g, err := BuildGamePlan(ctx, r.Snapshot, func(ctx context.Context) (storage.Graph, error) {
 		if s.QuestLogOnly {
+			if s.QuestGuidance && r.Snapshot != nil {
+				if reader, ok := s.Store.(interface {
+					QuestGuidance(context.Context, string, string, []int) (storage.Graph, error)
+				}); ok {
+					ids := []int{}
+					for _, q := range r.Snapshot.Quests {
+						ids = append(ids, q.ID)
+					}
+					bounded, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+					defer cancel()
+					graph, err := reader.QuestGuidance(bounded, r.GameVersion, r.Snapshot.ClientBuild, ids)
+					if err == nil {
+						return graph, nil
+					}
+					guidanceUnavailable = true
+				}
+			}
 			return storage.Graph{GameVersion: r.GameVersion}, nil
 		}
 		if retriever, ok := s.Store.(interface {
@@ -125,6 +144,9 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		return s.Store.Graph(ctx, r.GameVersion, r.Spoilers)
 	})
 	a.ToolTrace = plan.Trace
+	if guidanceUnavailable {
+		a.Warnings = append(a.Warnings, "Verified follow-up lookup is unavailable; guidance uses the approved current quest context only.")
+	}
 	if err != nil {
 		return a, err
 	}
@@ -536,6 +558,10 @@ func (s *Service) Ask(ctx context.Context, r Request) (Answer, error) {
 		}
 	}
 	if !valid {
+		a.Text = "I could not validate that reply against the supplied quest context. Try asking about one specific objective."
+		if swedish {
+			a.Text = "Jag kunde inte verifiera svaret mot questinformationen. Fråga gärna om ett specifikt mål."
+		}
 		a.Warnings = append(a.Warnings, "Model answer failed evidence validation; answer withheld.")
 		finish()
 		return a, nil

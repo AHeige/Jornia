@@ -13,6 +13,19 @@ local function same(a,b)
  if type(a)~=type(b)then return false end;if type(a)~='table'then return a==b end
  for k,v in pairs(a)do if not same(v,b[k])then return false end end;for k in pairs(b)do if a[k]==nil then return false end end;return true
 end
+-- Read only the player's selected quest. Never change selection to scrape other quests.
+local function questText(id)
+ local selected=call(C_QuestLog and C_QuestLog.GetSelectedQuest)
+ if not selected then
+  local index=call(GetQuestLogSelection);local info=index and call(C_QuestLog and C_QuestLog.GetInfo,index)
+  selected=type(info)=='table' and info.questID or nil
+ end
+ local description,objective='',''
+ if selected==id then description,objective=call(GetQuestLogQuestText) end
+ description=visible(description);objective=visible(objective)
+ local waypoint=visible(call(C_QuestLog and C_QuestLog.GetNextWaypointText,id))
+ return txt(description,1024),txt(objective,512),txt(waypoint,240),(type(description)=='string' and #description>1024)or(type(objective)=='string' and #objective>512)or(type(waypoint)=='string' and #waypoint>240)
+end
 local function quests()
  local rows={};local truncated=false
  local count=num(call(C_QuestLog and C_QuestLog.GetNumQuestLogEntries),1000)
@@ -25,7 +38,8 @@ local function quests()
    if type(raw)=='table'then for index,o in ipairs(raw)do if index>8 then truncated=true;break end
     if type(o)=='table'then objectives[#objectives+1]={text=txt(o.text,160),kind=txt(o.type,30),fulfilled=num(o.numFulfilled),required=num(o.numRequired),finished=visible(o.finished)==true}end
    end end
-   rows[#rows+1]={id=q.questID,title=txt(q.title,200),complete=call(C_QuestLog and C_QuestLog.IsComplete,q.questID)==true,waypoint=WispNavigation and WispNavigation.HasWaypoint(q.questID)or false,objectives=objectives}
+   local description,objectiveText,waypointText,textTruncated=questText(q.questID)
+   rows[#rows+1]={description=description,objective_text=objectiveText,waypoint_text=waypointText,text_truncated=textTruncated,id=q.questID,title=txt(q.title,200),complete=call(C_QuestLog and C_QuestLog.IsComplete,q.questID)==true,waypoint=WispNavigation and WispNavigation.HasWaypoint(q.questID)or false,objectives=objectives}
   end
  end
  table.sort(rows,function(a,b)return a.id<b.id end);return rows,truncated,not truncated

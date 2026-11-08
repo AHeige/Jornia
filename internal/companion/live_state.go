@@ -56,7 +56,7 @@ func validateLocalState(s *LocalState) error {
 	}
 	seen := map[int]bool{}
 	for _, q := range s.Quests {
-		if seen[q.ID] || q.ID < 1 || q.ID > 2147483647 || len(q.Title) > 200 || !utf8.ValidString(q.Title) || validateObjectives(q.Objectives) != nil {
+		if seen[q.ID] || q.ID < 1 || q.ID > 2147483647 || len(q.Title) > 200 || !utf8.ValidString(q.Title) || validateObjectives(q.Objectives) != nil || wisp.ValidateQuestText(q) != nil {
 			return errors.New("invalid local quest state")
 		}
 		seen[q.ID] = true

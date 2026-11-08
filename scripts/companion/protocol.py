@@ -17,11 +17,11 @@ def expand_snapshot(value):
     if not isinstance(rows,list):raise ValueError('quest shape')
     simple=[]
     for row in rows:
-        if not isinstance(row,list) or len(row) not in (4,5):raise ValueError('quest shape')
+        if not isinstance(row,list) or len(row) not in (4,5,6):raise ValueError('quest shape')
         simple.append(row[:4])
     snap=base(value[:5]+[simple])
     for row,q in zip(rows,snap['quests']):
-        if len(row)==5:
+        if len(row)>=5:
             if not isinstance(row[4],list) or len(row[4])>8:raise ValueError('objective shape')
             objectives=[]
             for o in row[4]:
@@ -34,6 +34,10 @@ def expand_snapshot(value):
                 if o[2]>=0:goal['required']=o[2]
                 objectives.append(goal)
             q['objectives']=objectives
+        if len(row)==6:
+            text=row[5]
+            if not isinstance(text,list) or len(text)!=4 or any(not isinstance(x,str) for x in text[:3]) or any(len(x.encode())>bound for x,bound in zip(text[:3],[1024,512,240])) or type(text[3]) is not int or text[3] not in (0,1):raise ValueError('quest text bounds')
+            q.update(description=text[0],objective_text=text[1],waypoint_text=text[2],text_truncated=bool(text[3]))
     if len(value)==7:
         meta=value[6]
         if not isinstance(meta,dict) or set(meta)!={'c','r','e','p','m'}:raise ValueError('character shape')
@@ -51,16 +55,41 @@ def expand_snapshot(value):
         snap.update(class_id=meta['c'],race_id=meta['r'],equipment=items,professions=professions,missing=missing)
     return snap
 
+DIGIT_GLYPHS=str.maketrans({'O':'0','o':'0','I':'1','l':'1','S':'5','$':'5'})
+HEX_GLYPHS=str.maketrans({'O':'0','o':'0','I':'1','l':'1','S':'5','$':'5','а':'a','А':'A','В':'B','с':'c','С':'C','е':'e','Е':'E'})
+def normalize_ocr_lines(lines):
+    """Canonicalize visual glyphs only inside fixed-alphabet transport fields."""
+    lines=list(lines);inside=False
+    for index,line in enumerate(lines):
+        m=re.fullmatch(r'(WISPBEGIN[34])\s+(.+)',line)
+        if m:
+            digits=''.join(m[2].split()).translate(DIGIT_GLYPHS)
+            expected=42 if m[1].endswith('3') else 47
+            if len(digits)==expected and digits.isascii() and digits.isdigit():
+                lines[index]=f'{m[1]} {digits[:24]} {digits[24:29]} {digits[29:37]} {digits[37:]}'
+            inside=True;continue
+        if line.strip()=='WISPEND':inside=False;continue
+        if inside:lines[index]=line.translate(HEX_GLYPHS)
+        ack=re.fullmatch(r'(WBREADY|WBACK|WBDONE|WBFAIL)\s*(.+)',line)
+        if ack:
+            digits=''.join(ack[2].split()).translate(DIGIT_GLYPHS)
+            if len(digits)==35 and digits.isascii() and digits.isdigit():
+                lines[index]=f'{ack[1]} {digits[:8]} {digits[8:13]} {digits[13:16]} {digits[16:20]} {digits[20:30]} {digits[30:]}'
+    return lines
+
 def parse(lines,identities):
-    text='\n'.join(lines)
-    m=re.search(r'^WISPBEGIN3\s+(\d{24})\s*(\d{5})\s*(\d{8})\s*(\d{5})\n([\s0-9a-fA-F]+)\nWISPEND$',text,re.M)
+    # Canonicalize only the fixed numeric/hexadecimal alphabet reported by Vision.
+    # The original packet checksum must still match; never repair arbitrary bytes.
+    text='\n'.join(normalize_ocr_lines(lines))
+    m=re.search(r'^WISPBEGIN([34])\s+(\d{24})\s*(\d{5})\s*(\d{8})\s*(\d{5}|\d{10})\n([\s0-9a-fA-F]+)\nWISPEND$',text,re.M)
     if not m:return None
-    ident,binding,nonce,digest,encoded=m.groups()
+    version,ident,binding,nonce,digest,encoded=m.groups()
     encoded=''.join(encoded.split())
     try:
         if not 2<=len(encoded)<=1280 or len(encoded)%2:return None
         raw=bytes.fromhex(encoded).decode('utf8')
-        if checksum(ident+binding+nonce+raw)!=int(digest):return None
+        expected=checksum(ident+binding+nonce+raw) if version=='3' else zlib.adler32((ident+binding+nonce+raw).encode())
+        if len(digest)!=(5 if version=='3' else 10) or expected!=int(digest):return None
         value=json.loads(raw)
         if not isinstance(value,dict):return None
         if set(value)=={'a'}:
@@ -88,6 +117,38 @@ def parse(lines,identities):
         return packet
     except (ValueError,TypeError,UnicodeError):return None
 
+
+def parse_observation(sample,identities):
+    """Try bounded Vision alternatives; accept one unique checksum-valid packet."""
+    initial=parse(sample.get('lines',[]),identities)
+    if initial is not None:return initial
+    if not any(str(line).startswith('WISPBEGIN4 ') for line in sample.get('lines',[])):return None
+    rows=sample.get('candidates')
+    if not isinstance(rows,list) or not 3<=len(rows)<=24:return None
+    choices=[];count=1
+    for index,row in enumerate(rows):
+        if not isinstance(row,list) or not 1<=len(row)<=3:return None
+        valid=[]
+        for text in row:
+            if not isinstance(text,str) or len(text)>256:continue
+            text=text.translate(str.maketrans({'а':'a','А':'A','В':'B','с':'c','С':'C','е':'e','Е':'E'}))
+            if index==0:ok=re.fullmatch(r'WISPBEGIN4\s+\d{24}\s+\d{5}\s+\d{8}\s+\d{10}',text)
+            elif index==len(rows)-1:ok=text.strip()=='WISPEND'
+            else:
+                text=''.join(text.split());ok=re.fullmatch('[0-9a-fA-F]+',text) and (len(text) in (64,96) if index<len(rows)-2 else 2<=len(text)<=96 and len(text)%2==0)
+            if ok and text not in valid:valid.append(text)
+        if not valid:return None
+        count*=len(valid)
+        if count>256:return None
+        choices.append(valid)
+    from itertools import product
+    accepted=None
+    for lines in product(*choices):
+        packet=parse(lines,identities)
+        if packet is not None:
+            if accepted is not None and packet!=accepted:return None
+            accepted=packet
+    return accepted
 
 def reply(packet,result,error=None):
     text=error if error else result.get('text','')

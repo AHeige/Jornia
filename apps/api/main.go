@@ -73,7 +73,7 @@ func run() error {
 		log.Print("migrations, Ashenvale fixture, and reviewed Forever knowledge ready")
 		return nil
 	}
-	service := &wisp.Service{Store: store, QuestLogOnly: env("WISP_QUESTLOG_ONLY", "true") == "true"}
+	service := &wisp.Service{Store: store, QuestLogOnly: env("WISP_QUESTLOG_ONLY", "true") == "true", QuestGuidance: true}
 	if gateway := os.Getenv("LANGCHAIN_URL"); gateway != "" {
 		parsed, err := url.Parse(gateway)
 		if err != nil || parsed.Scheme != "http" || parsed.Hostname() != "model" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {

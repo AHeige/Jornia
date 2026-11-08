@@ -21,11 +21,15 @@ type GameObjective struct {
 	Finished  bool   `json:"finished"`
 }
 type GameQuest struct {
-	Objectives []GameObjective `json:"objectives,omitempty"`
-	ID         int             `json:"id"`
-	Title      string          `json:"title,omitempty"`
-	Complete   bool            `json:"complete"`
-	Waypoint   bool            `json:"waypoint"`
+	Description   string          `json:"description,omitempty"`
+	ObjectiveText string          `json:"objective_text,omitempty"`
+	WaypointText  string          `json:"waypoint_text,omitempty"`
+	TextTruncated bool            `json:"text_truncated,omitempty"`
+	Objectives    []GameObjective `json:"objectives,omitempty"`
+	ID            int             `json:"id"`
+	Title         string          `json:"title,omitempty"`
+	Complete      bool            `json:"complete"`
+	Waypoint      bool            `json:"waypoint"`
 }
 
 // A per-question, explicitly approved observation. Absence is unknown, not an empty quest log.
@@ -114,6 +118,9 @@ func ValidateSnapshot(s *GameSnapshot) error {
 		if q.ID < 1 || q.ID > 2147483647 || seen[q.ID] || len(q.Title) > 200 || !utf8.ValidString(q.Title) {
 			return errors.New("invalid quest observation")
 		}
+		if err := ValidateQuestText(q); err != nil {
+			return err
+		}
 		if len(q.Objectives) > 8 {
 			return errors.New("too many quest objectives")
 		}
@@ -123,6 +130,14 @@ func ValidateSnapshot(s *GameSnapshot) error {
 			}
 		}
 		seen[q.ID] = true
+	}
+	return nil
+}
+
+// ValidateQuestText bounds private observed game text; it is never shared world knowledge.
+func ValidateQuestText(q GameQuest) error {
+	if len(q.Description) > 1024 || len(q.ObjectiveText) > 512 || len(q.WaypointText) > 240 || !utf8.ValidString(q.Description+q.ObjectiveText+q.WaypointText) {
+		return errors.New("invalid observed quest text")
 	}
 	return nil
 }

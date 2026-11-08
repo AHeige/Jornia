@@ -428,7 +428,8 @@ func (s *Server) answer(ctx context.Context, req Ask) (wisp.Answer, error) {
 			return s.journeyAnswer(ctx, req.CharacterID)
 		}
 	}
-	// Journal excerpts leave only after explicit per-question preview approval. Names, IDs, notes and conversation history stay local.
+	// Journal excerpts require per-question approval. Structured character identity,
+	// notes and conversation history stay local; approved quest text is game-provided text.
 	mode := "auto"
 	if req.AI {
 		mode = "generate"
