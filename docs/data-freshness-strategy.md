@@ -191,3 +191,13 @@ character context for immediate state. Track listed quests, fetched details,
 usable directions/NPCs, verified chains, age and unanswered questions separately.
 The current coverage endpoint does not yet measure these regional fields;
 regional completeness and route readiness remain unverified.
+
+Deployment check: importer image `wisp-private-foreverdb:20261108-starters` is
+selected for the existing hourly job. A bounded 20-request check completed on
+build `1.60.1.70862`, saving 20 documents. The six filtered catalogs returned
+76 quests for Dun Morogh, 70 for Durotar, 80 for Elwynn Forest, 41 for Mulgore,
+74 for Teldrassil and 91 for Tirisfal. Sample returned zone fields matched each
+filter. The queue reported all six catalogs current at priority -10 and 432
+quest-detail jobs current at priority -9, including previously cached details.
+These are provider catalog/refresh counts, not independently verified quest
+availability or complete route coverage. No chat/API services were restarted.
