@@ -39,3 +39,9 @@ This is the user's settled product direction, recorded on 6 November 2026.
 
 - The user stopped the quest-completion/gameplay test because of botting concerns. Earlier permission to move, fight, loot or turn in quests must not be reused to resume that test.
 - Continue with chat/companion UI and read-only character-state verification. Any later gameplay-control test requires a new explicit instruction.
+
+## Current-character context (8 November 2026)
+
+- Current character context is on by default at the user's request. Keep the visible per-character opt-out and preserve its value across sends, panel modes and reopening. Never reset it to off after a successful question.
+- Refresh approved context at Enter. This preference does not authorize continuous uploads, whole-journal uploads or community contributions.
+- Represent actual quest turn-ins separately from active ready-to-turn-in quests. Absence from the active log alone must never become proof of completion.

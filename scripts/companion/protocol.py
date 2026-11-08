@@ -40,7 +40,7 @@ def expand_snapshot(value):
             q.update(description=text[0],objective_text=text[1],waypoint_text=text[2],text_truncated=bool(text[3]))
     if len(value)==7:
         meta=value[6]
-        if not isinstance(meta,dict) or set(meta)!={'c','r','e','p','m'}:raise ValueError('character shape')
+        if not isinstance(meta,dict) or set(meta) not in ({'c','r','e','p','m'},{'c','r','e','p','m','d'}):raise ValueError('character shape')
         if any(type(meta[k]) is not int or not 0<=meta[k]<=100 for k in ('c','r')):raise ValueError('identity bounds')
         gear=meta['e'];skills=meta['p'];missing=meta['m']
         if not isinstance(gear,list) or len(gear)>19 or not isinstance(skills,list) or len(skills)>12 or not isinstance(missing,list) or len(missing)>8 or any(x not in ('quests','equipment','professions','class','race') for x in missing):raise ValueError('character bounds')
@@ -52,6 +52,13 @@ def expand_snapshot(value):
         for row in skills:
             if not isinstance(row,list) or len(row)!=3 or any(type(n) is not int for n in row) or not 1<=row[0]<=2147483647 or not 0<=row[1]<=row[2]<=10000:raise ValueError('skill bounds')
             professions.append(dict(skill_id=row[0],rank=row[1],max_rank=row[2]))
+        done=meta.get('d',[])
+        if not isinstance(done,list) or len(done)>8:raise ValueError('completion bounds')
+        completed=[];seen=set();active={q['id'] for q in snap['quests']}
+        for row in done:
+            if not isinstance(row,list) or len(row)!=5 or type(row[0]) is not int or not 1<=row[0]<=2147483647 or row[0] in seen or row[0] in active or not isinstance(row[1],str) or len(row[1].encode())>100 or type(row[2]) is not int or not 1<=row[2]<=snap['captured_at']+5 or row[3] not in ('client_flag','turn_in_event') or not isinstance(row[4],list) or len(row[4])>4 or any(not isinstance(x,str) or len(x.encode())>80 for x in row[4]):raise ValueError('completion shape')
+            completed.append(dict(id=row[0],title=row[1],observed_at=row[2],confirmation=row[3],objective_texts=row[4]));seen.add(row[0])
+        if completed:snap['completed_quests']=completed
         snap.update(class_id=meta['c'],race_id=meta['r'],equipment=items,professions=professions,missing=missing)
     return snap
 

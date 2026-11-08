@@ -92,3 +92,33 @@ f:SetScript('OnEvent',function(_,event,arg)
  local function update()pending=false;S.Refresh(event,arg)end
  if C_Timer and C_Timer.After then C_Timer.After(.25,update)else update()end
 end)
+-- Per-question completion evidence from this character's own recorded turn-ins.
+-- A missing active quest is never sufficient evidence of completion.
+function S.Completed()
+ local c=character();local owner=call(UnitGUID,'player')
+ if not c or c.id~=owner then return {} end
+ local active={};for _,q in ipairs(S.Current and S.Current.quests or {})do active[q.id]=true end
+ local rows,seen={},{}
+ for i=#(c.events or {}),1,-1 do
+  local e=c.events[i];local id=num(e.quest_id)
+  if e.kind=='quest_completed' and id and id>0 and num(e.observed_at) and e.observed_at>0 and not seen[id] and not active[id]then
+   seen[id]=true
+   local title=e.quest_title;local objectives=e.objectives
+   if not title or title=='' or not objectives then
+    for j=i-1,1,-1 do local before=c.events[j]
+     if before.quest_id==id then
+      if not title or title==''then title=before.quest_title end
+      objectives=objectives or before.objectives
+      if title and title~='' and objectives then break end
+     end
+    end
+   end
+   if not title or title==''then title=call(C_QuestLog and C_QuestLog.GetTitleForQuestID,id)end
+   local names={};for _,o in ipairs(objectives or {})do if #names>=4 then break end;local v=txt(o.text,80):gsub('%s*:%s*%d+%s*/%s*%d+%s*$','');if v~=''then names[#names+1]=v end end
+   local flag=call(C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted,id)
+   rows[#rows+1]={id=id,title=txt(title,100),observed_at=flag==true and time() or e.observed_at,confirmation=flag==true and 'client_flag' or 'turn_in_event',objective_texts=names}
+   if #rows>=8 then break end
+  end
+ end
+ return rows
+end

@@ -42,18 +42,26 @@ type GameProfession struct {
 	Rank    int `json:"rank"`
 	MaxRank int `json:"max_rank"`
 }
+type CompletedQuest struct {
+	ID             int      `json:"id"`
+	Title          string   `json:"title"`
+	ObservedAt     int64    `json:"observed_at"`
+	Confirmation   string   `json:"confirmation"`
+	ObjectiveTexts []string `json:"objective_texts"`
+}
 type GameSnapshot struct {
-	ClassID     int              `json:"class_id,omitempty"`
-	RaceID      int              `json:"race_id,omitempty"`
-	Equipment   []GameItem       `json:"equipment,omitempty"`
-	Professions []GameProfession `json:"professions,omitempty"`
-	Missing     []string         `json:"missing,omitempty"`
-	CapturedAt  int64            `json:"captured_at"`
-	Level       int              `json:"level"`
-	Zone        string           `json:"zone"`
-	ClientBuild string           `json:"client_build"`
-	Quests      []GameQuest      `json:"quests"`
-	Truncated   bool             `json:"truncated"`
+	CompletedQuests []CompletedQuest `json:"completed_quests,omitempty"`
+	ClassID         int              `json:"class_id,omitempty"`
+	RaceID          int              `json:"race_id,omitempty"`
+	Equipment       []GameItem       `json:"equipment,omitempty"`
+	Professions     []GameProfession `json:"professions,omitempty"`
+	Missing         []string         `json:"missing,omitempty"`
+	CapturedAt      int64            `json:"captured_at"`
+	Level           int              `json:"level"`
+	Zone            string           `json:"zone"`
+	ClientBuild     string           `json:"client_build"`
+	Quests          []GameQuest      `json:"quests"`
+	Truncated       bool             `json:"truncated"`
 }
 type Action struct {
 	ID        string `json:"id"`
@@ -127,6 +135,20 @@ func ValidateSnapshot(s *GameSnapshot) error {
 		for _, o := range q.Objectives {
 			if o.Index < 0 || o.Index > 32 || len(o.Text) > 160 || len(o.Kind) > 30 || !utf8.ValidString(o.Text+o.Kind) || o.Fulfilled != nil && (*o.Fulfilled < 0 || *o.Fulfilled > 2147483647) || o.Required != nil && (*o.Required < 0 || *o.Required > 2147483647) {
 				return errors.New("invalid quest objective")
+			}
+		}
+		seen[q.ID] = true
+	}
+	if len(s.CompletedQuests) > 8 {
+		return errors.New("too many completed quests")
+	}
+	for _, q := range s.CompletedQuests {
+		if q.ID < 1 || q.ID > 2147483647 || seen[q.ID] || len(q.Title) > 100 || !utf8.ValidString(q.Title) || q.ObservedAt < 1 || q.ObservedAt > s.CapturedAt+5 || (q.Confirmation != "client_flag" && q.Confirmation != "turn_in_event") || len(q.ObjectiveTexts) > 4 {
+			return errors.New("invalid completed quest evidence")
+		}
+		for _, v := range q.ObjectiveTexts {
+			if len(v) > 80 || !utf8.ValidString(v) {
+				return errors.New("invalid completed objective text")
 			}
 		}
 		seen[q.ID] = true
@@ -232,6 +254,9 @@ func snapshotQuestion(r Request) string {
 	q := retrievalQuestion(r)
 	if r.Snapshot != nil {
 		q += " " + r.Snapshot.Zone
+		for _, done := range r.Snapshot.CompletedQuests {
+			q += " " + done.Title
+		}
 		for _, quest := range r.Snapshot.Quests {
 			if quest.Title != "" {
 				q += " " + strings.TrimSpace(quest.Title)

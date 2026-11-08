@@ -4,7 +4,7 @@ local UI = WispJournalUI
 UI.Config = {}
 UI.ClearsAcceptedInput = true
 local window,rail,banner,chat,journey,chatText,journeyText,status,input,tabs,sendButton,modeButton,closeButton,resize,footer,connectButton
-local character,entries,messages,drafts={},{},{},{}
+local character,entries,messages,drafts,contextSharing={},{},{},{},{}
 local mode,tab='full','journey'
 local sizes={full={860,540},compact={420,340}}
 local pending,layoutBusy,lastW,lastH
@@ -225,14 +225,14 @@ function UI.Show(person,events)
    -- Sender must acknowledge acceptance with an operation ID. Nil/error preserves the draft.
    local ok,id,reason=pcall(UI.OnSend,question,key(),UI.ShareContext and UI.ShareContext:GetChecked() or false)
    if not ok or type(id)~='string' or id=='' then status:SetText(type(reason)=='string' and safe(reason) or 'No acceptance confirmed. Draft kept; check Wisp.');return end
-   if UI.ShareContext then UI.ShareContext:SetChecked(false) end
    pending={id=id,character=key(),draft=question};UI.AddMessage('user',question);drafts[key()]='';input:SetText('');input:ClearFocus();updatePending()
   end
   input:SetScript('OnEnterPressed',send);sendButton=button(chat,'Ask Jornia',490,-207,98,send)
   status=label(chat,'',0,-253,612,10,true)
-  UI.ShareContext=CreateFrame('CheckButton',nil,chat,'UICheckButtonTemplate');UI.ShareContext:SetChecked(false)
-  UI.shareLabel=label(chat,'Include current character state (this question)',28,-232,580,11)
-  UI.ShareContext:SetScript('OnEnter',function(self)if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetText('Current character context');GameTooltip:AddLine('Reads level, area, class/race IDs, gear IDs, profession ranks and a limited quest/progress snapshot when you send.',1,1,1,true);GameTooltip:AddLine('Selected text goes through Jornia to Berget. Images stay local. Missing fields remain unknown.',1,1,1,true);GameTooltip:Show()end end)
+  UI.ShareContext=CreateFrame('CheckButton',nil,chat,'UICheckButtonTemplate');UI.ShareContext:SetChecked(true)
+  UI.ShareContext:SetScript('OnClick',function(self)contextSharing[key()]=self:GetChecked() and true or false;if UI.OnContextPreference then UI.OnContextPreference(key(),contextSharing[key()])end end)
+  UI.shareLabel=label(chat,'Include current character context',28,-232,580,11)
+  UI.ShareContext:SetScript('OnEnter',function(self)if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetText('Current character context');GameTooltip:AddLine('Reads level, area, class/race IDs, gear IDs, profession ranks, a limited quest/progress snapshot, and recent confirmed turn-ins when you send.',1,1,1,true);GameTooltip:AddLine('Selected text goes through Jornia to Berget. Images stay local. Missing fields remain unknown.',1,1,1,true);GameTooltip:Show()end end)
   UI.ShareContext:SetScript('OnLeave',function()if GameTooltip then GameTooltip:Hide()end end)
 
   journeyText=label(journey,'',0,-2,612,13);journeyText:SetJustifyV('TOP')
@@ -255,7 +255,8 @@ function UI.Show(person,events)
  end
  UI.nameLabel:SetText(safe(character.name or 'Character'));UI.identity:SetText('Level '..tostring(character.level or '?')..'\n'..safe(character.zone))
  UI.compactIdentity:SetText(safe(character.name or 'Character')..' · Lv '..tostring(character.level or '?'))
- input:SetText(drafts[key()] or '');updateJourney();renderMessages();updatePending();layout();window:Show()
+ if contextSharing[key()]==nil then contextSharing[key()]=character.share_current_context~=false end
+ UI.ShareContext:SetChecked(contextSharing[key()]);input:SetText(drafts[key()] or '');updateJourney();renderMessages();updatePending();layout();window:Show()
  return window
 end
 function UI.ShowJourney()if window then if mode=='compact' then UI.SetMode('full') end;selectTab('journey')end end

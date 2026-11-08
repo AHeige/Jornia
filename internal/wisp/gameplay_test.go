@@ -69,3 +69,24 @@ func TestModelCannotInventActionAndUnknownKeepsLanguage(t *testing.T) {
 		t.Fatal(a, err)
 	}
 }
+
+func TestCompletionIsExplicitAndDistinctFromActiveQuest(t *testing.T) {
+	now := time.Now().Unix()
+	s := &GameSnapshot{CapturedAt: now, Level: 3, CompletedQuests: []CompletedQuest{{ID: 376, Title: "The Damned", ObservedAt: now, Confirmation: "turn_in_event", ObjectiveTexts: []string{"Scavenger Paw"}}}}
+	if err := ValidateSnapshot(s); err != nil {
+		t.Fatal(err)
+	}
+	s.Quests = []GameQuest{{ID: 376, Complete: true}}
+	if err := ValidateSnapshot(s); err == nil {
+		t.Fatal("same quest accepted as active and turned in")
+	}
+	s.CompletedQuests = nil
+	if err := ValidateSnapshot(s); err != nil {
+		t.Fatal("ready-to-turn-in active quest rejected", err)
+	}
+	s.Quests = nil
+	s.CompletedQuests = []CompletedQuest{{ID: 376, ObservedAt: now, Confirmation: "missing_from_log"}}
+	if err := ValidateSnapshot(s); err == nil {
+		t.Fatal("absence accepted as completion proof")
+	}
+}

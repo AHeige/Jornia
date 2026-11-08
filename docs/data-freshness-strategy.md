@@ -150,3 +150,7 @@ Report search performance separately from OCR, network and model time. Initial o
 ## Operational update — 8 November 2026
 
 The user resumed ForeverDB and general world retrieval after testing the limitations of quest-log-only guidance. See [the resumed-provider record and incremental enrichment priorities](foreverdb-resumed-2026-11-08.md). Restoring the provider does not by itself make level-range recommendations answerable; required-field projection and intent-aware retrieval are the next measured slice.
+
+### Current context default and completion evidence
+
+On 8 November 2026 the user selected current character context **on by default**, with a retained, per-character opt-out. A send still requires an explicit action and captures state at that moment. The old per-send checkbox reset no longer applies. Recent recorded quest turn-ins now travel as separate bounded completion evidence; see [the real post-turn-in regression and delivery record](completed-quests-context-2026-11-08.md). This does not enable automatic whole-journal upload or community contributions.

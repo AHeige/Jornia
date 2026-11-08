@@ -16,8 +16,9 @@ local function personAndEvents()
  if type(surname)=='string' and surname~='' and surname~=(GetRealmName and GetRealmName() or '') then name=name..' '..surname end
  local db=WispDB
  local c=type(db)=='table' and type(db.characters)=='table' and db.characters[guid]
+ local share;if type(c)=='table' and type(c.share_current_context)=='boolean'then share=c.share_current_context end
  local events=type(c)=='table' and type(c.events)=='table' and c.events or {}
- return {id=guid,name=name,level=UnitLevel('player'),zone=GetZoneText() or ''},events
+ return {id=guid,name=name,level=UnitLevel('player'),zone=GetZoneText() or '',share_current_context=share},events
 end
 local function refresh()
  local person,events=personAndEvents();if person then UI.Show(person,events) end
@@ -28,6 +29,10 @@ function UI.OpenNative(view)
  elseif view=='chat' then UI.SetMode('full');UI.ShowChat()
  elseif view=='journey' then UI.SetMode('full');UI.ShowJourney()
  else UI.SetMode('full') end
+end
+UI.OnContextPreference=function(owner,value)
+ local c=WispDB and WispDB.characters and WispDB.characters[owner]
+ if c and owner==UnitGUID('player')then c.share_current_context=value end
 end
 UI.OnNote=function(value) if previous then previous('note '..value);refresh() end end
 UI.OnPause=function() if previous then previous('stop');refresh() end end

@@ -98,4 +98,15 @@ class QRTest(unittest.TestCase):
   self.assertEqual(qr_lines(dict(qr=[ack])),[ack])
   self.assertIsNone(qr_lines(dict(qr=[ack.replace('12715','1271S')])))
 
+class CompletedQuestTest(unittest.TestCase):
+ def test_turn_in_evidence_and_active_conflict(self):
+  from protocol import expand_snapshot
+  now=int(time.time());meta=dict(c=8,r=5,e=[],p=[],m=[],d=[[376,'The Damned',now,'turn_in_event',['Scavenger Paw']]])
+  state=[now,3,'Deathknell','70790',0,[],meta]
+  self.assertEqual(expand_snapshot(state)['completed_quests'][0]['id'],376)
+  state[5]=[[376,'The Damned',1,0]]
+  with self.assertRaises(ValueError):expand_snapshot(state)
+  state[5]=[];meta['d'][0][3]='missing_from_log'
+  with self.assertRaises(ValueError):expand_snapshot(state)
+
 if __name__=='__main__':unittest.main()

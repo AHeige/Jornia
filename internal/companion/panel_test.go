@@ -39,7 +39,7 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
 	}
 	if err = vm.DoString(`
  local UI=WispJournalUI;local a={id='one',name='One',level=16,zone='Ashenvale'};local b={id='two',name='Two',level=2,zone='Durotar'}
- UI.Show(a,{});local c=UI.Controls
+ UI.Show(a,{});local c=UI.Controls;assert(UI.ShareContext:GetChecked())
  c.Input:SetText('A draft');UI.AddMessage('assistant','Welcome');UI.SetMode('compact')
  assert(c.Window.w==420 and c.Window.h==340 and c.Input:GetText()=='A draft' and c.Chat.shown and not c.Journey.shown)
  c.Window:SetSize(50,20);assert(c.Window.w==340 and c.Window.h==260 and c.Input.w>0)
@@ -47,10 +47,10 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
  UI.DragHandle.scripts.OnMouseDown(UI.DragHandle,'LeftButton');assert(c.Window.moving);UI.DragHandle.scripts.OnMouseUp();assert(not c.Window.moving)
  UI.SetMode('full');assert(c.Window.w==860 and c.Input:GetText()=='A draft')
  UI.SetMode('compact');assert(c.Window.w==340 and #c.Messages.lines==1)
- UI.Show(b,{});assert(c.Input:GetText()=='' and #c.Messages.lines==0);c.Input:SetText('Other draft')
+ UI.Show(b,{});assert(c.Input:GetText()=='' and #c.Messages.lines==0 and UI.ShareContext:GetChecked());c.Input:SetText('Other draft')
  UI.Show(a,{});assert(c.Input:GetText()=='A draft' and #c.Messages.lines==1)
  c.Input.scripts.OnEnterPressed();assert(c.Input:GetText()=='A draft')
- local sends=0;UI.OnSend=function(q,owner)sends=sends+1;assert(owner=='one');return 'op1' end
+ local sends=0;UI.OnSend=function(q,owner,include)assert(include==true);sends=sends+1;assert(owner=='one');return 'op1' end
  c.Input.scripts.OnEnterPressed();assert(sends==1 and c.Input.disabled and c.Input:GetText()=='' and c.Status.text=='Sending your message…')
  UI.SetProgress('op1','one','Jornia is thinking…')
  UI.SetMode('full');UI.SetMode('compact');c.Input.scripts.OnEnterPressed();assert(sends==1 and c.Status.text=='Jornia is thinking…')
@@ -66,6 +66,7 @@ func TestCompanionPanelModesResizeDraftAndPendingIsolation(t *testing.T) {
  UI.connectionInput:SetText(string.rep('ab',32));UI.connectionInput.scripts.OnEnterPressed();assert(UI.connectionInput:GetText()=='' and attempts==1)
  UI.connectionInput.scripts.OnEnterPressed();assert(attempts==1 and #c.Messages.lines==before)
  assert(not UI.ResolveConnection('wrong','one','Wrong',false));assert(UI.ResolveConnection('connect1','one','Connected',false));assert(#c.Messages.lines==before and not c.Input.disabled)
+ UI.ShareContext:SetChecked(false);UI.ShareContext.scripts.OnClick(UI.ShareContext);UI.Show(b,{});assert(UI.ShareContext:GetChecked());UI.Show(a,{});assert(not UI.ShareContext:GetChecked());UI.SetMode('compact');assert(not UI.ShareContext:GetChecked())
 
  `); err != nil {
 		t.Fatal(err)

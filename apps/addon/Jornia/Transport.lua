@@ -57,9 +57,27 @@ local function encodeRows(rows)
 end
 local function snapshot(q,include)
  local state=include and WispClientState and WispClientState.Snapshot() or nil
- local rows={};local truncated=false;local gear={};local skills={};local missing={}
+ local completed={};local completionRelevant=false;local rows={};local truncated=false;local gear={};local skills={};local missing={}
  if include and not state then return nil,'Current character state is unavailable. Reopen Jornia after the journal is ready.' end
  if state then
+  if WispClientState.Completed then
+   local candidates=WispClientState.Completed()
+   local function relevant(c)
+    local lower=q:lower();if c.title~='' and lower:find(c.title:lower(),1,true)then return true end
+    for _,name in ipairs(c.objective_texts or {})do
+     if lower:find(name:lower(),1,true)then return true end
+     for word in name:lower():gmatch('%w+')do if #word>=3 and word~='the' and word~='and' and word~='for' and lower:find(word,1,true)then return true end end
+    end
+    return false
+   end
+   table.sort(candidates,function(a,b)local x,y=relevant(a),relevant(b);if x~=y then return x end;return a.observed_at>b.observed_at end)
+   for i,c in ipairs(candidates)do
+    if i>2 then break end
+    if relevant(c)then completionRelevant=true end
+    local names={};for _,name in ipairs(c.objective_texts or {})do names[#names+1]=quote(name)end
+    completed[#completed+1]={id=c.id,title=c.title,at=c.observed_at,confirmation=c.confirmation,names=names}
+   end
+  end
   truncated=state.truncated or not state.quests_available
   local ordered={};for _,quest in ipairs(state.quests or {})do ordered[#ordered+1]=quest end
   local selected;if C_QuestLog and C_QuestLog.GetSelectedQuest then local ok,id=pcall(C_QuestLog.GetSelectedQuest);if ok then selected=id end end
@@ -86,8 +104,10 @@ local function snapshot(q,include)
   if not state.class_id then missing[#missing+1]=quote('class')end;if not state.race_id then missing[#missing+1]=quote('race')end
  end
  local function body()
+  local done={};for _,c in ipairs(completed)do done[#done+1]='['..c.id..','..quote(c.title)..','..c.at..','..quote(c.confirmation)..',['..table.concat(c.names,',')..']]'end
+  local completion=#done>0 and ',"d":['..table.concat(done,',')..']' or ''
   local snap='null'
-  if state then snap='['..state.observed_at..','..state.level..','..quote(state.zone)..','..quote(state.client_build)..','..(truncated and '1' or '0')..',['..encodeRows(rows)..'],{"c":'..(state.class_id or 0)..',"r":'..(state.race_id or 0)..',"e":['..table.concat(gear,',')..'],"p":['..table.concat(skills,',')..'],"m":['..table.concat(missing,',')..']}]'end
+  if state then snap='['..state.observed_at..','..state.level..','..quote(state.zone)..','..quote(state.client_build)..','..(truncated and '1' or '0')..',['..encodeRows(rows)..'],{"c":'..(state.class_id or 0)..',"r":'..(state.race_id or 0)..',"e":['..table.concat(gear,',')..'],"p":['..table.concat(skills,',')..'],"m":['..table.concat(missing,',')..']'..completion..'}]'end
   local identity=''
   local current=WispJournalRuntime and WispJournalRuntime.Current()
   if current and WispDB and type(WispDB.installation_id)=='string' then
@@ -96,9 +116,12 @@ local function snapshot(q,include)
   return '{"q":'..quote(q)..',"s":'..snap..identity..'}'
  end
  -- Protect useful quest objectives before optional gear/profession context.
+ -- Keep a bounded completion fact before optional active narrative.
+ while #body()>480 and #completed>1 do table.remove(completed)end
  while #body()>480 and #gear>0 do table.remove(gear);truncated=true end
  while #body()>480 and #skills>0 do table.remove(skills);truncated=true end
- while #body()>480 and #rows>1 do table.remove(rows);truncated=true end
+ if not completionRelevant then while #body()>480 and #completed>0 do table.remove(completed)end end
+ while #body()>480 and #rows>(completionRelevant and 0 or 1) do table.remove(rows);truncated=true end
  -- Prefer game objective/waypoint instructions over a long narrative. Mark every cut.
  for _,field in ipairs({'description','objective','waypoint'})do
   while #body()>480 and #rows==1 and #rows[1][field]>0 do
@@ -106,7 +129,8 @@ local function snapshot(q,include)
    rows[1][field]=trim(rows[1][field],#rows[1][field]-24);rows[1].cut=true
   end
  end
- if #body()>480 and #rows==1 then return nil,'Open a shorter quest or shorten the question; this context does not fit the current bridge.' end
+ while #body()>480 and #completed>0 and #completed[1].names>0 do table.remove(completed[1].names)end
+ if #body()>480 then return nil,'Open a shorter quest or shorten the question; this context does not fit the current bridge.' end
  return body()
 end
 local function display(text)
