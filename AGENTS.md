@@ -34,3 +34,8 @@ This is the user's settled product direction, recorded on 6 November 2026.
 - The user subsequently approved one small QR tile at a fixed position in the top-right corner of the chat. This is an explicit exception to the earlier fully invisible transport requirement, not permission to restore the large encoded OCR card.
 - Keep raw packets, checksums and diagnostic labels out of the player experience. The QR tile must stay inside the chat, preserve readable messages and input, and require no extra player action.
 - Measure real quest context, repeated messages, movement/resizing, failure and manual recovery during uninterrupted play. A successful generated QR fixture alone does not establish a usable native chat or Windows readiness.
+
+## Game-client test scope (8 November 2026)
+
+- The user stopped the quest-completion/gameplay test because of botting concerns. Earlier permission to move, fight, loot or turn in quests must not be reused to resume that test.
+- Continue with chat/companion UI and read-only character-state verification. Any later gameplay-control test requires a new explicit instruction.

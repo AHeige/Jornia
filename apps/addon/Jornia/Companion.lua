@@ -2,6 +2,7 @@
 WispJournalUI = {}
 local UI = WispJournalUI
 UI.Config = {}
+UI.ClearsAcceptedInput = true
 local window,rail,banner,chat,journey,chatText,journeyText,status,input,tabs,sendButton,modeButton,closeButton,resize,footer,connectButton
 local character,entries,messages,drafts={},{},{},{}
 local mode,tab='full','journey'
@@ -66,7 +67,7 @@ local function updatePending()
  else
   if input.Enable then input:Enable() end;input:EnableMouse(true);sendButton:Enable()
  end
- if waiting then status:SetText(pending.connection and 'Checking invite code…' or 'Jornia is thinking…')
+ if waiting then status:SetText(pending.connection and 'Checking invite code…' or pending.progress or 'Sending your message…')
  elseif pending then status:SetText('A reply is pending for another character.')
  elseif not UI.OnSend then status:SetText(UI.Config.disconnectedText or 'Preview · AI disconnected. Nothing is sent.')
  else status:SetText('Enter to send · your current character only') end
@@ -152,11 +153,16 @@ function UI.AddMessage(role,text,owner)
  if owner==key() then renderMessages() end
 end
 function UI.SetProgress(requestID,owner,text)
- if pending and pending.id==requestID and pending.character==owner and owner==key() then status:SetText(safe(text)) end
+ if pending and pending.id==requestID and pending.character==owner then pending.progress=text;if owner==key() then status:SetText(safe(text))end end
 end
 function UI.Resolve(requestID,owner,text,isError,metadata)
  if not pending or pending.id~=requestID or pending.character~=owner then return false end
+ local sentDraft=pending.draft
  pending=nil
+ if isError and sentDraft then
+  drafts[owner]=sentDraft
+  if owner==key() then input:SetText(sentDraft) end
+ end
  if not isError then
   UI.AddMessage('assistant',text,owner);drafts[owner]=''
   if metadata and metadata.foreverdb then
@@ -220,7 +226,7 @@ function UI.Show(person,events)
    local ok,id,reason=pcall(UI.OnSend,question,key(),UI.ShareContext and UI.ShareContext:GetChecked() or false)
    if not ok or type(id)~='string' or id=='' then status:SetText(type(reason)=='string' and safe(reason) or 'No acceptance confirmed. Draft kept; check Wisp.');return end
    if UI.ShareContext then UI.ShareContext:SetChecked(false) end
-   pending={id=id,character=key()};UI.AddMessage('user',question);input:ClearFocus();updatePending()
+   pending={id=id,character=key(),draft=question};UI.AddMessage('user',question);drafts[key()]='';input:SetText('');input:ClearFocus();updatePending()
   end
   input:SetScript('OnEnterPressed',send);sendButton=button(chat,'Ask Jornia',490,-207,98,send)
   status=label(chat,'',0,-253,612,10,true)

@@ -141,6 +141,10 @@ def run(a):
         for line in process.stdout:
             sample=json.loads(line)
             if sample.get('error'):raise RuntimeError(sample['error'])
+            if sample.get('capture_attached') or sample.get('capture_detached'):
+                last_capture=0;announced=False;last=None;count=0
+                print(json.dumps({k:sample[k] for k in ('capture_attached','capture_detached','window_id','process_id') if k in sample}),flush=True)
+                continue
             if sample.get('ready'):print('Local OCR helper started. Waiting for a game frame.',flush=True);continue
             if sample.get('capture_tick'):
                 last_capture=time.monotonic()

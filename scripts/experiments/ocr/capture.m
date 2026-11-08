@@ -82,6 +82,14 @@ static NSDictionary *readQR(CGImageRef image) {
  NSDictionary *result=@{@"qr":values,@"ocr_ms":@((CFAbsoluteTimeGetCurrent()-start)*1000),@"crop_width":@(CGImageGetWidth(crop)),@"crop_height":@(CGImageGetHeight(crop))};
  CGImageRelease(crop);return result;
 }
+// Track the actual main game window, not the first incidental window from the app.
+static SCWindow *gameWindow(SCShareableContent *content) {
+ SCWindow *best=nil;
+ for(SCWindow *w in content.windows)if([w.owningApplication.bundleIdentifier isEqualToString:@"com.blizzard.worldofwarcraft"]&&w.windowLayer==0&&w.frame.size.width>=300&&w.frame.size.height>=200){
+  if(!best||w.frame.size.width*w.frame.size.height>best.frame.size.width*best.frame.size.height)best=w;
+ }
+ return best;
+}
 // Keep one current frame; no screenshot files or frame queue are retained.
 @interface WispFrames:NSObject<SCStreamOutput,SCStreamDelegate>
 @property(nonatomic) CVPixelBufferRef latest;
@@ -123,8 +131,7 @@ int main(int argc,const char *argv[]) {
    __block SCShareableContent *content=nil;dispatch_semaphore_t available=dispatch_semaphore_create(0);
    [SCShareableContent getShareableContentExcludingDesktopWindows:YES onScreenWindowsOnly:YES completionHandler:^(SCShareableContent *c,NSError *e){content=c;dispatch_semaphore_signal(available);}];
    if(!awaitCapture(available,3)){usleep(300000);continue;}
-   SCWindow *window=nil;
-   for(SCWindow *w in content.windows)if([w.owningApplication.bundleIdentifier isEqualToString:@"com.blizzard.worldofwarcraft"]&&w.windowLayer==0){window=w;break;}
+   SCWindow *window=gameWindow(content);
    if(!window){usleep(300000);continue;}
    WispFrames *frames=[WispFrames new];
    SCContentFilter *filter=[[SCContentFilter alloc]initWithDesktopIndependentWindow:window];
@@ -135,9 +142,21 @@ int main(int argc,const char *argv[]) {
    __block BOOL running=NO;dispatch_semaphore_t begun=dispatch_semaphore_create(0);
    [stream startCaptureWithCompletionHandler:^(NSError *error){running=error==nil;dispatch_semaphore_signal(begun);}];
    if(!awaitCapture(begun,5)||!running){emit(@{@"error":@"capture_start_failed"});return 5;}
-   CFAbsoluteTime lastFrame=CFAbsoluteTimeGetCurrent(),tick=0;
+   qrBox=CGRectNull;qrMisses=0;
+   emit(@{@"capture_attached":@YES,@"window_id":@(window.windowID),@"process_id":@(window.owningApplication.processID)});
+   CFAbsoluteTime lastFrame=CFAbsoluteTimeGetCurrent(),tick=0,checked=lastFrame;
    while(!frames.failed&&CFAbsoluteTimeGetCurrent()-lastFrame<10){@autoreleasepool{
     [[NSRunLoop currentRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.05]];
+    // A stream can keep producing frames after the original window is replaced.
+    // Recheck ownership even while frames arrive, and reattach without game reload.
+    if(CFAbsoluteTimeGetCurrent()-checked>=2){
+     checked=CFAbsoluteTimeGetCurrent();__block SCShareableContent *current=nil;
+     dispatch_semaphore_t found=dispatch_semaphore_create(0);
+     [SCShareableContent getShareableContentExcludingDesktopWindows:YES onScreenWindowsOnly:YES completionHandler:^(SCShareableContent *c,NSError *e){current=c;dispatch_semaphore_signal(found);}];
+     if(!awaitCapture(found,3)||!current)break;
+     SCWindow *now=gameWindow(current);
+     if(!now||now.windowID!=window.windowID||now.owningApplication.processID!=window.owningApplication.processID||fabs(now.frame.size.width-window.frame.size.width)>1||fabs(now.frame.size.height-window.frame.size.height)>1)break;
+    }
     CVPixelBufferRef pixel=[frames take];if(!pixel)continue;lastFrame=CFAbsoluteTimeGetCurrent();if(lastFrame-tick>1){tick=lastFrame;emit(@{@"capture_tick":@YES});}
     CIImage *ci=[CIImage imageWithCVPixelBuffer:pixel];CGImageRef image=[images createCGImage:ci fromRect:ci.extent];CVPixelBufferRelease(pixel);if(!image)continue;
     if(qrMode){emit(readQR(image));CGImageRelease(image);continue;}
@@ -153,6 +172,7 @@ int main(int argc,const char *argv[]) {
     }
     CGImageRelease(image);
    }}
+   emit(@{@"capture_detached":@YES});
    dispatch_semaphore_t ended=dispatch_semaphore_create(0);[stream stopCaptureWithCompletionHandler:^(NSError *error){dispatch_semaphore_signal(ended);}];awaitCapture(ended,3);
   }}
  }
