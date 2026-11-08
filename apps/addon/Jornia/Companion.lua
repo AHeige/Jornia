@@ -3,7 +3,7 @@ WispJournalUI = {}
 local UI = WispJournalUI
 UI.Config = {}
 UI.ClearsAcceptedInput = true
-local window,rail,banner,chat,journey,chatText,journeyText,status,input,tabs,sendButton,modeButton,closeButton,resize,footer,connectButton
+local window,rail,chat,journey,chatText,journeyText,status,input,tabs,sendButton,modeButton,closeButton,resize,footer,connectButton
 local character,entries,messages,drafts,contextSharing={},{},{},{},{}
 local mode,tab='full','journey'
 local sizes={full={860,540},compact={420,340}}
@@ -55,7 +55,7 @@ local function selectTab(which)
  tab=which;chat:SetShown(mode=='compact' or which=='chat');journey:SetShown(mode=='full' and which=='journey')
  for name,b in pairs(tabs) do b:SetBackdropColor(name==which and .13 or .06,name==which and .2 or .1,name==which and .34 or .17,1) end
  if which=='journey' then updateJourney() end
- if UI.title then UI.title:SetText(which=='journey' and 'Your story so far.' or 'A moment with Wisp.') end
+ if UI.title then UI.title:SetText(which=='journey' and 'Your story so far.' or 'Talk to Jornia') end
 end
 local function updatePending()
  if not input then return end
@@ -79,7 +79,7 @@ local function layout()
  w=math.max(minW,math.min(w,mode=='compact' and 700 or 1100));h=math.max(minH,math.min(h,760))
  if window:GetWidth()~=w or window:GetHeight()~=h then window:SetSize(w,h) end
  sizes[mode]={w,h};lastW,lastH=w,h
- local compact=mode=='compact';rail:SetShown(not compact);banner:SetShown(not compact);footer:SetShown(not compact)
+ local compact=mode=='compact';rail:SetShown(not compact);UI.title:SetShown(not compact);footer:SetShown(not compact)
  UI.compactTitle:SetShown(compact);UI.compactIdentity:SetShown(compact);UI.previewLabel:SetShown(not compact)
  place(closeButton,w-42,-10,28,30);place(modeButton,w-160,-10,108,30)
  if UI.DragHandle then UI.DragHandle:SetWidth(w-176) end
@@ -87,9 +87,9 @@ local function layout()
  if compact then
   place(chat,18,-70,w-36,h-84)
  else
-  rail:SetHeight(h);place(banner,212,-51,w-234,110)
-  place(chat,214,-183,w-236,h-220);place(journey,214,-183,w-236,h-220)
-  UI.title:SetWidth(w-290);UI.bannerCopy:SetWidth(w-290);UI.previewLabel:SetWidth(w-420)
+  rail:SetHeight(h)
+  place(chat,214,-94,w-236,h-131);place(journey,214,-94,w-236,h-131)
+  UI.title:SetWidth(w-250);UI.previewLabel:SetWidth(w-420)
   footer:ClearAllPoints();footer:SetPoint('BOTTOMLEFT',214,12);footer:SetWidth(w-250)
  end
  if connectButton then place(connectButton,compact and w-120 or 20,compact and -42 or -308,100,28);UI.compactIdentity:SetWidth(compact and w-160 or 280) end
@@ -199,9 +199,7 @@ function UI.Show(person,events)
   closeButton=button(window,'×',810,-10,28,function()window:Hide()end)
   connectButton=button(window,'Connect AI',20,-308,100,function()UI.ShowConnection()end)
   closeButton.caption:ClearAllPoints();closeButton.caption:SetPoint('CENTER');closeButton.caption:SetWidth(26);closeButton.caption:SetJustifyH('CENTER')
-  banner=surface(window,212,-51,626,110,.06,.1,.18)
-  local art=banner:CreateTexture(nil,'ARTWORK');art:SetAllPoints();art:SetTexture('Interface\\AddOns\\Wisp\\Media\\expedition');art:SetTexCoord(0,1,.25,.52);art:SetVertexColor(.45,.55,.8,1)
-  UI.title=label(banner,'Your story so far.',18,-22,540,26);UI.bannerCopy=label(banner,'Recorded places, moments and milestones.',18,-67,540,12)
+  UI.title=label(window,'Your story so far.',214,-56,600,20)
   chat=CreateFrame('Frame',nil,window);journey=CreateFrame('Frame',nil,window)
   chatText=CreateFrame('ScrollingMessageFrame',nil,chat);chatText:SetFont('Fonts\\FRIZQT__.TTF',13,'');chatText:SetJustifyH('LEFT');chatText:SetFading(false);chatText:SetMaxLines(200);chatText:EnableMouseWheel(true)
   if chatText.SetHyperlinksEnabled then chatText:SetHyperlinksEnabled(true) end;chatText:EnableMouse(true)
@@ -224,7 +222,7 @@ function UI.Show(person,events)
    if not UI.OnSend then status:SetText('AI is disconnected. Nothing was sent.');return end
    -- Sender must acknowledge acceptance with an operation ID. Nil/error preserves the draft.
    local ok,id,reason=pcall(UI.OnSend,question,key(),UI.ShareContext and UI.ShareContext:GetChecked() or false)
-   if not ok or type(id)~='string' or id=='' then status:SetText(type(reason)=='string' and safe(reason) or 'No acceptance confirmed. Draft kept; check Wisp.');return end
+   if not ok or type(id)~='string' or id=='' then status:SetText(type(reason)=='string' and safe(reason) or 'No acceptance confirmed. Draft kept; check Jornia.');return end
    pending={id=id,character=key(),draft=question};UI.AddMessage('user',question);drafts[key()]='';input:SetText('');input:ClearFocus();updatePending()
   end
   input:SetScript('OnEnterPressed',send);sendButton=button(chat,'Ask Jornia',490,-207,98,send)
@@ -244,7 +242,7 @@ function UI.Show(person,events)
   label(resize,'//',4,-4,18,14,true)
   resize:SetScript('OnMouseDown',function(_,which)if which=='LeftButton' then window:StartSizing('BOTTOMRIGHT') end end)
   resize:SetScript('OnMouseUp',function()window:StopMovingOrSizing();layout()end)
-  UI.Controls={Window=window,Input=input,Resize=resize,Mode=modeButton,Connect=connectButton,Status=status,Chat=chat,Journey=journey,Messages=chatText}
+  UI.Controls={Window=window,Input=input,Resize=resize,Mode=modeButton,Connect=connectButton,Status=status,Chat=chat,Journey=journey,Messages=chatText,Send=sendButton,JourneyText=journeyText}
   -- A dedicated title hit region also works where native drag events do not bubble.
   local drag=CreateFrame('Frame',nil,window);drag:SetPoint('TOPLEFT');drag:SetSize(684,44)
   drag:SetFrameLevel(window:GetFrameLevel()+10);drag:EnableMouse(true)
