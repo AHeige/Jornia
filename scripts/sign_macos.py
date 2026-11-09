@@ -6,6 +6,7 @@ import json
 import pathlib
 import subprocess
 import tempfile
+from macos_bundle import signing_targets
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('app', type=pathlib.Path)
@@ -23,10 +24,11 @@ if a.output.exists():
 identities = subprocess.check_output(['security','find-identity','-v','-p','codesigning'],text=True)
 if not any(a.identity in line and 'Developer ID Application:' in line for line in identities.splitlines()):
     raise SystemExit('An installed valid Developer ID Application identity is required')
-# Sign the actual executable first, then seal its bundle. No --deep signing or relaxed entitlements.
-for target in [app/'Contents/MacOS/Jornia',app]:
+# Seal capture/runtime helpers and other nested code before the outer app.
+# No --deep signing or relaxed entitlements. Bundle inspection fails on escaping links.
+for target in signing_targets(app):
     subprocess.run(['codesign','--force','--options','runtime','--timestamp','--sign',a.identity,str(target)],check=True)
-subprocess.run(['codesign','--verify','--strict','--verbose=2',str(app)],check=True)
+subprocess.run(['codesign','--verify','--deep','--strict','--verbose=2',str(app)],check=True)
 with tempfile.TemporaryDirectory(prefix='wisp-notary-',dir=app.parent) as directory:
     upload=pathlib.Path(directory)/'Jornia.zip'
     subprocess.run(['ditto','-c','-k','--keepParent',str(app),str(upload)],check=True)

@@ -10,16 +10,20 @@ import subprocess
 import zipfile
 
 root = Path(__file__).resolve().parents[1]
-parser=argparse.ArgumentParser();parser.add_argument('--use-built-web',action='store_true',help='Reuse unchanged checked-in web CSS without reinstalling dependencies');args=parser.parse_args()
+parser=argparse.ArgumentParser()
+parser.add_argument('--use-built-web',action='store_true',help='Reuse unchanged checked-in web CSS without reinstalling dependencies')
+parser.add_argument('--platform',choices=['darwin','windows','all'],default='all',help='Build only the selected desktop platform')
+args=parser.parse_args()
 version = '0.8.0'
-for system,arch in [('windows','amd64'),('darwin','arm64')]:
+targets=[(system,arch) for system,arch in [('windows','amd64'),('darwin','arm64')] if args.platform in ('all',system)]
+for system,arch in targets:
     if (root/'dist'/f'jornia-{version}-{system}-{arch}.zip').exists():
         raise SystemExit('Release already exists; bump the version before rebuilding published artifacts.')
 env = os.environ | {'GOCACHE':str(root/'.cache/go-build'),'GOMODCACHE':str(root/'.cache/go-mod'),'CGO_ENABLED':'0'}
 if not args.use_built_web:
     subprocess.run(['npm','ci','--prefix','apps/companion/web','--no-audit','--no-fund'],cwd=root,check=True)
     subprocess.run(['npm','run','build','--prefix','apps/companion/web'],cwd=root,check=True)
-for system,arch in [('windows','amd64'),('darwin','arm64')]:
+for system,arch in targets:
     name=f'jornia-{version}-{system}-{arch}'
     stage=root/'dist'/name
     stage.mkdir(parents=True,exist_ok=True)

@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/AHeige/Jornia/internal/companion"
@@ -125,7 +126,7 @@ func run() error {
 	}
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	select {
 	case err := <-done:
