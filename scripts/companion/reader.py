@@ -127,7 +127,12 @@ def run(a):
         try:recover_owned(a.root)
         finally:lock.close()
         return
-    carrier=ChatCarrier(a.root);pads=InvitePads(a.root);stop=threading.Event();process=None;worker=None;last_capture=0;announced=False
+    carrier=ChatCarrier(a.root)
+    try:pads=InvitePads(a.root)
+    except Exception:
+        carrier.restore()
+        raise
+    stop=threading.Event();process=None;worker=None;last_capture=0;announced=False
     def beat():
         phase=True
         while not stop.wait(1):
@@ -140,7 +145,9 @@ def run(a):
         process=subprocess.Popen([str(a.capture)]+(['--qr'] if a.qr else ['--card','--fast']),stdout=subprocess.PIPE,text=True)
         for line in process.stdout:
             sample=json.loads(line)
-            if sample.get('error'):raise RuntimeError(sample['error'])
+            if sample.get('error'):
+                print(json.dumps(dict(status='capture_error',reason=sample['error'])),flush=True)
+                raise RuntimeError(sample['error'])
             if sample.get('capture_attached') or sample.get('capture_detached'):
                 last_capture=0;announced=False;last=None;count=0
                 print(json.dumps({k:sample[k] for k in ('capture_attached','capture_detached','window_id','process_id') if k in sample}),flush=True)
@@ -166,6 +173,7 @@ def run(a):
                 print(json.dumps(dict(status='qr_accepted',request_id=packet['id'],decode_ms=round(sample.get('ocr_ms',0),1),crop_width=sample.get('crop_width'),crop_height=sample.get('crop_height'),has_context=bool(snap),quests=len(snap.get('quests',[])))),flush=True)
             while not samples.empty():samples.get_nowait()
             worker=threading.Thread(target=complete,args=(session,carrier,packet,samples,round(sample.get('ocr_ms',0),1),stop,pads));worker.start()
+        if not stop.is_set():raise RuntimeError('Capture helper stopped unexpectedly')
     finally:
         stop.set();heartbeat.join(timeout=3)
         if worker:

@@ -10,13 +10,14 @@ An experimental World of Warcraft: Forever companion with a central knowledge gr
 
 Jornia combines a Lua addon, a Go desktop companion with private SQLite character journals, and a Go/PostgreSQL backend calling Berget. The addon maintains current character state; selected, dated state and journal excerpts can accompany a question. World facts retain source/build labels. SavedVariables persistence remains delayed until WoW saves; it is separate from the live transport.
 
-**Status:** developer alpha. A real OCR → AI → native Lua exchange has been verified on Mac; reusable return blocks have separate measured success and corruption tests. Windows real-time transport, long-session reliability, signed installation and a self-contained setup for the current bridge remain unfinished. Historical experiment notes describe their own implementation stage, not necessarily today's complete product.
+**Status:** developer alpha. A real OCR → AI → native Lua exchange has been verified on Mac; reusable return blocks have separate measured success and corruption tests. A [self-contained native Mac candidate](docs/release-0.9.0-native-mac.md) now includes the local server, private runtime, capture helper and addon installer. It requires Apple Silicon/macOS 26 and is ad-hoc signed only. Live acceptance of that final app, Windows real-time transport, long-session reliability and trusted distribution remain unfinished. Historical experiment notes describe their own implementation stage, not necessarily today's complete product.
 
 Source: **https://github.com/AHeige/Jornia**. Original software and documentation are MIT-licensed; see [LICENSE](LICENSE) and [NOTICE](NOTICE.md). Provider datasets, third-party material and game imagery are not relicensed by this repository. No provider database dump is included.
 
 The existing [download page](https://aheige.github.io/wisp-site/) provides the 0.8.0 Windows and Mac desktop/journal alpha, not a packaged release of the current reusable native bridge. Testers receive a separate revocable access code; no provider key is distributed.
 
 - [Client installation and VM-hosted updates](docs/client-distribution.md)
+- [Native Mac candidate: installation, verification and remaining release gates](docs/release-0.9.0-native-mac.md)
 - [Automatic local journey: first-use consent, import and limits](docs/automatic-journal.md)
 - [First WoW test: installation and walkthrough](docs/wow-first-test.md)
 - [Companion mutation and recovery contract](docs/companion-mutations.md)
@@ -31,7 +32,7 @@ The existing [download page](https://aheige.github.io/wisp-site/) provides the 0
 
 The product is now Jornia (formerly Wisp). Use `/jornia` or `/jorniamini` in game; `/wisp` and `/wispmini` remain aliases. Existing addon folder/SavedVariables IDs, transport markers, headers and deployed infrastructure identifiers retain their legacy names to preserve compatibility. Existing local `Wisp/player.db` is reused; new installations use a Jornia data directory. Historical captures and raw experiment records retain the names actually observed.
 
-The current friend-test backend uses observed quest context, with a separate exact-build register for explicitly verified follow-up relationships. ForeverDB refresh is paused and its stored facts are excluded from served knowledge. No ForeverDB key is needed for this flow. See [the current delivery checklist](docs/questlog-companion-delivery-2026-11-08.md).
+The quest-log-first flow uses observed quest context, with a separate exact-build register for explicitly verified follow-up relationships. Source-labelled imported world facts can complement that context when enabled; provider credentials stay on the backend. The [quest-log delivery checklist](docs/questlog-companion-delivery-2026-11-08.md) records the earlier provider-independent slice.
 
 See [richer quest guidance and its limits](docs/richer-quest-guidance-2026-11-08.md).
 

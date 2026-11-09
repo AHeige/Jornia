@@ -10,14 +10,14 @@ The app must explain that capture is local, images are not uploaded, and only su
 
 ## Delivery order
 
-- [x] Scope the first pilot to Apple Silicon, macOS 14 or later, matching the tested capture helper. Intel Macs are not yet validated.
+- [x] Scope the first candidate to Apple Silicon. Final binary inspection found that the bundled CPython requires macOS 26, so this candidate declares 26+; macOS 14 support needs a compatible runtime, and Intel Macs are not validated.
 - [x] Add a Mac-only selection to the existing packaging tool: `--platform darwin`. This still builds the older browser/journal bundle; it does not yet include native chat.
 - [x] Prepare signing to include nested capture/runtime binaries before sealing the outer app, reject external symlinks, and verify the nested signatures.
 - [x] Handle SIGTERM in the companion's graceful shutdown path so managed shutdown can remove temporary session credentials and close the local database.
-- [ ] Build one app lifecycle for the companion, reader and capture helper: one instance, private session ownership, startup ordering, visible status and graceful quit. Never delete another process's session to force startup.
-- [ ] Bundle the Python standard-library reader with a private relocatable runtime, or replace it with equivalent first-party native code. Do not depend on Homebrew, Xcode or `/usr/bin/python3` existing on a player's Mac. Retain runtime licences.
-- [ ] Bundle the complete native addon and owned return-channel assets. The current journal-only package deliberately removes Transport.lua and cannot serve as the native pilot.
-- [ ] Add game-folder selection/validation, preserve SavedVariables and local journals, back up replaced addon files, and refuse carrier writes while another bridge or updater owns them. Do not silently change a running game's addon installation.
+- [x] Build one app lifecycle for the companion, reader and capture helper: one instance, private session ownership, startup ordering, visible status and graceful quit. Never delete another process's session to force startup. Packaged start/stop and permission-denied recovery pass with a synthetic capture helper.
+- [x] Bundle the Python standard-library reader with a private relocatable runtime. Players do not need Homebrew, Xcode or Python installed. Runtime and linked-library licences are included.
+- [x] Bundle the complete native addon and owned return-channel assets. The older journal-only download remains unchanged.
+- [x] Add game-folder selection/validation, preserve SavedVariables and local journals, back up replaced addon files, and refuse installation while a game or bridge is running. Disposable-folder tests cover journal preservation, backups and interrupted carriers.
 - [ ] Present screen-capture consent and actionable denied/revoked-permission states under the stable signed app identity. Request only the permissions actually needed.
 - [ ] Verify manual recovery from a stopped reader/helper and an interrupted transfer. Restore only owned carrier files; preserve ambiguous originals and explain the failure. Never automatically repeat a paid question.
 - [ ] Verify chat closure immediately after Enter, character switching, resizing/movement and repeated questions. If delivery requires the chat to remain visible, state that limitation clearly in the pilot; do not claim background delivery.
@@ -36,7 +36,7 @@ Data ingestion can continue independently. Complete world coverage is not a prer
 
 ## Current release blockers
 
-The native runtime is still launched as separate developer processes; there is no self-contained native app bundle yet. The existing 0.8.0 ZIP contains the browser companion and journal addon only. Developer ID signing/notarization has not been completed. Do not publish a new download or declare this checklist passed until the unchecked delivery steps have evidence.
+A self-contained local candidate now exists; see [0.9.0 native Mac notes](release-0.9.0-native-mac.md). The existing public 0.8.0 ZIP still contains the browser companion and journal addon only. The final installed app needs its own screen-capture approval and live acceptance test. Developer ID signing/notarization and clean-machine installation are outstanding. Do not publish a new download or declare this checklist passed until the unchecked delivery steps have evidence.
 
 ## Preparation checks, 9 November
 
